@@ -1,0 +1,64 @@
+[logger]
+; Filter rules
+; Value: [<category>|*][.debug|.info|.warning|.critical]=true|false;...
+; Reference: https://doc.qt.io/qt-5/qloggingcategory.html#setFilterRules
+filter_rules = *.debug=true
+
+; Message pattern
+; Value: default|
+;    [%{appname}] [%{category}] [%{file}] [%{function}] [%{line}] [%{message}] 
+;    [%{pid}] [%{threadid}] [%{qthreadptr}] [%{type}] 
+;    [%{time process}] [%{time boot}] [%{time [format]}] 
+;    [%{backtrace [depth=N] [separator="..."]}]
+;    [%{if-[debug|info|warning|fatal|*]} ... %{endif}]
+; Reference: https://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
+; message_pattern = default
+message_pattern = %{time yyyyMMdd h:mm:ss.zzz t} %{file}:%{line} %{message}
+
+; Filter with regular expression
+; Value: <regexp>
+regexp_filter = ^net.*
+
+; Output to StdOut stream
+; Value: true|false
+stdout = false
+
+; Output to StdErr stream
+; Value: true|false
+stderr = false
+
+; Log output Android or iOS, if available
+; Value: true|false
+stdlog = true
+
+; Output to SysLog
+; Value: <string>
+syslog_ident = myapp
+
+; Output to systemd journal
+; Value: true|false
+journal = false
+
+; path
+; Value: <string>
+path = myapp.log
+
+; Maximum rotating file size
+; Value: <int>
+max_file_size = 1048576
+
+; Maximum rotating file count
+; Value: <int>
+max_file_count = 3
+
+; Send message to HTTP server
+; Value: <string>
+http_url = http://127.0.0.1:8085/log/message
+
+; Message format for HTTP sink
+; Value: raw|default|json
+http_msg_format = json
+
+; Run the logger in its own thread
+; Value: true|false
+async = true
