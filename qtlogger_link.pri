@@ -21,8 +21,6 @@ qtlogger_no_thread {
 
 qtlogger_network {
     DEFINES *= QTLOGGER_NETWORK
-}
-else {
     QT *= network
 }
 
