@@ -20,13 +20,13 @@
 
 namespace QtLogger {
 
-using MessageHandlerPtr = QSharedPointer<class MessageHandler>;
+using PipelineHandlerPtr = QSharedPointer<class PipelineHandler>;
 
-class QTLOGGER_EXPORT MessageHandler : public AbstractMessageProcessor
+class QTLOGGER_EXPORT PipelineHandler : public AbstractMessageProcessor
 {
 public:
-    MessageHandler();
-    MessageHandler(std::initializer_list<AbstractMessageProcessorPtr> processors);
+    PipelineHandler();
+    PipelineHandler(std::initializer_list<AbstractMessageProcessorPtr> processors);
 
     Type processorType() const override { return AbstractMessageProcessor::Handler; }
 
@@ -52,10 +52,10 @@ public:
     void appendSink(const AbstractMessageSinkPtr &sink);
     void clearSinks();
 
-    void appendHandler(const MessageHandlerPtr &handler);
+    void appendHandler(const PipelineHandlerPtr &handler);
     void clearHandlers();
 
-    MessageHandler &operator<<(const AbstractMessageProcessorPtr &processor);
+    PipelineHandler &operator<<(const AbstractMessageProcessorPtr &processor);
 
     bool process(LogMessage &logMsg) override;
 
@@ -65,13 +65,13 @@ private:
     QList<AbstractMessageProcessorPtr> m_processors;
 };
 
-inline MessageHandler &operator<<(MessageHandler *handler,
+inline PipelineHandler &operator<<(PipelineHandler *handler,
                                   const AbstractMessageProcessorPtr &processor)
 {
     return *handler << processor;
 }
 
-inline MessageHandler &operator<<(MessageHandlerPtr handler,
+inline PipelineHandler &operator<<(PipelineHandlerPtr handler,
                                   const AbstractMessageProcessorPtr &processor)
 {
     return *handler << processor;
