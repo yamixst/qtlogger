@@ -12,18 +12,18 @@ class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageProcessor
+class QTLOGGER_EXPORT MessageHandler
 {
 public:
-    enum Type { Processor, Filter, Formatter, Sink, Handler };
+    enum Type { Handler, Filter, Formatter, Sink, Pipeline, Other };
 
-    virtual ~AbstractMessageProcessor() = default;
+    virtual ~MessageHandler() = default;
 
-    virtual Type processorType() const { return AbstractMessageProcessor::Processor; }
+    virtual Type type() const { return MessageHandler::Handler; }
 
     virtual bool process(LogMessage &logMsg) = 0;
 };
 
-using AbstractMessageProcessorPtr = QSharedPointer<AbstractMessageProcessor>;
+using MessageHandlerPtr = QSharedPointer<MessageHandler>;
 
 } // namespace QtLogger

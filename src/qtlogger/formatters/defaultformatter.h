@@ -5,7 +5,7 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessageprocessor.h"
+#include "../messagehandler.h"
 #include "../logger_global.h"
 #include "qtlogmessageformatter.h"
 
@@ -13,20 +13,20 @@ namespace QtLogger {
 
 using DefaultFormatterPtr = QSharedPointer<class DefaultFormatter>;
 
-class QTLOGGER_EXPORT DefaultFormatter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT DefaultFormatter : public MessageHandler
 {
 public:
     static DefaultFormatterPtr instance();
 
     bool process(LogMessage &logMsg) override;
 
-    AbstractMessageProcessorPtr formatter() const;
-    void setFormatter(AbstractMessageProcessorPtr formatter);
+    MessageHandlerPtr formatter() const;
+    void setFormatter(MessageHandlerPtr formatter);
 
 private:
-    explicit DefaultFormatter(const AbstractMessageProcessorPtr &formatter);
+    explicit DefaultFormatter(const MessageHandlerPtr &formatter);
 
-    AbstractMessageProcessorPtr m_formatter;
+    MessageHandlerPtr m_formatter;
 };
 
 inline DefaultFormatterPtr DefaultFormatter::instance()
@@ -35,7 +35,7 @@ inline DefaultFormatterPtr DefaultFormatter::instance()
     return s_instance;
 }
 
-inline DefaultFormatter::DefaultFormatter(const AbstractMessageProcessorPtr &formatter)
+inline DefaultFormatter::DefaultFormatter(const MessageHandlerPtr &formatter)
     : m_formatter(formatter)
 {
 }
@@ -49,12 +49,12 @@ inline bool DefaultFormatter::process(LogMessage &logMsg)
     return true;
 }
 
-inline AbstractMessageProcessorPtr DefaultFormatter::formatter() const
+inline MessageHandlerPtr DefaultFormatter::formatter() const
 {
     return m_formatter;
 }
 
-inline void DefaultFormatter::setFormatter(AbstractMessageProcessorPtr formatter)
+inline void DefaultFormatter::setFormatter(MessageHandlerPtr formatter)
 {
     m_formatter = formatter;
 }

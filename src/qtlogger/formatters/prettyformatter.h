@@ -6,14 +6,14 @@
 #include <QMap>
 #include <QStringList>
 
-#include "../abstractmessageprocessor.h"
+#include "../messagehandler.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using PrettyFormatterPtr = QSharedPointer<class PrettyFormatter>;
 
-class QTLOGGER_EXPORT PrettyFormatter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT PrettyFormatter : public MessageHandler
 {
 public:
     static PrettyFormatterPtr instance()

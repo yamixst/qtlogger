@@ -5,21 +5,21 @@
 
 #include <QSharedPointer>
 
-#include "abstractmessageprocessor.h"
+#include "messagehandler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFormatter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT AbstractMessageFormatter : public MessageHandler
 {
 public:
     virtual ~AbstractMessageFormatter() = default;
 
     virtual QString format(const LogMessage &logMsg) const = 0;
 
-    Type processorType() const override { return AbstractMessageProcessor::Formatter; }
+    Type type() const override { return MessageHandler::Formatter; }
 
     bool process(LogMessage &logMsg) override final
     {

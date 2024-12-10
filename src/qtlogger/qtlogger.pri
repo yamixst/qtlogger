@@ -64,7 +64,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/abstractmessagefilter.h \
     $$PWD/abstractmessageformatter.h \
-    $$PWD/abstractmessageprocessor.h \
     $$PWD/abstractmessagesink.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
@@ -78,6 +77,7 @@ HEADERS += \
     $$PWD/logger.h \
     $$PWD/logger_global.h \
     $$PWD/logmessage.h \
+    $$PWD/messagehandler.h \
     $$PWD/messagepatterns.h \
     $$PWD/pipelinehandler.h \
     $$PWD/setmessagepattern.h \
