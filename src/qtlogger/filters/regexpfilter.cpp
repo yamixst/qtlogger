@@ -16,9 +16,9 @@ QtLogger::RegExpFilter::RegExpFilter(const QString &regExp) : m_regExp(QRegularE
 }
 
 QTLOGGER_DECL_SPEC
-bool RegExpFilter::filter(const DebugMessage &dmesg) const
+bool RegExpFilter::filter(const LogMessage &logMsg) const
 {
-    return m_regExp.match(dmesg.message()).hasMatch();
+    return m_regExp.match(logMsg.message()).hasMatch();
 }
 
 } // namespace QtLogger

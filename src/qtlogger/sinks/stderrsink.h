@@ -15,7 +15,7 @@ class QTLOGGER_EXPORT StdErrSink : public AbstractMessageSink
 public:
     StdErrSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;

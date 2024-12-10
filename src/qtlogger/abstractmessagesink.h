@@ -17,22 +17,22 @@ using AbstractMessageSinkPtr = QSharedPointer<class AbstractMessageSink>;
 class QTLOGGER_EXPORT AbstractMessageSink : public AbstractMessageProcessor
 {
 public:
-    virtual void send(const DebugMessage &dmesg) = 0;
+    virtual void send(const LogMessage &logMsg) = 0;
 
     virtual bool flush() { return true; }
 
     Type processorType() const override { return AbstractMessageProcessor::Sink; }
 
-    bool process(DebugMessage &dmesg) override final
+    bool process(LogMessage &logMsg) override final
     {
         if (!m_preprocessor.isNull()) {
-            auto _dmesg = dmesg;
-            m_preprocessor->process(_dmesg);
-            send(_dmesg);
+            auto _logMsg = logMsg;
+            m_preprocessor->process(_logMsg);
+            send(_logMsg);
             return true;
         }
 
-        send(dmesg);
+        send(logMsg);
 
         return true;
     }

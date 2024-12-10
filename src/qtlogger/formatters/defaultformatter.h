@@ -18,7 +18,7 @@ class QTLOGGER_EXPORT DefaultFormatter : public AbstractMessageProcessor
 public:
     static DefaultFormatterPtr instance();
 
-    bool process(DebugMessage &dmesg) override;
+    bool process(LogMessage &logMsg) override;
 
     AbstractMessageProcessorPtr formatter() const;
     void setFormatter(AbstractMessageProcessorPtr formatter);
@@ -40,10 +40,10 @@ inline DefaultFormatter::DefaultFormatter(const AbstractMessageProcessorPtr &for
 {
 }
 
-inline bool DefaultFormatter::process(DebugMessage &dmesg)
+inline bool DefaultFormatter::process(LogMessage &logMsg)
 {
-    if (!dmesg.isFormatted() && m_formatter) {
-        m_formatter->process(dmesg);
+    if (!logMsg.isFormatted() && m_formatter) {
+        m_formatter->process(logMsg);
     }
 
     return true;

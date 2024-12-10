@@ -28,7 +28,7 @@ public:
     explicit HttpSink(const QUrl &url, Format format = Default);
     ~HttpSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     void setRequest(const QNetworkRequest &request);
