@@ -6,7 +6,9 @@
 #include <QLoggingCategory>
 #include <QTimer>
 
-#include "../../qtlogger.h"
+// #include "../../qtlogger.h"
+
+#include <qtlogger/qtlogger.h>
 
 Q_LOGGING_CATEGORY(lc, "MyCategory")
 
