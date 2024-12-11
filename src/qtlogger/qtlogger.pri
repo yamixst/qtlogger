@@ -17,8 +17,6 @@ qtlogger_no_thread {
 
 qtlogger_network {
     DEFINES *= QTLOGGER_NETWORK
-}
-else {
     QT *= network
     SOURCES += $$PWD/sinks/httpsink.cpp
     HEADERS += $$PWD/sinks/httpsink.h
