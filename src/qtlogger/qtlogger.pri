@@ -47,7 +47,6 @@ qtlogger_journal {
 }
 
 SOURCES += \
-    $$PWD/debugmessage.cpp \
     $$PWD/filters/regexpfilter.cpp \
     $$PWD/formatters/jsonformatter.cpp \
     $$PWD/formatters/patternformatter.cpp \
