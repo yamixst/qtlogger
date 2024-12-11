@@ -110,7 +110,7 @@ void PipelineHandler::clear(Type type)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::appendFilter(const AbstractMessageFilterPtr &filter)
+void PipelineHandler::appendFilter(const FilterPtr &filter)
 {
     if (filter.isNull())
         return;
