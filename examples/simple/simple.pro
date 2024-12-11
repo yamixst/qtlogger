@@ -9,5 +9,10 @@ CONFIG += qt
 QT -= gui
 QT += core network
 
-HEADERS += $$PWD/../../qtlogger.h
+include(../../qtlogger_link.pri)
+
+# HEADERS += $$PWD/../../qtlogger.h
+
+INCLUDEPATH += $$PWD/../../src
+
 SOURCES += $$PWD/main.cpp
