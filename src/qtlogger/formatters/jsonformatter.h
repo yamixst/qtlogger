@@ -5,14 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessageformatter.h"
+#include "../formatter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using JsonFormatterPtr = QSharedPointer<class JsonFormatter>;
 
-class QTLOGGER_EXPORT JsonFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT JsonFormatter : public Formatter
 {
 public:
     static JsonFormatterPtr instance()

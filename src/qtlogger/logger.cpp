@@ -172,7 +172,7 @@ void Logger::clearFilters()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::setFormatter(const AbstractMessageFormatterPtr &formatter)
+void Logger::setFormatter(const FormatterPtr &formatter)
 {
     m_handler->setFormatter(formatter);
 }
