@@ -17,3 +17,8 @@ SUBDIRS += src
     SUBDIRS += examples
     examples.depends = src
 }
+
+DISTFILES += \
+    $$PWD/doc/qtlogger.conf.example \
+    $$PWD/LICENSE \
+    $$PWD/README.md
