@@ -63,7 +63,6 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/abstractmessageformatter.h \
-    $$PWD/abstractmessagesink.h \
     $$PWD/filter.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
@@ -81,6 +80,7 @@ HEADERS += \
     $$PWD/messagepatterns.h \
     $$PWD/pipelinehandler.h \
     $$PWD/setmessagepattern.h \
+    $$PWD/sink.h \
     $$PWD/sinks/filesink.h \
     $$PWD/sinks/iodevicesink.h \
     $$PWD/sinks/rotatingfilesink.h \

@@ -11,7 +11,7 @@
 #include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
-#include "abstractmessagesink.h"
+#include "sink.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatters/functionformatter.h"
@@ -28,7 +28,7 @@ public:
     PipelineHandler();
     PipelineHandler(std::initializer_list<MessageHandlerPtr> handlers);
 
-    Type type() const override { return MessageHandler::Pipeline; }
+    Type type() const override { return MessageHandler::PipelineType; }
 
     void append(const MessageHandlerPtr &handler);
     void append(std::initializer_list<MessageHandlerPtr> handlers);
@@ -49,7 +49,7 @@ public:
     PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();
 
-    void appendSink(const AbstractMessageSinkPtr &sink);
+    void appendSink(const SinkPtr &sink);
     void clearSinks();
 
     void appendHandler(const PipelineHandlerPtr &pipeline);

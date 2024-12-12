@@ -1,7 +1,7 @@
 #include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
-#include "abstractmessagesink.h"
+#include "sink.h"
 #include "logmessage.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
@@ -28,7 +28,7 @@
 using QtLoggerFilter = QtLogger::Filter;
 using QtLoggerAbstractMessageFormatter = QtLogger::AbstractMessageFormatter;
 using QtLoggerMessageHandler = QtLogger::MessageHandler;
-using QtLoggerAbstractMessageSink = QtLogger::AbstractMessageSink;
+using QtLoggerSink = QtLogger::Sink;
 using QtLoggerLogMessage = QtLogger::LogMessage;
 using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
 using QtLoggerFileSink = QtLogger::FileSink;
@@ -52,7 +52,7 @@ using QtLoggerStdOutSink = QtLogger::StdOutSink;
 using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerAbstractMessageFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
 using QtLoggerMessageHandlerPtr = QtLogger::MessageHandlerPtr;
-using QtLoggerAbstractMessageSinkPtr = QtLogger::AbstractMessageSinkPtr;
+using QtLoggerSinkPtr = QtLogger::SinkPtr;
 using QtLoggerDefaultFormatterPtr = QtLogger::DefaultFormatterPtr;
 using QtLoggerFileSinkPtr = QtLogger::FileSinkPtr;
 using QtLoggerFunctionFilterPtr = QtLogger::FunctionFilterPtr;
@@ -74,13 +74,13 @@ using QtLoggerStdOutSinkPtr = QtLogger::StdOutSinkPtr;
 using QtLoggerFilter = QtLogger::Filter;
 using QtLoggerFormatter = QtLogger::AbstractMessageFormatter;
 using QtLoggerHandler = QtLogger::MessageHandler;
-using QtLoggerSink = QtLogger::AbstractMessageSink;
+using QtLoggerSink = QtLogger::Sink;
 using QtLoggerPipeline = QtLogger::PipelineHandler;
 
 using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
 using QtLoggerHandlerPtr = QtLogger::MessageHandlerPtr;
-using QtLoggerSinkPtr = QtLogger::AbstractMessageSinkPtr;
+using QtLoggerSinkPtr = QtLogger::SinkPtr;
 using QtLoggerPipelinePtr = QtLogger::PipelineHandlerPtr;
 
 #ifdef QTLOGGER_NETWORK

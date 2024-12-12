@@ -8,14 +8,14 @@
 #include <QPointer>
 #include <QUrl>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 QT_FORWARD_DECLARE_CLASS(QNetworkAccessManager)
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT HttpSink : public AbstractMessageSink
+class QTLOGGER_EXPORT HttpSink : public Sink
 {
 public:
     enum Format {

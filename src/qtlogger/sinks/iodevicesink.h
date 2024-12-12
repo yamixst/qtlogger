@@ -6,14 +6,14 @@
 #include <QIODevice>
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using QIODevicePtr = QSharedPointer<QIODevice>;
 
-class QTLOGGER_EXPORT IODeviceSink : public AbstractMessageSink
+class QTLOGGER_EXPORT IODeviceSink : public Sink
 {
 public:
     explicit IODeviceSink(const QIODevicePtr &device);

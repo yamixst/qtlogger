@@ -3,7 +3,7 @@
 
 #include "pipelinehandler.h"
 
-#include "abstractmessagesink.h"
+#include "sink.h"
 
 namespace QtLogger {
 
@@ -116,7 +116,7 @@ void PipelineHandler::appendFilter(const FilterPtr &filter)
         return;
 
     auto index = std::find_if(m_handlers.begin(), m_handlers.end(), [](const auto &x) {
-        return x->type() != MessageHandler::Filter;
+        return x->type() != MessageHandler::FilterType;
     });
 
     m_handlers.insert(index, filter);
@@ -146,7 +146,7 @@ RegExpFilterPtr PipelineHandler::appendFilter(const QRegularExpression &regExp)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearFilters()
 {
-    clear(Filter);
+    clear(FilterType);
 }
 
 QTLOGGER_DECL_SPEC
@@ -158,7 +158,7 @@ void PipelineHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
     clearFormatters();
 
     auto index = std::find_if(m_handlers.begin(), m_handlers.end(), [](const auto &x) {
-        return x->type() != MessageHandler::Filter;
+        return x->type() != MessageHandler::FilterType;
     });
 
     m_handlers.insert(index, formatter);
@@ -187,11 +187,11 @@ PatternFormatterPtr PipelineHandler::setFormatter(const QString &pattern)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearFormatters()
 {
-    clear(MessageHandler::Formatter);
+    clear(MessageHandler::FormatterType);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::appendSink(const AbstractMessageSinkPtr &sink)
+void PipelineHandler::appendSink(const SinkPtr &sink)
 {
     append(sink);
 }
@@ -199,7 +199,7 @@ void PipelineHandler::appendSink(const AbstractMessageSinkPtr &sink)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearSinks()
 {
-    clear(MessageHandler::Sink);
+    clear(MessageHandler::SinkType);
 }
 
 QTLOGGER_DECL_SPEC
@@ -211,7 +211,7 @@ void PipelineHandler::appendHandler(const PipelineHandlerPtr &pipeline)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearHandlers()
 {
-    clear(MessageHandler::Pipeline);
+    clear(MessageHandler::PipelineType);
 }
 
 QTLOGGER_DECL_SPEC
@@ -239,13 +239,13 @@ void PipelineHandler::flush()
 {
     for (auto &handler : m_handlers) {
         switch (handler->type()) {
-        case MessageHandler::Sink: {
-            auto sink = handler.dynamicCast<AbstractMessageSink>();
+        case MessageHandler::SinkType: {
+            auto sink = handler.dynamicCast<Sink>();
             if (sink)
                 sink->flush();
             break;
         }
-        case MessageHandler::Pipeline: {
+        case MessageHandler::PipelineType: {
             auto pipeline = handler.dynamicCast<PipelineHandler>();
             if (pipeline)
                 pipeline->flush();
