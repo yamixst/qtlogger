@@ -12,7 +12,7 @@ PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth)
 }
 
 QTLOGGER_DECL_SPEC
-bool PrettyFormatter::process(DebugMessage &dmesg)
+bool PrettyFormatter::process(LogMessage &logMsg)
 {
     static const QString msg_f { QStringLiteral("%1 %2 %3%4%5%6") };
     static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss.zzz") };
@@ -25,11 +25,11 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
 
     QString thread;
     if (m_showThread) {
-        if (!m_threads.contains(dmesg.threadId())) {
-            m_threads[dmesg.threadId()] = m_threadsIndex++;
+        if (!m_threads.contains(logMsg.threadId())) {
+            m_threads[logMsg.threadId()] = m_threadsIndex++;
         }
         if (m_threads.count() > 1) {
-            const auto index = m_threads.value(dmesg.threadId());
+            const auto index = m_threads.value(logMsg.threadId());
             thread = thread_f.arg(index);
             if (index == 0) {
                 thread.fill(QChar::fromLatin1(' '));
@@ -38,8 +38,8 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
     }
 
     QString category;
-    if (qstrcmp(dmesg.category(), "default") != 0) {
-        category = category_f.arg(QString::fromUtf8(dmesg.category()));
+    if (qstrcmp(logMsg.category(), "default") != 0) {
+        category = category_f.arg(QString::fromUtf8(logMsg.category()));
     }
 
     QString space;
@@ -51,10 +51,10 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
         space.fill(QChar::fromLatin1(' '), qMax(m_categoryWidth - categoryLength, 0));
     }
 
-    auto result = msg_f.arg(dmesg.time().toString(time_f), type_l.at(dmesg.type()), thread,
-                            category, space, dmesg.message());
+    auto result = msg_f.arg(logMsg.time().toString(time_f), type_l.at(logMsg.type()), thread,
+                            category, space, logMsg.message());
 
-    dmesg.setFormattedMessage(result);
+    logMsg.setFormattedMessage(result);
 
     return true;
 }

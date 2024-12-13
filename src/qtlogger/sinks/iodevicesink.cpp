@@ -14,13 +14,13 @@ IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device)
 }
 
 QTLOGGER_DECL_SPEC
-void IODeviceSink::send(const DebugMessage &dmesg)
+void IODeviceSink::send(const LogMessage &logMsg)
 {
     if (m_device.isNull()) {
         return;
     }
 
-    m_device->write(dmesg.formattedMessage().toLocal8Bit().append("\n"));
+    m_device->write(logMsg.formattedMessage().toLocal8Bit().append("\n"));
 }
 
 QTLOGGER_DECL_SPEC

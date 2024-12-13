@@ -20,7 +20,7 @@ public:
     explicit RotatingFileSink(const QString &path, int maxFileSize = RotatingFileDefaultMaxFileSize,
                               int maxFileCount = RotatingFileDefaultMaxFileCount);
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
 private:
     void rotate();

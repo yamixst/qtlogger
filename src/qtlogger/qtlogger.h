@@ -2,7 +2,7 @@
 #include "abstractmessageformatter.h"
 #include "abstractmessageprocessor.h"
 #include "abstractmessagesink.h"
-#include "debugmessage.h"
+#include "logmessage.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatters/defaultformatter.h"
@@ -29,7 +29,7 @@ using QtLoggerAbstractMessageFilter = QtLogger::AbstractMessageFilter;
 using QtLoggerAbstractMessageFormatter = QtLogger::AbstractMessageFormatter;
 using QtLoggerAbstractMessageProcessor = QtLogger::AbstractMessageProcessor;
 using QtLoggerAbstractMessageSink = QtLogger::AbstractMessageSink;
-using QtLoggerDebugMessage = QtLogger::DebugMessage;
+using QtLoggerLogMessage = QtLogger::LogMessage;
 using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
 using QtLoggerFileSink = QtLogger::FileSink;
 using QtLoggerFunctionFilter = QtLogger::FunctionFilter;

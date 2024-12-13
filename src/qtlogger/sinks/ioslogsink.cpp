@@ -15,17 +15,17 @@ QTLOGGER_DECL_SPEC
 IosLogSink::IosLogSink() { }
 
 QTLOGGER_DECL_SPEC
-void IosLogSink::send(const DebugMessage &dmesg)
+void IosLogSink::send(const LogMessage &logMsg)
 {
 #ifdef QTLOGGER_IOSLOG
     QString formattedMessage;
-    if (qstrcmp(dmesg.category(), "default") == 0)
-        formattedMessage = dmesg.message();
+    if (qstrcmp(logMsg.category(), "default") == 0)
+        formattedMessage = logMsg.message();
     else
-        formattedMessage = QStringLiteral("%1: %2").arg(dmesg.category(), dmesg.message());
+        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
 
     os_log_type_t type = OS_LOG_TYPE_DEBUG;
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         type = OS_LOG_TYPE_DEBUG;
         break;
@@ -43,9 +43,9 @@ void IosLogSink::send(const DebugMessage &dmesg)
         break;
     };
 
-    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(dmesg.message()));
+    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(logMsg.message()));
 #else
-    Q_UNUSED(dmesg);
+    Q_UNUSED(logMsg);
 #endif
 }
 

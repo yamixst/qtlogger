@@ -15,11 +15,11 @@ QTLOGGER_DECL_SPEC
 AndroidLogSink::AndroidLogSink() {}
 
 QTLOGGER_DECL_SPEC
-void AndroidLogSink::send(const DebugMessage &dmesg)
+void AndroidLogSink::send(const LogMessage &logMsg)
 {
 #ifdef QTLOGGER_ANDROIDLOG
     android_LogPriority priority = ANDROID_LOG_DEBUG;
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         priority = ANDROID_LOG_DEBUG;
         break;
@@ -37,9 +37,9 @@ void AndroidLogSink::send(const DebugMessage &dmesg)
         break;
     };
 
-    __android_log_print(priority, dmesg.category(), "%s\n", qPrintable(dmesg.message()));
+    __android_log_print(priority, logMsg.category(), "%s\n", qPrintable(logMsg.message()));
 #else
-    Q_UNUSED(dmesg);
+    Q_UNUSED(logMsg);
 #endif
 }
 

@@ -124,7 +124,7 @@ void MessageHandler::appendFilter(const AbstractMessageFilterPtr &filter)
 
 QTLOGGER_DECL_SPEC
 FunctionFilterPtr
-MessageHandler::appendFilter(const std::function<bool(const DebugMessage &)> &function)
+MessageHandler::appendFilter(const std::function<bool(const LogMessage &)> &function)
 {
     const auto f = FunctionFilterPtr::create(function);
 
@@ -222,12 +222,12 @@ MessageHandler &MessageHandler::operator<<(const AbstractMessageProcessorPtr &pr
 }
 
 QTLOGGER_DECL_SPEC
-bool MessageHandler::process(DebugMessage &dmesg)
+bool MessageHandler::process(LogMessage &logMsg)
 {
     for (auto &processor : m_processors) {
         if (!processor)
             continue;
-        if (!processor->process(dmesg))
+        if (!processor->process(logMsg))
             break;
     }
 

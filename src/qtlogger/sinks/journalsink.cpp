@@ -20,12 +20,12 @@ JournalSink::JournalSink()
 }
 
 QTLOGGER_DECL_SPEC
-void JournalSink::send(const DebugMessage &dmesg)
+void JournalSink::send(const LogMessage &logMsg)
 {
 #ifdef QTLOGGER_JOURNAL
     int priority = LOG_DEBUG;
 
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         priority = LOG_DEBUG;
         break;
@@ -45,17 +45,17 @@ void JournalSink::send(const DebugMessage &dmesg)
         return;
     }
 
-    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(dmesg.file());
-    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(dmesg.line());
+    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(logMsg.file());
+    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(logMsg.line());
 
-    sd_journal_print_with_location(priority, file.constData(), line.constData(), dmesg.function(),
-                                   "%s", qPrintable(dmesg.formattedMessage()));
+    sd_journal_print_with_location(priority, file.constData(), line.constData(), logMsg.function(),
+                                   "%s", qPrintable(logMsg.formattedMessage()));
 
-    sd_journal_send_with_location(file.constData(), line.constData(), dmesg.function(), "%s",
-                                  qPrintable(dmesg.formattedMessage()), "PRIORITY=%i", priority,
-                                  "CATEGORY=%s", dmesg.category(), NULL);
+    sd_journal_send_with_location(file.constData(), line.constData(), logMsg.function(), "%s",
+                                  qPrintable(logMsg.formattedMessage()), "PRIORITY=%i", priority,
+                                  "CATEGORY=%s", logMsg.category(), NULL);
 #else
-    Q_UNUSED(dmesg);
+    Q_UNUSED(logMsg);
 #endif
 }
 

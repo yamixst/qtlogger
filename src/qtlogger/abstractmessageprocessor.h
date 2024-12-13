@@ -5,7 +5,7 @@
 
 #include <QSharedPointer>
 
-#include "debugmessage.h"
+#include "logmessage.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
@@ -21,7 +21,7 @@ public:
 
     virtual Type processorType() const { return AbstractMessageProcessor::Processor; }
 
-    virtual bool process(DebugMessage &dmesg) = 0;
+    virtual bool process(LogMessage &logMsg) = 0;
 };
 
 using AbstractMessageProcessorPtr = QSharedPointer<AbstractMessageProcessor>;

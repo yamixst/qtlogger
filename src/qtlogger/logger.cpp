@@ -77,7 +77,7 @@ Logger *Logger::instance()
 QTLOGGER_DECL_SPEC
 Logger::Logger(QObject *parent) : QObject(parent)
 {
-    qRegisterMetaType<QtLogger::DebugMessage>("QtLogger::DebugMessage");
+    qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
 }
 
 QTLOGGER_DECL_SPEC
@@ -511,7 +511,7 @@ static QEvent::Type QtLoggerEventType()
 }
 
 QTLOGGER_DECL_SPEC
-Logger::LogEvent::LogEvent(const DebugMessage &dmesg) : QEvent(QtLoggerEventType()), dmesg(dmesg) { }
+Logger::LogEvent::LogEvent(const LogMessage &logMsg) : QEvent(QtLoggerEventType()), logMsg(logMsg) { }
 
 QTLOGGER_DECL_SPEC
 void Logger::customEvent(QEvent *event)
@@ -519,7 +519,7 @@ void Logger::customEvent(QEvent *event)
     if (event->type() == QtLoggerEventType()) {
         auto ev = dynamic_cast<LogEvent *>(event);
         if (ev) {
-            m_handler->process(ev->dmesg);
+            m_handler->process(ev->logMsg);
         }
     }
 }
@@ -527,32 +527,32 @@ void Logger::customEvent(QEvent *event)
 #endif
 
 QTLOGGER_DECL_SPEC
-void Logger::processMessage(DebugMessage &dmesg)
+void Logger::processMessage(LogMessage &logMsg)
 {
-    m_handler->process(dmesg);
+    m_handler->process(logMsg);
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::processMessage(const DebugMessage &dmesg)
+void Logger::processMessage(const LogMessage &logMsg)
 {
-    DebugMessage __dmesg(dmesg);
-    processMessage(__dmesg);
+    LogMessage __logMsg(logMsg);
+    processMessage(__logMsg);
 }
 
 QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
-    DebugMessage dmesg(type, context, message);
+    LogMessage logMsg(type, context, message);
 
 #ifndef QTLOGGER_NO_THREAD
     if (!ownThreadIsRunning()) {
-        processMessage(dmesg);
+        processMessage(logMsg);
     } else {
-        QCoreApplication::postEvent(this, new LogEvent(dmesg));
+        QCoreApplication::postEvent(this, new LogEvent(logMsg));
     }
 #else
-    processMessage(dmesg);
+    processMessage(logMsg);
 #endif
 }
 
