@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
-#include "messagehandler.h"
+#include "pipelinehandler.h"
 
 #include "abstractmessagesink.h"
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-MessageHandler::MessageHandler() { }
+PipelineHandler::PipelineHandler() { }
 
 QTLOGGER_DECL_SPEC
-MessageHandler::MessageHandler(std::initializer_list<AbstractMessageProcessorPtr> processors)
+PipelineHandler::PipelineHandler(std::initializer_list<AbstractMessageProcessorPtr> processors)
     : m_processors(processors)
 {
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::append(const AbstractMessageProcessorPtr &processor)
+void PipelineHandler::append(const AbstractMessageProcessorPtr &processor)
 {
     if (processor.isNull())
         return;
@@ -26,13 +26,13 @@ void MessageHandler::append(const AbstractMessageProcessorPtr &processor)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::append(std::initializer_list<AbstractMessageProcessorPtr> processors)
+void PipelineHandler::append(std::initializer_list<AbstractMessageProcessorPtr> processors)
 {
     m_processors.append(processors);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::insertAfter(Type type, const AbstractMessageProcessorPtr &processor)
+void PipelineHandler::insertAfter(Type type, const AbstractMessageProcessorPtr &processor)
 {
     auto first = std::find_if(
             m_processors.begin(), m_processors.end(),
@@ -52,7 +52,7 @@ void MessageHandler::insertAfter(Type type, const AbstractMessageProcessorPtr &p
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::insertAfter(Type type, Type typeRight,
+void PipelineHandler::insertAfter(Type type, Type typeRight,
                                  const AbstractMessageProcessorPtr &processor)
 {
     auto first = std::find_if(
@@ -83,7 +83,7 @@ void MessageHandler::insertAfter(Type type, Type typeRight,
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::remove(const AbstractMessageProcessorPtr &processor)
+void PipelineHandler::remove(const AbstractMessageProcessorPtr &processor)
 {
     if (processor.isNull())
         return;
@@ -92,13 +92,13 @@ void MessageHandler::remove(const AbstractMessageProcessorPtr &processor)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clear()
+void PipelineHandler::clear()
 {
     m_processors.clear();
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clear(Type type)
+void PipelineHandler::clear(Type type)
 {
     QMutableListIterator<AbstractMessageProcessorPtr> iter(m_processors);
 
@@ -110,7 +110,7 @@ void MessageHandler::clear(Type type)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::appendFilter(const AbstractMessageFilterPtr &filter)
+void PipelineHandler::appendFilter(const AbstractMessageFilterPtr &filter)
 {
     if (filter.isNull())
         return;
@@ -124,7 +124,7 @@ void MessageHandler::appendFilter(const AbstractMessageFilterPtr &filter)
 
 QTLOGGER_DECL_SPEC
 FunctionFilterPtr
-MessageHandler::appendFilter(const std::function<bool(const LogMessage &)> &function)
+PipelineHandler::appendFilter(const std::function<bool(const LogMessage &)> &function)
 {
     const auto f = FunctionFilterPtr::create(function);
 
@@ -134,7 +134,7 @@ MessageHandler::appendFilter(const std::function<bool(const LogMessage &)> &func
 }
 
 QTLOGGER_DECL_SPEC
-RegExpFilterPtr MessageHandler::appendFilter(const QRegularExpression &regExp)
+RegExpFilterPtr PipelineHandler::appendFilter(const QRegularExpression &regExp)
 {
     const auto f = RegExpFilterPtr::create(regExp);
 
@@ -144,13 +144,13 @@ RegExpFilterPtr MessageHandler::appendFilter(const QRegularExpression &regExp)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clearFilters()
+void PipelineHandler::clearFilters()
 {
     clear(Filter);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
+void PipelineHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
 {
     if (formatter.isNull())
         return;
@@ -165,7 +165,7 @@ void MessageHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
 }
 
 QTLOGGER_DECL_SPEC
-FunctionFormatterPtr MessageHandler::setFormatter(const FunctionFormatter::Function &function)
+FunctionFormatterPtr PipelineHandler::setFormatter(const FunctionFormatter::Function &function)
 {
     const auto f = FunctionFormatterPtr::create(function);
 
@@ -175,7 +175,7 @@ FunctionFormatterPtr MessageHandler::setFormatter(const FunctionFormatter::Funct
 }
 
 QTLOGGER_DECL_SPEC
-PatternFormatterPtr MessageHandler::setFormatter(const QString &pattern)
+PatternFormatterPtr PipelineHandler::setFormatter(const QString &pattern)
 {
     const auto f = PatternFormatterPtr::create(pattern);
 
@@ -185,44 +185,44 @@ PatternFormatterPtr MessageHandler::setFormatter(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clearFormatters()
+void PipelineHandler::clearFormatters()
 {
     clear(AbstractMessageProcessor::Formatter);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::appendSink(const AbstractMessageSinkPtr &sink)
+void PipelineHandler::appendSink(const AbstractMessageSinkPtr &sink)
 {
     append(sink);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clearSinks()
+void PipelineHandler::clearSinks()
 {
     clear(AbstractMessageProcessor::Sink);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::appendHandler(const MessageHandlerPtr &handler)
+void PipelineHandler::appendHandler(const PipelineHandlerPtr &handler)
 {
     append(handler);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clearHandlers()
+void PipelineHandler::clearHandlers()
 {
     clear(AbstractMessageProcessor::Handler);
 }
 
 QTLOGGER_DECL_SPEC
-MessageHandler &MessageHandler::operator<<(const AbstractMessageProcessorPtr &processor)
+PipelineHandler &PipelineHandler::operator<<(const AbstractMessageProcessorPtr &processor)
 {
     append(processor);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-bool MessageHandler::process(LogMessage &logMsg)
+bool PipelineHandler::process(LogMessage &logMsg)
 {
     for (auto &processor : m_processors) {
         if (!processor)
@@ -235,7 +235,7 @@ bool MessageHandler::process(LogMessage &logMsg)
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::flush()
+void PipelineHandler::flush()
 {
     for (auto &processor : m_processors) {
         switch (processor->processorType()) {
@@ -246,7 +246,7 @@ void MessageHandler::flush()
             break;
         }
         case AbstractMessageProcessor::Handler: {
-            auto handler = processor.dynamicCast<MessageHandler>();
+            auto handler = processor.dynamicCast<PipelineHandler>();
             if (handler)
                 handler->flush();
             break;

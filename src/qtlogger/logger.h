@@ -19,7 +19,7 @@
 #include "abstractmessageprocessor.h"
 #include "abstractmessagesink.h"
 #include "logger_global.h"
-#include "messagehandler.h"
+#include "pipelinehandler.h"
 
 #define gQtLogger QtLogger::Logger::instance()
 
@@ -88,7 +88,7 @@ public:
     void appendHttpSink(const QString &url, int format);
     void clearSinks();
 
-    void appendHandler(const MessageHandlerPtr &handler);
+    void appendHandler(const PipelineHandlerPtr &handler);
     void clearHandlers();
 
     Logger &operator<<(const AbstractMessageProcessorPtr &processor);
@@ -155,7 +155,7 @@ private:
     void processMessage(LogMessage &logMsg);
 
 private:
-    MessageHandlerPtr m_handler = MessageHandlerPtr::create();
+    PipelineHandlerPtr m_handler = PipelineHandlerPtr::create();
 
 #ifndef QTLOGGER_NO_THREAD
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -172,9 +172,9 @@ inline Logger &operator<<(Logger *logger, const AbstractMessageProcessorPtr &pro
     return *logger << processor;
 }
 
-inline Logger& operator<<(Logger* logger, const MessageHandler& handler)
+inline Logger& operator<<(Logger* logger, const PipelineHandler& handler)
 {
-    return *logger << MessageHandlerPtr::create(handler);
+    return *logger << PipelineHandlerPtr::create(handler);
 }
 
 } // namespace QtLogger
