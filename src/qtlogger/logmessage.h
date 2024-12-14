@@ -35,7 +35,7 @@ public:
           m_time(logMsg.m_time),
           m_threadId(logMsg.m_threadId),
           m_formattedMessage(logMsg.m_formattedMessage),
-          m_metadata(logMsg.m_metadata)
+          m_attributes(logMsg.m_attributes)
     {
     }
 
@@ -55,9 +55,9 @@ public:
     void setFormattedMessage(const QString &formattedMessage);
     bool isFormatted() const;
 
-    QVariant metadata(const QByteArray &name) const;
-    void setMetadata(const QByteArray &name, const QVariant &value);
-    bool hasMetadata(const QByteArray &name) const;
+    QVariant attribute(const QByteArray &name) const;
+    void setAttribute(const QByteArray &name, const QVariant &value);
+    bool hasAttribute(const QByteArray &name) const;
 
 private:
     // context buffers
@@ -73,7 +73,7 @@ private:
     const Qt::HANDLE m_threadId = QThread::currentThreadId();
 
     QString m_formattedMessage;
-    QHash<QByteArray, QVariant> m_metadata;
+    QHash<QByteArray, QVariant> m_attributes;
 };
 
 inline QtMsgType LogMessage::type() const
@@ -126,19 +126,19 @@ inline bool LogMessage::isFormatted() const
     return !m_formattedMessage.isNull();
 }
 
-inline QVariant LogMessage::metadata(const QByteArray &name) const
+inline QVariant LogMessage::attribute(const QByteArray &name) const
 {
-    return m_metadata.value(name);
+    return m_attributes.value(name);
 }
 
-inline void LogMessage::setMetadata(const QByteArray &name, const QVariant &value)
+inline void LogMessage::setAttribute(const QByteArray &name, const QVariant &value)
 {
-    m_metadata.insert(name, value);
+    m_attributes.insert(name, value);
 }
 
-inline bool LogMessage::hasMetadata(const QByteArray &name) const
+inline bool LogMessage::hasAttribute(const QByteArray &name) const
 {
-    return m_metadata.contains(name);
+    return m_attributes.contains(name);
 }
 
 } // namespace QtLogger
