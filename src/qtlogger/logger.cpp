@@ -216,7 +216,7 @@ void Logger::clearSinks()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::appendHandler(const MessageHandlerPtr &handler)
+void Logger::appendHandler(const PipelineHandlerPtr &handler)
 {
     m_handler->appendHandler(handler);
 }
@@ -241,7 +241,7 @@ void Logger::configure(std::initializer_list<AbstractMessageProcessorPtr> proces
     QMutexLocker locker(&m_mutex);
 #endif
 
-    m_handler = MessageHandlerPtr::create(processors);
+    m_handler = PipelineHandlerPtr::create(processors);
 
 #ifndef QTLOGGER_NO_THREAD
     if (async) {
