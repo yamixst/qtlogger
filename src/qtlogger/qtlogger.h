@@ -1,6 +1,6 @@
 #include "abstractmessagefilter.h"
 #include "abstractmessageformatter.h"
-#include "abstractmessageprocessor.h"
+#include "messagehandler.h"
 #include "abstractmessagesink.h"
 #include "logmessage.h"
 #include "filters/functionfilter.h"
@@ -27,7 +27,7 @@
 
 using QtLoggerAbstractMessageFilter = QtLogger::AbstractMessageFilter;
 using QtLoggerAbstractMessageFormatter = QtLogger::AbstractMessageFormatter;
-using QtLoggerAbstractMessageProcessor = QtLogger::AbstractMessageProcessor;
+using QtLoggerMessageHandler = QtLogger::MessageHandler;
 using QtLoggerAbstractMessageSink = QtLogger::AbstractMessageSink;
 using QtLoggerLogMessage = QtLogger::LogMessage;
 using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
@@ -51,7 +51,7 @@ using QtLoggerStdOutSink = QtLogger::StdOutSink;
 
 using QtLoggerAbstractMessageFilterPtr = QtLogger::AbstractMessageFilterPtr;
 using QtLoggerAbstractMessageFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
-using QtLoggerAbstractMessageProcessorPtr = QtLogger::AbstractMessageProcessorPtr;
+using QtLoggerMessageHandlerPtr = QtLogger::MessageHandlerPtr;
 using QtLoggerAbstractMessageSinkPtr = QtLogger::AbstractMessageSinkPtr;
 using QtLoggerDefaultFormatterPtr = QtLogger::DefaultFormatterPtr;
 using QtLoggerFileSinkPtr = QtLogger::FileSinkPtr;
@@ -73,15 +73,15 @@ using QtLoggerStdOutSinkPtr = QtLogger::StdOutSinkPtr;
 
 using QtLoggerFilter = QtLogger::AbstractMessageFilter;
 using QtLoggerFormatter = QtLogger::AbstractMessageFormatter;
-using QtLoggerProcessor = QtLogger::AbstractMessageProcessor;
+using QtLoggerHandler = QtLogger::MessageHandler;
 using QtLoggerSink = QtLogger::AbstractMessageSink;
-using QtLoggerHandler = QtLogger::PipelineHandler;
+using QtLoggerPipeline = QtLogger::PipelineHandler;
 
 using QtLoggerFilterPtr = QtLogger::AbstractMessageFilterPtr;
 using QtLoggerFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
-using QtLoggerProcessorPtr = QtLogger::AbstractMessageProcessorPtr;
+using QtLoggerHandlerPtr = QtLogger::MessageHandlerPtr;
 using QtLoggerSinkPtr = QtLogger::AbstractMessageSinkPtr;
-using QtLoggerHandlerPtr = QtLogger::PipelineHandlerPtr;
+using QtLoggerPipelinePtr = QtLogger::PipelineHandlerPtr;
 
 #ifdef QTLOGGER_NETWORK
 #include "sinks/httpsink.h"

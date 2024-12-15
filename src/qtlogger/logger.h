@@ -16,7 +16,7 @@
 
 #include "abstractmessagefilter.h"
 #include "abstractmessageformatter.h"
-#include "abstractmessageprocessor.h"
+#include "messagehandler.h"
 #include "abstractmessagesink.h"
 #include "logger_global.h"
 #include "pipelinehandler.h"
@@ -69,9 +69,9 @@ public:
     */
     static void setMessagePattern(const QString &pattern);
 
-    void append(const AbstractMessageProcessorPtr &processor);
-    void append(std::initializer_list<AbstractMessageProcessorPtr> processors);
-    void remove(const AbstractMessageProcessorPtr &processor);
+    void append(const MessageHandlerPtr &handler);
+    void append(std::initializer_list<MessageHandlerPtr> handlers);
+    void remove(const MessageHandlerPtr &handler);
     void clear();
 
     void appendFilter(const AbstractMessageFilterPtr &filter);
@@ -88,12 +88,12 @@ public:
     void appendHttpSink(const QString &url, int format);
     void clearSinks();
 
-    void appendHandler(const PipelineHandlerPtr &handler);
+    void appendHandler(const PipelineHandlerPtr &pipeline);
     void clearHandlers();
 
-    Logger &operator<<(const AbstractMessageProcessorPtr &processor);
+    Logger &operator<<(const MessageHandlerPtr &handler);
 
-    void configure(std::initializer_list<AbstractMessageProcessorPtr> processors,
+    void configure(std::initializer_list<MessageHandlerPtr> handlers,
                    bool async = false);
     void configure(const SinkType &types = StdLog, const QString &path = {}, int maxFileSize = 0,
                    int maxFileCount = 0, bool async = false);
@@ -167,14 +167,14 @@ private:
 #endif
 };
 
-inline Logger &operator<<(Logger *logger, const AbstractMessageProcessorPtr &processor)
+inline Logger &operator<<(Logger *logger, const MessageHandlerPtr &handler)
 {
-    return *logger << processor;
+    return *logger << handler;
 }
 
-inline Logger& operator<<(Logger* logger, const PipelineHandler& handler)
+inline Logger& operator<<(Logger* logger, const PipelineHandler& pipeline)
 {
-    return *logger << PipelineHandlerPtr::create(handler);
+    return *logger << PipelineHandlerPtr::create(pipeline);
 }
 
 } // namespace QtLogger

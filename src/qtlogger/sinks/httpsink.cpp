@@ -33,7 +33,7 @@ HttpSink::HttpSink(const QUrl &url, Format format) : m_url(url)
 
     switch (format) {
     case None:
-        setPreprocessor(AbstractMessageProcessorPtr());
+        setPreprocessor(MessageHandlerPtr());
         break;
     case Raw:
         setPreprocessor(NullFormatter::instance());

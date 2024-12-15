@@ -5,21 +5,21 @@
 
 #include <QSharedPointer>
 
-#include "abstractmessageprocessor.h"
+#include "messagehandler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFilter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT AbstractMessageFilter : public MessageHandler
 {
 public:
     virtual ~AbstractMessageFilter() = default;
 
     virtual bool filter(const LogMessage &logMsg) const = 0;
 
-    Type processorType() const override { return AbstractMessageProcessor::Filter; }
+    Type type() const override { return MessageHandler::Filter; }
 
     bool process(LogMessage &logMsg) override final { return filter(logMsg); }
 };

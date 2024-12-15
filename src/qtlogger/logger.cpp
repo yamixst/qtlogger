@@ -124,21 +124,21 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::append(const AbstractMessageProcessorPtr &processor)
+void Logger::append(const MessageHandlerPtr &handler)
 {
-    m_handler->append(processor);
+    m_handler->append(handler);
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::append(std::initializer_list<AbstractMessageProcessorPtr> processors)
+void Logger::append(std::initializer_list<MessageHandlerPtr> handlers)
 {
-    m_handler->append(processors);
+    m_handler->append(handlers);
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::remove(const AbstractMessageProcessorPtr &processor)
+void Logger::remove(const MessageHandlerPtr &handler)
 {
-    m_handler->remove(processor);
+    m_handler->remove(handler);
 }
 
 QTLOGGER_DECL_SPEC
@@ -216,9 +216,9 @@ void Logger::clearSinks()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::appendHandler(const PipelineHandlerPtr &handler)
+void Logger::appendHandler(const PipelineHandlerPtr &pipeline)
 {
-    m_handler->appendHandler(handler);
+    m_handler->appendHandler(pipeline);
 }
 
 QTLOGGER_DECL_SPEC
@@ -228,20 +228,20 @@ void Logger::clearHandlers()
 }
 
 QTLOGGER_DECL_SPEC
-Logger &Logger::operator<<(const AbstractMessageProcessorPtr &processor)
+Logger &Logger::operator<<(const MessageHandlerPtr &handler)
 {
-    append(processor);
+    append(handler);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(std::initializer_list<AbstractMessageProcessorPtr> processors, bool async)
+void Logger::configure(std::initializer_list<MessageHandlerPtr> handlers, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
     QMutexLocker locker(&m_mutex);
 #endif
 
-    m_handler = PipelineHandlerPtr::create(processors);
+    m_handler = PipelineHandlerPtr::create(handlers);
 
 #ifndef QTLOGGER_NO_THREAD
     if (async) {
