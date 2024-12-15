@@ -17,11 +17,11 @@ class QTLOGGER_EXPORT AbstractMessageFilter : public AbstractMessageProcessor
 public:
     virtual ~AbstractMessageFilter() = default;
 
-    virtual bool filter(const DebugMessage &dmesg) const = 0;
+    virtual bool filter(const LogMessage &logMsg) const = 0;
 
     Type processorType() const override { return AbstractMessageProcessor::Filter; }
 
-    bool process(DebugMessage &dmesg) override final { return filter(dmesg); }
+    bool process(LogMessage &logMsg) override final { return filter(logMsg); }
 };
 
 using AbstractMessageFilterPtr = QSharedPointer<AbstractMessageFilter>;

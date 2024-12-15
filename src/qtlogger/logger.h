@@ -75,12 +75,12 @@ public:
     void clear();
 
     void appendFilter(const AbstractMessageFilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const DebugMessage &)> &function);
+    FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
     RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();
 
     void setFormatter(const AbstractMessageFormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const DebugMessage &)> &function);
+    FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
     PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();
 
@@ -133,9 +133,9 @@ public:
 protected:
     struct LogEvent : public QEvent
     {
-        DebugMessage dmesg;
+        LogMessage logMsg;
 
-        LogEvent(const DebugMessage &dmesg);
+        LogEvent(const LogMessage &logMsg);
     };
 
     void customEvent(QEvent *event) override;
@@ -149,10 +149,10 @@ public:
                                const QString &message);
 
     void processMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
-    void processMessage(const DebugMessage &dmesg);
+    void processMessage(const LogMessage &logMsg);
 
 private:
-    void processMessage(DebugMessage &dmesg);
+    void processMessage(LogMessage &logMsg);
 
 private:
     MessageHandlerPtr m_handler = MessageHandlerPtr::create();

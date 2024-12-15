@@ -14,9 +14,9 @@ SignalSink::SignalSink(QObject *parent) : QObject(parent)
 }
 
 QTLOGGER_DECL_SPEC
-void SignalSink::send(const DebugMessage &dmesg)
+void SignalSink::send(const LogMessage &logMsg)
 {
-    Q_EMIT message(dmesg);
+    Q_EMIT message(logMsg);
 }
 
 } // namespace QtLogger

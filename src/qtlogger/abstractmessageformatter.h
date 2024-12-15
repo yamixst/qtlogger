@@ -17,13 +17,13 @@ class QTLOGGER_EXPORT AbstractMessageFormatter : public AbstractMessageProcessor
 public:
     virtual ~AbstractMessageFormatter() = default;
 
-    virtual QString format(const DebugMessage &dmesg) const = 0;
+    virtual QString format(const LogMessage &logMsg) const = 0;
 
     Type processorType() const override { return AbstractMessageProcessor::Formatter; }
 
-    bool process(DebugMessage &dmesg) override final
+    bool process(LogMessage &logMsg) override final
     {
-        dmesg.setFormattedMessage(format(dmesg));
+        logMsg.setFormattedMessage(format(logMsg));
         return true;
     }
 };

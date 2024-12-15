@@ -17,7 +17,7 @@ class QTLOGGER_EXPORT JournalSink : public AbstractMessageSink
 public:
     JournalSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using JournalSinkPtr = QSharedPointer<JournalSink>;

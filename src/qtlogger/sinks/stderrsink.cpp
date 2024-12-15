@@ -16,9 +16,9 @@ StdErrSink::StdErrSink()
 }
 
 QTLOGGER_DECL_SPEC
-void StdErrSink::send(const DebugMessage &dmesg)
+void StdErrSink::send(const LogMessage &logMsg)
 {
-    std::cerr << qPrintable(dmesg.formattedMessage()) << std::endl;
+    std::cerr << qPrintable(logMsg.formattedMessage()) << std::endl;
 }
 
 } // namespace QtLogger

@@ -66,7 +66,6 @@ HEADERS += \
     $$PWD/abstractmessageformatter.h \
     $$PWD/abstractmessageprocessor.h \
     $$PWD/abstractmessagesink.h \
-    $$PWD/debugmessage.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
     $$PWD/formatters/defaultformatter.h \
@@ -78,6 +77,7 @@ HEADERS += \
     $$PWD/formatters/qtlogmessageformatter.h \
     $$PWD/logger.h \
     $$PWD/logger_global.h \
+    $$PWD/logmessage.h \
     $$PWD/messagehandler.h \
     $$PWD/messagepatterns.h \
     $$PWD/setmessagepattern.h \

@@ -11,13 +11,13 @@ QTLOGGER_DECL_SPEC
 PatternFormatter::PatternFormatter(const QString &pattern) : m_pattern(pattern) { }
 
 QTLOGGER_DECL_SPEC
-QString PatternFormatter::format(const DebugMessage &dmesg) const
+QString PatternFormatter::format(const LogMessage &logMsg) const
 {
     // TODO: write own formatter
 
     QtLogger::setMessagePattern(m_pattern);
 
-    auto result = qFormatLogMessage(dmesg.type(), dmesg.context(), dmesg.message());
+    auto result = qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
 
     QtLogger::restorePreviousMessagePattern();
 

@@ -15,11 +15,11 @@ namespace QtLogger {
 class QTLOGGER_EXPORT FunctionFormatter : public AbstractMessageFormatter
 {
 public:
-    using Function = std::function<QString(const DebugMessage &)>;
+    using Function = std::function<QString(const LogMessage &)>;
 
     FunctionFormatter(const Function &func) : m_func(func) { }
 
-    QString format(const DebugMessage &dmesg) const override { return m_func(dmesg); }
+    QString format(const LogMessage &logMsg) const override { return m_func(logMsg); }
 
 private:
     Function m_func;

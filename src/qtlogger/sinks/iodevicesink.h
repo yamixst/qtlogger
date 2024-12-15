@@ -18,7 +18,7 @@ class QTLOGGER_EXPORT IODeviceSink : public AbstractMessageSink
 public:
     explicit IODeviceSink(const QIODevicePtr &device);
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
 protected:
     const QIODevicePtr &device() const;

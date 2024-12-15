@@ -24,7 +24,7 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    bool process(DebugMessage &dmesg) override final;
+    bool process(LogMessage &logMsg) override final;
 
     inline bool showThread() const { return m_showThread; }
     inline void setShowThread(bool newShowThread) { m_showThread = newShowThread; }

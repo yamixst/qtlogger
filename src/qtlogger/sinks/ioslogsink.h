@@ -17,7 +17,7 @@ class QTLOGGER_EXPORT IosLogSink : public AbstractMessageSink
 public:
     IosLogSink();
 
-    void send(const DebugMessage &dmesg);
+    void send(const LogMessage &logMsg);
 };
 
 using IosLogSinkPtr = QSharedPointer<IosLogSink>;

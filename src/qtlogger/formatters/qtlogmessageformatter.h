@@ -21,9 +21,9 @@ public:
         return s_instance;
     }
 
-    QString format(const DebugMessage &dmesg) const override
+    QString format(const LogMessage &logMsg) const override
     {
-        return qFormatLogMessage(dmesg.type(), dmesg.context(), dmesg.message());
+        return qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
     }
 
 private:

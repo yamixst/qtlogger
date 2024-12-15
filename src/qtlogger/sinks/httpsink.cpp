@@ -66,7 +66,7 @@ HttpSink::~HttpSink()
 }
 
 QTLOGGER_DECL_SPEC
-void HttpSink::send(const DebugMessage &dmesg)
+void HttpSink::send(const LogMessage &logMsg)
 {
     if (!Logger::instance()->ownThreadIsRunning()) {
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
@@ -74,7 +74,7 @@ void HttpSink::send(const DebugMessage &dmesg)
         m_manager = new QNetworkAccessManager;
     }
 
-    auto reply = m_manager->post(m_request, dmesg.formattedMessage().toUtf8());
+    auto reply = m_manager->post(m_request, logMsg.formattedMessage().toUtf8());
 
     QObject::connect(reply, &QNetworkReply::finished, reply, &QObject::deleteLater);
 

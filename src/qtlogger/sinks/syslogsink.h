@@ -22,7 +22,7 @@ public:
                         int facility = QTLOGGER_SYSLOG_LOG_USER);
     ~SysLogSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using SysLogSinkPtr = QSharedPointer<SysLogSink>;

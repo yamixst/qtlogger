@@ -12,30 +12,30 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT DebugMessage
+class QTLOGGER_EXPORT LogMessage
 {
 public:
-    constexpr DebugMessage() noexcept = default;
+    constexpr LogMessage() noexcept = default;
 
-    DebugMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
+    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
         : m_type(type),
           m_context(context.file, context.line, context.function, context.category),
           m_message(message)
     {
     }
 
-    DebugMessage(const DebugMessage &dmesg) noexcept
-        : m_file(dmesg.m_context.file),
-          m_function(dmesg.m_context.function),
-          m_category(dmesg.m_context.category),
-          m_type(dmesg.m_type),
-          m_context(m_file.constData(), dmesg.m_context.line, m_function.constData(),
+    LogMessage(const LogMessage &logMsg) noexcept
+        : m_file(logMsg.m_context.file),
+          m_function(logMsg.m_context.function),
+          m_category(logMsg.m_context.category),
+          m_type(logMsg.m_type),
+          m_context(m_file.constData(), logMsg.m_context.line, m_function.constData(),
                     m_category.constData()),
-          m_message(dmesg.m_message),
-          m_time(dmesg.m_time),
-          m_threadId(dmesg.m_threadId),
-          m_formattedMessage(dmesg.m_formattedMessage),
-          m_metadata(dmesg.m_metadata)
+          m_message(logMsg.m_message),
+          m_time(logMsg.m_time),
+          m_threadId(logMsg.m_threadId),
+          m_formattedMessage(logMsg.m_formattedMessage),
+          m_metadata(logMsg.m_metadata)
     {
     }
 
@@ -76,67 +76,67 @@ private:
     QHash<QByteArray, QVariant> m_metadata;
 };
 
-inline QtMsgType DebugMessage::type() const
+inline QtMsgType LogMessage::type() const
 {
     return m_type;
 }
 
-inline const QMessageLogContext &DebugMessage::context() const
+inline const QMessageLogContext &LogMessage::context() const
 {
     return m_context;
 }
 
-inline QString DebugMessage::message() const
+inline QString LogMessage::message() const
 {
     return m_message;
 }
 
-inline int DebugMessage::line() const
+inline int LogMessage::line() const
 {
     return m_context.line;
 }
 
-inline const char *DebugMessage::file() const
+inline const char *LogMessage::file() const
 {
     return m_context.file;
 }
 
-inline const char *DebugMessage::function() const
+inline const char *LogMessage::function() const
 {
     return m_context.function;
 }
 
-inline const char *DebugMessage::category() const
+inline const char *LogMessage::category() const
 {
     return m_context.category;
 }
 
-inline QString DebugMessage::formattedMessage() const
+inline QString LogMessage::formattedMessage() const
 {
     return isFormatted() ? m_formattedMessage : m_message;
 }
 
-inline void DebugMessage::setFormattedMessage(const QString &formattedMessage)
+inline void LogMessage::setFormattedMessage(const QString &formattedMessage)
 {
     m_formattedMessage = formattedMessage;
 }
 
-inline bool DebugMessage::isFormatted() const
+inline bool LogMessage::isFormatted() const
 {
     return !m_formattedMessage.isNull();
 }
 
-inline QVariant DebugMessage::metadata(const QByteArray &name) const
+inline QVariant LogMessage::metadata(const QByteArray &name) const
 {
     return m_metadata.value(name);
 }
 
-inline void DebugMessage::setMetadata(const QByteArray &name, const QVariant &value)
+inline void LogMessage::setMetadata(const QByteArray &name, const QVariant &value)
 {
     m_metadata.insert(name, value);
 }
 
-inline bool DebugMessage::hasMetadata(const QByteArray &name) const
+inline bool LogMessage::hasMetadata(const QByteArray &name) const
 {
     return m_metadata.contains(name);
 }

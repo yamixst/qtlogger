@@ -40,12 +40,12 @@ public:
     void clear(Type type);
 
     void appendFilter(const AbstractMessageFilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const DebugMessage &)> &function);
+    FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
     RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();
 
     void setFormatter(const AbstractMessageFormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const DebugMessage &)> &function);
+    FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
     PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();
 
@@ -57,7 +57,7 @@ public:
 
     MessageHandler &operator<<(const AbstractMessageProcessorPtr &processor);
 
-    bool process(DebugMessage &dmesg) override;
+    bool process(LogMessage &logMsg) override;
 
     void flush();
 

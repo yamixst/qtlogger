@@ -16,9 +16,9 @@ StdOutSink::StdOutSink()
 }
 
 QTLOGGER_DECL_SPEC
-void StdOutSink::send(const DebugMessage &dmesg)
+void StdOutSink::send(const LogMessage &logMsg)
 {
-    std::cout << qPrintable(dmesg.formattedMessage()) << std::endl;
+    std::cout << qPrintable(logMsg.formattedMessage()) << std::endl;
 }
 
 } // namespace QtLogger
