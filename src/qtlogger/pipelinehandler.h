@@ -28,16 +28,16 @@ public:
     PipelineHandler();
     PipelineHandler(std::initializer_list<MessageHandlerPtr> handlers);
 
-    Type type() const override { return MessageHandler::PipelineType; }
+    HandlerType type() const override { return HandlerType::Pipeline; }
 
     void append(const MessageHandlerPtr &handler);
     void append(std::initializer_list<MessageHandlerPtr> handlers);
-    void insertAfter(Type type, const MessageHandlerPtr &handler);
-    void insertAfter(Type type, Type typeRight, const MessageHandlerPtr &handler);
+    void insertAfter(HandlerType type, const MessageHandlerPtr &handler);
+    void insertAfter(HandlerType type, HandlerType typeRight, const MessageHandlerPtr &handler);
     void remove(const MessageHandlerPtr &handler);
     void clear();
 
-    void clear(Type type);
+    void clear(HandlerType type);
 
     void appendFilter(const FilterPtr &filter);
     FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
