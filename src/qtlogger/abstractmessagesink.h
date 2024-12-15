@@ -5,7 +5,7 @@
 
 #include <QSharedPointer>
 
-#include "abstractmessageprocessor.h"
+#include "messagehandler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
@@ -14,14 +14,14 @@ namespace QtLogger {
 
 using AbstractMessageSinkPtr = QSharedPointer<class AbstractMessageSink>;
 
-class QTLOGGER_EXPORT AbstractMessageSink : public AbstractMessageProcessor
+class QTLOGGER_EXPORT AbstractMessageSink : public MessageHandler
 {
 public:
     virtual void send(const LogMessage &logMsg) = 0;
 
     virtual bool flush() { return true; }
 
-    Type processorType() const override { return AbstractMessageProcessor::Sink; }
+    Type type() const override { return MessageHandler::Sink; }
 
     bool process(LogMessage &logMsg) override final
     {
@@ -37,9 +37,9 @@ public:
         return true;
     }
 
-    AbstractMessageProcessorPtr preprocessor() const { return m_preprocessor; }
+    MessageHandlerPtr preprocessor() const { return m_preprocessor; }
 
-    inline void setPreprocessor(const AbstractMessageProcessorPtr &preprocessor)
+    inline void setPreprocessor(const MessageHandlerPtr &preprocessor)
     {
         if (preprocessor.data() == this)
             return;
@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    AbstractMessageProcessorPtr m_preprocessor;
+    MessageHandlerPtr m_preprocessor;
 };
 
 } // namespace QtLogger
