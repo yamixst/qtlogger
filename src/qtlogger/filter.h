@@ -12,10 +12,10 @@ class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFilter : public MessageHandler
+class QTLOGGER_EXPORT Filter : public MessageHandler
 {
 public:
-    virtual ~AbstractMessageFilter() = default;
+    virtual ~Filter() = default;
 
     virtual bool filter(const LogMessage &logMsg) const = 0;
 
@@ -24,6 +24,6 @@ public:
     bool process(LogMessage &logMsg) override final { return filter(logMsg); }
 };
 
-using AbstractMessageFilterPtr = QSharedPointer<AbstractMessageFilter>;
+using FilterPtr = QSharedPointer<Filter>;
 
 } // namespace QtLogger

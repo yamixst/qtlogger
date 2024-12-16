@@ -6,12 +6,12 @@
 #include <QRegularExpression>
 #include <QSharedPointer>
 
-#include "../abstractmessagefilter.h"
+#include "../filter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT RegExpFilter : public AbstractMessageFilter
+class QTLOGGER_EXPORT RegExpFilter : public Filter
 {
 public:
     explicit RegExpFilter(const QRegularExpression &regExp);

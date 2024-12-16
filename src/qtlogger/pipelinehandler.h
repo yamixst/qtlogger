@@ -8,7 +8,7 @@
 
 #include <initializer_list>
 
-#include "abstractmessagefilter.h"
+#include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
 #include "abstractmessagesink.h"
@@ -39,7 +39,7 @@ public:
 
     void clear(Type type);
 
-    void appendFilter(const AbstractMessageFilterPtr &filter);
+    void appendFilter(const FilterPtr &filter);
     FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
     RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();

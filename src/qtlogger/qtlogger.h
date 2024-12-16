@@ -1,4 +1,4 @@
-#include "abstractmessagefilter.h"
+#include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
 #include "abstractmessagesink.h"
@@ -25,7 +25,7 @@
 #include "sinks/stdoutsink.h"
 #include "version.h"
 
-using QtLoggerAbstractMessageFilter = QtLogger::AbstractMessageFilter;
+using QtLoggerFilter = QtLogger::Filter;
 using QtLoggerAbstractMessageFormatter = QtLogger::AbstractMessageFormatter;
 using QtLoggerMessageHandler = QtLogger::MessageHandler;
 using QtLoggerAbstractMessageSink = QtLogger::AbstractMessageSink;
@@ -49,7 +49,7 @@ using QtLoggerStdErrSink = QtLogger::StdErrSink;
 using QtLoggerStdLogSink = QtLogger::StdLogSink;
 using QtLoggerStdOutSink = QtLogger::StdOutSink;
 
-using QtLoggerAbstractMessageFilterPtr = QtLogger::AbstractMessageFilterPtr;
+using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerAbstractMessageFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
 using QtLoggerMessageHandlerPtr = QtLogger::MessageHandlerPtr;
 using QtLoggerAbstractMessageSinkPtr = QtLogger::AbstractMessageSinkPtr;
@@ -71,13 +71,13 @@ using QtLoggerStdErrSinkPtr = QtLogger::StdErrSinkPtr;
 using QtLoggerStdLogSinkPtr = QtLogger::StdLogSinkPtr;
 using QtLoggerStdOutSinkPtr = QtLogger::StdOutSinkPtr;
 
-using QtLoggerFilter = QtLogger::AbstractMessageFilter;
+using QtLoggerFilter = QtLogger::Filter;
 using QtLoggerFormatter = QtLogger::AbstractMessageFormatter;
 using QtLoggerHandler = QtLogger::MessageHandler;
 using QtLoggerSink = QtLogger::AbstractMessageSink;
 using QtLoggerPipeline = QtLogger::PipelineHandler;
 
-using QtLoggerFilterPtr = QtLogger::AbstractMessageFilterPtr;
+using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
 using QtLoggerHandlerPtr = QtLogger::MessageHandlerPtr;
 using QtLoggerSinkPtr = QtLogger::AbstractMessageSinkPtr;
