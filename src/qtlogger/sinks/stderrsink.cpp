@@ -10,10 +10,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-StdErrSink::StdErrSink()
-{
-    setPreprocessor(DefaultFormatter::instance());
-}
+StdErrSink::StdErrSink() { }
 
 QTLOGGER_DECL_SPEC
 void StdErrSink::send(const LogMessage &logMsg)
