@@ -196,7 +196,7 @@ void Logger::clearFormatters()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::appendSink(const AbstractMessageSinkPtr &sink)
+void Logger::appendSink(const SinkPtr &sink)
 {
     m_handler->appendSink(sink);
 }

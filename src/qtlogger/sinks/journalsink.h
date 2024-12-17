@@ -12,7 +12,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT JournalSink : public AbstractMessageSink
+class QTLOGGER_EXPORT JournalSink : public Sink
 {
 public:
     JournalSink();

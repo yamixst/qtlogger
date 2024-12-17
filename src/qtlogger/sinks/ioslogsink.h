@@ -12,7 +12,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT IosLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT IosLogSink : public Sink
 {
 public:
     IosLogSink();

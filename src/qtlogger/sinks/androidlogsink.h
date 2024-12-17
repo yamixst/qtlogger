@@ -12,7 +12,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AndroidLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT AndroidLogSink : public Sink
 {
 public:
     AndroidLogSink();
