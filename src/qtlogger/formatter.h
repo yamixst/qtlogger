@@ -12,10 +12,10 @@ class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFormatter : public MessageHandler
+class QTLOGGER_EXPORT Formatter : public MessageHandler
 {
 public:
-    virtual ~AbstractMessageFormatter() = default;
+    virtual ~Formatter() = default;
 
     virtual QString format(const LogMessage &logMsg) const = 0;
 
@@ -28,6 +28,6 @@ public:
     }
 };
 
-using AbstractMessageFormatterPtr = QSharedPointer<AbstractMessageFormatter>;
+using FormatterPtr = QSharedPointer<Formatter>;
 
 } // namespace QtLogger

@@ -5,14 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessageformatter.h"
+#include "../formatter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using NullFormatterPtr = QSharedPointer<class NullFormatter>;
 
-class QTLOGGER_EXPORT NullFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT NullFormatter : public Formatter
 {
 public:
     static NullFormatterPtr instance()

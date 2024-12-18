@@ -5,14 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessageformatter.h"
+#include "../formatter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using PatternFormatterPtr = QSharedPointer<class PatternFormatter>;
 
-class QTLOGGER_EXPORT PatternFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT PatternFormatter : public Formatter
 {
 public:
     explicit PatternFormatter(const QString &pattern);
