@@ -162,7 +162,7 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
 
     clear();
 
-    DefaultFormatter::instance()->setFormatter(PrettyFormatter::instance());
+    setFormatter(PrettyFormatter::instance());
 
     if (types.testFlag(SinkType::StdOut)) {
         appendSink(StdOutSinkPtr::create());

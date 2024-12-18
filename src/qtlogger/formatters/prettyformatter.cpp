@@ -7,12 +7,12 @@ namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
 PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth)
-    : m_showThread(showThread), m_maxCategoryWidth(maxCategoryWidth)
+    : m_showThreadId(showThread), m_maxCategoryWidth(maxCategoryWidth)
 {
 }
 
 QTLOGGER_DECL_SPEC
-bool PrettyFormatter::process(LogMessage &logMsg)
+QString PrettyFormatter::format(const LogMessage &logMsg) const
 {
     static const QString msg_f { QStringLiteral("%1 %2 %3%4%5%6") };
     static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss.zzz") };
@@ -24,7 +24,7 @@ bool PrettyFormatter::process(LogMessage &logMsg)
     static const QString category_f { QStringLiteral("[%1] ") };
 
     QString thread;
-    if (m_showThread) {
+    if (m_showThreadId) {
         if (!m_threads.contains(logMsg.threadId())) {
             m_threads[logMsg.threadId()] = m_threadsIndex++;
         }
@@ -54,9 +54,7 @@ bool PrettyFormatter::process(LogMessage &logMsg)
     auto result = msg_f.arg(logMsg.time().toString(time_f), type_l.at(logMsg.type()), thread,
                             category, space, logMsg.message());
 
-    logMsg.setFormattedMessage(result);
-
-    return true;
+    return result;
 }
 
 } // namespace QtLogger
