@@ -148,7 +148,7 @@ void Logger::clear()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::appendFilter(const AbstractMessageFilterPtr &filter)
+void Logger::appendFilter(const FilterPtr &filter)
 {
     m_handler->appendFilter(filter);
 }

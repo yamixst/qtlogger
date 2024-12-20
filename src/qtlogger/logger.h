@@ -14,7 +14,7 @@
 #    include <QThread>
 #endif
 
-#include "abstractmessagefilter.h"
+#include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
 #include "abstractmessagesink.h"
@@ -74,7 +74,7 @@ public:
     void remove(const MessageHandlerPtr &handler);
     void clear();
 
-    void appendFilter(const AbstractMessageFilterPtr &filter);
+    void appendFilter(const FilterPtr &filter);
     FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
     RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();

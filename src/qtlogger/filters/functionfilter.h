@@ -7,12 +7,12 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessagefilter.h"
+#include "../filter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT FunctionFilter : public AbstractMessageFilter
+class QTLOGGER_EXPORT FunctionFilter : public Filter
 {
 public:
     using Function = std::function<bool(const LogMessage &)>;

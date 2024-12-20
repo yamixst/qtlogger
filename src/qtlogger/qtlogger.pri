@@ -62,9 +62,9 @@ SOURCES += \
     $$PWD/sinks/stdoutsink.cpp
 
 HEADERS += \
-    $$PWD/abstractmessagefilter.h \
     $$PWD/abstractmessageformatter.h \
     $$PWD/abstractmessagesink.h \
+    $$PWD/filter.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
     $$PWD/formatters/defaultformatter.h \
