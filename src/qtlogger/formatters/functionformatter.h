@@ -7,12 +7,12 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessageformatter.h"
+#include "../formatter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT FunctionFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT FunctionFormatter : public Formatter
 {
 public:
     using Function = std::function<QString(const LogMessage &)>;

@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 #include "filter.h"
-#include "abstractmessageformatter.h"
+#include "formatter.h"
 #include "messagehandler.h"
 #include "sink.h"
 #include "filters/functionfilter.h"
@@ -44,7 +44,7 @@ public:
     RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();
 
-    void setFormatter(const AbstractMessageFormatterPtr &formatter);
+    void setFormatter(const FormatterPtr &formatter);
     FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
     PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();

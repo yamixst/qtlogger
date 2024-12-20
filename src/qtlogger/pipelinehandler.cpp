@@ -150,7 +150,7 @@ void PipelineHandler::clearFilters()
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
+void PipelineHandler::setFormatter(const FormatterPtr &formatter)
 {
     if (formatter.isNull())
         return;
