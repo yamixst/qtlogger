@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <initializer_list>
+
 #include <QList>
 #include <QSharedPointer>
-
-#include <initializer_list>
 
 #include "handler.h"
 #include "logger_global.h"
@@ -18,7 +18,7 @@ using PipelinePtr = QSharedPointer<class Pipeline>;
 class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
-    Pipeline();
+    Pipeline() = default;
     Pipeline(std::initializer_list<HandlerPtr> handlers);
 
     HandlerType type() const override { return HandlerType::Pipeline; }

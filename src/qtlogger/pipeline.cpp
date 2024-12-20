@@ -3,18 +3,10 @@
 
 #include "pipeline.h"
 
-#include "sink.h"
-
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-Pipeline::Pipeline() { }
-
-QTLOGGER_DECL_SPEC
-Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers)
-    : m_handlers(handlers)
-{
-}
+Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers) : m_handlers(handlers) { }
 
 QTLOGGER_DECL_SPEC
 void Pipeline::append(const HandlerPtr &handler)
