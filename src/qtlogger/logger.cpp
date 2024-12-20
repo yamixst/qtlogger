@@ -124,110 +124,6 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::append(const MessageHandlerPtr &handler)
-{
-    m_handler->append(handler);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::append(std::initializer_list<MessageHandlerPtr> handlers)
-{
-    m_handler->append(handlers);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::remove(const MessageHandlerPtr &handler)
-{
-    m_handler->remove(handler);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clear()
-{
-    m_handler->clear();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendFilter(const FilterPtr &filter)
-{
-    m_handler->appendFilter(filter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFilterPtr Logger::appendFilter(const FunctionFilter::Function &function)
-{
-    return m_handler->appendFilter(function);
-}
-
-QTLOGGER_DECL_SPEC
-RegExpFilterPtr Logger::appendFilter(const QRegularExpression &regExp)
-{
-    return m_handler->appendFilter(regExp);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearFilters()
-{
-    m_handler->clearFilters();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::setFormatter(const FormatterPtr &formatter)
-{
-    m_handler->setFormatter(formatter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFormatterPtr Logger::setFormatter(const FunctionFormatter::Function &function)
-{
-    return m_handler->setFormatter(function);
-}
-
-QTLOGGER_DECL_SPEC
-PatternFormatterPtr Logger::setFormatter(const QString &pattern)
-{
-    return m_handler->setFormatter(pattern);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearFormatters()
-{
-    m_handler->clearFormatters();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendSink(const SinkPtr &sink)
-{
-    m_handler->appendSink(sink);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendHttpSink(const QString &url, int format)
-{
-#ifdef QTLOGGER_NETWORK
-    appendSink(HttpSinkPtr::create(QUrl(url), static_cast<HttpSink::Format>(format)));
-#endif
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearSinks()
-{
-    m_handler->clearSinks();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendHandler(const PipelineHandlerPtr &pipeline)
-{
-    m_handler->appendHandler(pipeline);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearHandlers()
-{
-    m_handler->clearHandlers();
-}
-
-QTLOGGER_DECL_SPEC
 Logger &Logger::operator<<(const MessageHandlerPtr &handler)
 {
     append(handler);
@@ -241,7 +137,11 @@ void Logger::configure(std::initializer_list<MessageHandlerPtr> handlers, bool a
     QMutexLocker locker(&m_mutex);
 #endif
 
-    m_handler = PipelineHandlerPtr::create(handlers);
+    clear();
+
+    for (const auto &handler : handlers) {
+        append(handler);
+    }
 
 #ifndef QTLOGGER_NO_THREAD
     if (async) {
@@ -439,12 +339,6 @@ void Logger::configure(const QString &path, const QString &group)
     configure(QSettings(path, QSettings::IniFormat), group);
 }
 
-QTLOGGER_DECL_SPEC
-void Logger::flush()
-{
-    m_handler->flush();
-}
-
 #ifndef QTLOGGER_NO_THREAD
 
 QTLOGGER_DECL_SPEC
@@ -519,7 +413,7 @@ void Logger::customEvent(QEvent *event)
     if (event->type() == QtLoggerEventType()) {
         auto ev = dynamic_cast<LogEvent *>(event);
         if (ev) {
-            m_handler->process(ev->logMsg);
+            process(ev->logMsg);
         }
     }
 }
@@ -529,7 +423,7 @@ void Logger::customEvent(QEvent *event)
 QTLOGGER_DECL_SPEC
 void Logger::processMessage(LogMessage &logMsg)
 {
-    m_handler->process(logMsg);
+    process(logMsg);
 }
 
 QTLOGGER_DECL_SPEC

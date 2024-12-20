@@ -31,7 +31,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Logger : public QObject
+class QTLOGGER_EXPORT Logger : public QObject, PipelineHandler
 {
     Q_OBJECT
 
@@ -69,28 +69,6 @@ public:
     */
     static void setMessagePattern(const QString &pattern);
 
-    void append(const MessageHandlerPtr &handler);
-    void append(std::initializer_list<MessageHandlerPtr> handlers);
-    void remove(const MessageHandlerPtr &handler);
-    void clear();
-
-    void appendFilter(const FilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
-    RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
-    void clearFilters();
-
-    void setFormatter(const FormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
-    PatternFormatterPtr setFormatter(const QString &pattern);
-    void clearFormatters();
-
-    void appendSink(const SinkPtr &sink);
-    void appendHttpSink(const QString &url, int format);
-    void clearSinks();
-
-    void appendHandler(const PipelineHandlerPtr &pipeline);
-    void clearHandlers();
-
     Logger &operator<<(const MessageHandlerPtr &handler);
 
     void configure(std::initializer_list<MessageHandlerPtr> handlers,
@@ -116,8 +94,6 @@ public:
     */
     void configure(const QSettings &settings, const QString &group = QStringLiteral("logger"));
     void configure(const QString &path, const QString &group = QStringLiteral("logger"));
-
-    void flush();
 
 #ifndef QTLOGGER_NO_THREAD
 public:
@@ -155,8 +131,6 @@ private:
     void processMessage(LogMessage &logMsg);
 
 private:
-    PipelineHandlerPtr m_handler = PipelineHandlerPtr::create();
-
 #ifndef QTLOGGER_NO_THREAD
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     mutable QRecursiveMutex m_mutex;
