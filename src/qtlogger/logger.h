@@ -17,7 +17,7 @@
 #include "filter.h"
 #include "abstractmessageformatter.h"
 #include "messagehandler.h"
-#include "abstractmessagesink.h"
+#include "sink.h"
 #include "logger_global.h"
 #include "pipelinehandler.h"
 
@@ -84,7 +84,7 @@ public:
     PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();
 
-    void appendSink(const AbstractMessageSinkPtr &sink);
+    void appendSink(const SinkPtr &sink);
     void appendHttpSink(const QString &url, int format);
     void clearSinks();
 

@@ -19,7 +19,7 @@ public:
 
     virtual bool filter(const LogMessage &logMsg) const = 0;
 
-    Type type() const override { return MessageHandler::Filter; }
+    Type type() const override { return MessageHandler::FilterType; }
 
     bool process(LogMessage &logMsg) override final { return filter(logMsg); }
 };

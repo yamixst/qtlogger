@@ -12,16 +12,16 @@ class QMessageLogContext;
 
 namespace QtLogger {
 
-using AbstractMessageSinkPtr = QSharedPointer<class AbstractMessageSink>;
+using SinkPtr = QSharedPointer<class Sink>;
 
-class QTLOGGER_EXPORT AbstractMessageSink : public MessageHandler
+class QTLOGGER_EXPORT Sink : public MessageHandler
 {
 public:
     virtual void send(const LogMessage &logMsg) = 0;
 
     virtual bool flush() { return true; }
 
-    Type type() const override { return MessageHandler::Sink; }
+    Type type() const override { return MessageHandler::SinkType; }
 
     bool process(LogMessage &logMsg) override final
     {

@@ -5,12 +5,12 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdOutSink : public AbstractMessageSink
+class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
     StdOutSink();

@@ -5,12 +5,12 @@
 
 #include <QObject>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SignalSink : public QObject, AbstractMessageSink
+class QTLOGGER_EXPORT SignalSink : public QObject, Sink
 {
     Q_OBJECT
 

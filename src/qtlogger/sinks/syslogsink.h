@@ -7,7 +7,7 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 #define QTLOGGER_SYSLOG_LOG_PID  0x01
@@ -15,7 +15,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SysLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT SysLogSink : public Sink
 {
 public:
     explicit SysLogSink(const QString &ident, int option = QTLOGGER_SYSLOG_LOG_PID,

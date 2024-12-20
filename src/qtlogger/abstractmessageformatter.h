@@ -19,7 +19,7 @@ public:
 
     virtual QString format(const LogMessage &logMsg) const = 0;
 
-    Type type() const override { return MessageHandler::Formatter; }
+    Type type() const override { return MessageHandler::FormatterType; }
 
     bool process(LogMessage &logMsg) override final
     {
