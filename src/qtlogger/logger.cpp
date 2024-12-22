@@ -153,7 +153,7 @@ void Logger::configure(std::initializer_list<MessageHandlerPtr> handlers, bool a
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(const SinkType &types, const QString &path, int maxFileSize,
+void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
@@ -164,35 +164,35 @@ void Logger::configure(const SinkType &types, const QString &path, int maxFileSi
 
     DefaultFormatter::instance()->setFormatter(PrettyFormatter::instance());
 
-    if (types.testFlag(StdOut)) {
+    if (types.testFlag(SinkType::StdOut)) {
         appendSink(StdOutSinkPtr::create());
     }
 
-    if (types.testFlag(StdErr)) {
+    if (types.testFlag(SinkType::StdErr)) {
         appendSink(StdErrSinkPtr::create());
     }
 
-    if (types.testFlag(StdLog)) {
+    if (types.testFlag(SinkType::StdLog)) {
         appendSink(StdLogSinkPtr::create());
     }
 
 #ifdef QTLOGGER_SYSLOG
-    if (types.testFlag(SysLog)) {
+    if (types.testFlag(SinkType::SysLog)) {
         appendSink(SysLogSinkPtr::create(QFileInfo(path).baseName()));
     }
 #endif
 
 #ifdef QTLOGGER_JOURNAL
-    if (types.testFlag(Journal)) {
+    if (types.testFlag(SinkType::Journal)) {
         appendSink(JournalSinkPtr::create());
     }
 #endif
 
-    if (types.testFlag(File) && !path.isEmpty()) {
+    if (types.testFlag(SinkType::File) && !path.isEmpty()) {
         appendSink(FileSinkPtr::create(path));
     }
 
-    if (types.testFlag(RotatingFile) && !path.isEmpty()) {
+    if (types.testFlag(SinkType::RotatingFile) && !path.isEmpty()) {
         appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
     }
 
@@ -209,7 +209,7 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(int types, const QString &path, int maxFileSize, int maxFileCount,
                        bool async)
 {
-    configure(SinkType(QFlag(types)), path, maxFileSize, maxFileCount, async);
+    configure(SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount, async);
 }
 
 QTLOGGER_DECL_SPEC

@@ -36,19 +36,19 @@ class QTLOGGER_EXPORT Logger : public QObject, PipelineHandler
     Q_OBJECT
 
 public:
-    enum SinkTypeFlag {
-        None = 0x00,
+    enum class SinkType {
+        Unknown = 0x00,
         StdOut = 0x01,
         StdErr = 0x02,
         SysLog = 0x04,
         Journal = 0x8,
-        StdLog = 0x10, // For Android, iOS
+        StdLog = 0x10, // For Android and iOS
         NTEventLog = 0x20,
         File = 0x40,
         RotatingFile = 0x80
     };
 
-    Q_DECLARE_FLAGS(SinkType, SinkTypeFlag)
+    Q_DECLARE_FLAGS(SinkTypeFlags, SinkType)
 
     static Logger *instance();
 
@@ -73,7 +73,7 @@ public:
 
     void configure(std::initializer_list<MessageHandlerPtr> handlers,
                    bool async = false);
-    void configure(const SinkType &types = StdLog, const QString &path = {}, int maxFileSize = 0,
+    void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {}, int maxFileSize = 0,
                    int maxFileCount = 0, bool async = false);
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
