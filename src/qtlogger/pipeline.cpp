@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
-#include "pipelinehandler.h"
+#include "pipeline.h"
 
 #include "sink.h"
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-PipelineHandler::PipelineHandler() { }
+Pipeline::Pipeline() { }
 
 QTLOGGER_DECL_SPEC
-PipelineHandler::PipelineHandler(std::initializer_list<MessageHandlerPtr> handlers)
+Pipeline::Pipeline(std::initializer_list<MessageHandlerPtr> handlers)
     : m_handlers(handlers)
 {
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::append(const MessageHandlerPtr &handler)
+void Pipeline::append(const MessageHandlerPtr &handler)
 {
     if (handler.isNull())
         return;
@@ -26,13 +26,13 @@ void PipelineHandler::append(const MessageHandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::append(std::initializer_list<MessageHandlerPtr> handlers)
+void Pipeline::append(std::initializer_list<MessageHandlerPtr> handlers)
 {
     m_handlers.append(handlers);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
+void Pipeline::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
 {
     auto first = std::find_if(
             m_handlers.begin(), m_handlers.end(),
@@ -52,7 +52,7 @@ void PipelineHandler::insertAfter(HandlerType type, const MessageHandlerPtr &han
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::insertAfter(HandlerType type, HandlerType typeRight,
+void Pipeline::insertAfter(HandlerType type, HandlerType typeRight,
                                  const MessageHandlerPtr &handler)
 {
     auto first = std::find_if(
@@ -83,7 +83,7 @@ void PipelineHandler::insertAfter(HandlerType type, HandlerType typeRight,
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::remove(const MessageHandlerPtr &handler)
+void Pipeline::remove(const MessageHandlerPtr &handler)
 {
     if (handler.isNull())
         return;
@@ -92,13 +92,13 @@ void PipelineHandler::remove(const MessageHandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clear()
+void Pipeline::clear()
 {
     m_handlers.clear();
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clear(HandlerType type)
+void Pipeline::clear(HandlerType type)
 {
     QMutableListIterator<MessageHandlerPtr> iter(m_handlers);
 
@@ -110,7 +110,7 @@ void PipelineHandler::clear(HandlerType type)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::appendFilter(const FilterPtr &filter)
+void Pipeline::appendFilter(const FilterPtr &filter)
 {
     if (filter.isNull())
         return;
@@ -124,7 +124,7 @@ void PipelineHandler::appendFilter(const FilterPtr &filter)
 
 QTLOGGER_DECL_SPEC
 FunctionFilterPtr
-PipelineHandler::appendFilter(const std::function<bool(const LogMessage &)> &function)
+Pipeline::appendFilter(const std::function<bool(const LogMessage &)> &function)
 {
     const auto f = FunctionFilterPtr::create(function);
 
@@ -134,7 +134,7 @@ PipelineHandler::appendFilter(const std::function<bool(const LogMessage &)> &fun
 }
 
 QTLOGGER_DECL_SPEC
-RegExpFilterPtr PipelineHandler::appendFilter(const QRegularExpression &regExp)
+RegExpFilterPtr Pipeline::appendFilter(const QRegularExpression &regExp)
 {
     const auto f = RegExpFilterPtr::create(regExp);
 
@@ -144,13 +144,13 @@ RegExpFilterPtr PipelineHandler::appendFilter(const QRegularExpression &regExp)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clearFilters()
+void Pipeline::clearFilters()
 {
     clear(HandlerType::Filter);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::setFormatter(const FormatterPtr &formatter)
+void Pipeline::setFormatter(const FormatterPtr &formatter)
 {
     if (formatter.isNull())
         return;
@@ -165,7 +165,7 @@ void PipelineHandler::setFormatter(const FormatterPtr &formatter)
 }
 
 QTLOGGER_DECL_SPEC
-FunctionFormatterPtr PipelineHandler::setFormatter(const FunctionFormatter::Function &function)
+FunctionFormatterPtr Pipeline::setFormatter(const FunctionFormatter::Function &function)
 {
     const auto f = FunctionFormatterPtr::create(function);
 
@@ -175,7 +175,7 @@ FunctionFormatterPtr PipelineHandler::setFormatter(const FunctionFormatter::Func
 }
 
 QTLOGGER_DECL_SPEC
-PatternFormatterPtr PipelineHandler::setFormatter(const QString &pattern)
+PatternFormatterPtr Pipeline::setFormatter(const QString &pattern)
 {
     const auto f = PatternFormatterPtr::create(pattern);
 
@@ -185,44 +185,44 @@ PatternFormatterPtr PipelineHandler::setFormatter(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clearFormatters()
+void Pipeline::clearFormatters()
 {
     clear(HandlerType::Formatter);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::appendSink(const SinkPtr &sink)
+void Pipeline::appendSink(const SinkPtr &sink)
 {
     append(sink);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clearSinks()
+void Pipeline::clearSinks()
 {
     clear(HandlerType::Sink);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::appendHandler(const PipelineHandlerPtr &pipeline)
+void Pipeline::appendHandler(const PipelinePtr &pipeline)
 {
     append(pipeline);
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clearHandlers()
+void Pipeline::clearHandlers()
 {
     clear(HandlerType::Pipeline);
 }
 
 QTLOGGER_DECL_SPEC
-PipelineHandler &PipelineHandler::operator<<(const MessageHandlerPtr &handler)
+Pipeline &Pipeline::operator<<(const MessageHandlerPtr &handler)
 {
     append(handler);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-bool PipelineHandler::process(LogMessage &logMsg)
+bool Pipeline::process(LogMessage &logMsg)
 {
     for (auto &handler : m_handlers) {
         if (!handler)
@@ -235,7 +235,7 @@ bool PipelineHandler::process(LogMessage &logMsg)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::flush()
+void Pipeline::flush()
 {
     for (auto &handler : m_handlers) {
         switch (handler->type()) {
@@ -246,7 +246,7 @@ void PipelineHandler::flush()
             break;
         }
         case HandlerType::Pipeline: {
-            auto pipeline = handler.dynamicCast<PipelineHandler>();
+            auto pipeline = handler.dynamicCast<Pipeline>();
             if (pipeline)
                 pipeline->flush();
             break;

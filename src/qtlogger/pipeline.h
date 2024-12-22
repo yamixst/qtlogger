@@ -20,13 +20,13 @@
 
 namespace QtLogger {
 
-using PipelineHandlerPtr = QSharedPointer<class PipelineHandler>;
+using PipelinePtr = QSharedPointer<class Pipeline>;
 
-class QTLOGGER_EXPORT PipelineHandler : public MessageHandler
+class QTLOGGER_EXPORT Pipeline : public MessageHandler
 {
 public:
-    PipelineHandler();
-    PipelineHandler(std::initializer_list<MessageHandlerPtr> handlers);
+    Pipeline();
+    Pipeline(std::initializer_list<MessageHandlerPtr> handlers);
 
     HandlerType type() const override { return HandlerType::Pipeline; }
 
@@ -52,10 +52,10 @@ public:
     void appendSink(const SinkPtr &sink);
     void clearSinks();
 
-    void appendHandler(const PipelineHandlerPtr &pipeline);
+    void appendHandler(const PipelinePtr &pipeline);
     void clearHandlers();
 
-    PipelineHandler &operator<<(const MessageHandlerPtr &handler);
+    Pipeline &operator<<(const MessageHandlerPtr &handler);
 
     bool process(LogMessage &logMsg) override;
 
@@ -65,13 +65,13 @@ private:
     QList<MessageHandlerPtr> m_handlers;
 };
 
-inline PipelineHandler &operator<<(PipelineHandler *pipeline,
+inline Pipeline &operator<<(Pipeline *pipeline,
                                   const MessageHandlerPtr &handler)
 {
     return *pipeline << handler;
 }
 
-inline PipelineHandler &operator<<(PipelineHandlerPtr pipeline,
+inline Pipeline &operator<<(PipelinePtr pipeline,
                                   const MessageHandlerPtr &handler)
 {
     return *pipeline << handler;
