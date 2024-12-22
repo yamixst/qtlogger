@@ -5,10 +5,10 @@
 
 #include <QSharedPointer>
 
-#include "iodevicesink.h"
 #include "../logger_global.h"
+#include "iodevicesink.h"
 
-class QFile;
+QT_FORWARD_DECLARE_CLASS(QFile)
 
 namespace QtLogger {
 

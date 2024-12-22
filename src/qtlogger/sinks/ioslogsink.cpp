@@ -5,24 +5,20 @@
 
 #include "ioslogsink.h"
 
-#ifdef QTLOGGER_IOSLOG
-#    include <os/log.h>
-#endif
+#include <os/log.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-IosLogSink::IosLogSink() { }
-
-QTLOGGER_DECL_SPEC
 void IosLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_IOSLOG
     QString formattedMessage;
-    if (qstrcmp(logMsg.category(), "default") == 0)
+
+    if (qstrcmp(logMsg.category(), "default") == 0) {
         formattedMessage = logMsg.message();
-    else
+    } else {
         formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
+    }
 
     os_log_type_t type = OS_LOG_TYPE_DEBUG;
     switch (logMsg.type()) {
@@ -44,9 +40,6 @@ void IosLogSink::send(const LogMessage &logMsg)
     };
 
     os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(logMsg.message()));
-#else
-    Q_UNUSED(logMsg);
-#endif
 }
 
 } // namespace QtLogger

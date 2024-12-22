@@ -11,11 +11,8 @@
 #    include <QThread>
 #endif
 
-#include "filter.h"
-#include "formatter.h"
 #include "handler.h"
 #include "logger_global.h"
-#include "sink.h"
 
 #ifndef QTLOGGER_NO_THREAD
 #    include "ownthreadpipeline.h"

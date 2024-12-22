@@ -15,8 +15,6 @@ namespace QtLogger {
 class QTLOGGER_EXPORT JournalSink : public Sink
 {
 public:
-    JournalSink();
-
     void send(const LogMessage &logMsg) override;
 };
 
