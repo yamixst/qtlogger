@@ -15,11 +15,11 @@ namespace QtLogger {
 class QTLOGGER_EXPORT MessageHandler
 {
 public:
-    enum Type { HandlerType, FilterType, FormatterType, SinkType, PipelineType, OtherType };
+    enum class HandlerType { Handler, Filter, Formatter, Sink, Pipeline, Mixed };
 
     virtual ~MessageHandler() = default;
 
-    virtual Type type() const { return MessageHandler::HandlerType; }
+    virtual HandlerType type() const { return HandlerType::Handler; }
 
     virtual bool process(LogMessage &logMsg) = 0;
 };

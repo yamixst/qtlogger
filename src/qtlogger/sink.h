@@ -21,7 +21,7 @@ public:
 
     virtual bool flush() { return true; }
 
-    Type type() const override { return MessageHandler::SinkType; }
+    HandlerType type() const override { return HandlerType::Sink; }
 
     bool process(LogMessage &logMsg) override final
     {
