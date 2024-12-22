@@ -32,7 +32,7 @@ void PipelineHandler::append(std::initializer_list<MessageHandlerPtr> handlers)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::insertAfter(Type type, const MessageHandlerPtr &handler)
+void PipelineHandler::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
 {
     auto first = std::find_if(
             m_handlers.begin(), m_handlers.end(),
@@ -52,7 +52,7 @@ void PipelineHandler::insertAfter(Type type, const MessageHandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::insertAfter(Type type, Type typeRight,
+void PipelineHandler::insertAfter(HandlerType type, HandlerType typeRight,
                                  const MessageHandlerPtr &handler)
 {
     auto first = std::find_if(
@@ -98,7 +98,7 @@ void PipelineHandler::clear()
 }
 
 QTLOGGER_DECL_SPEC
-void PipelineHandler::clear(Type type)
+void PipelineHandler::clear(HandlerType type)
 {
     QMutableListIterator<MessageHandlerPtr> iter(m_handlers);
 
@@ -116,7 +116,7 @@ void PipelineHandler::appendFilter(const FilterPtr &filter)
         return;
 
     auto index = std::find_if(m_handlers.begin(), m_handlers.end(), [](const auto &x) {
-        return x->type() != MessageHandler::FilterType;
+        return x->type() != HandlerType::Filter;
     });
 
     m_handlers.insert(index, filter);
@@ -146,7 +146,7 @@ RegExpFilterPtr PipelineHandler::appendFilter(const QRegularExpression &regExp)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearFilters()
 {
-    clear(FilterType);
+    clear(HandlerType::Filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -158,7 +158,7 @@ void PipelineHandler::setFormatter(const FormatterPtr &formatter)
     clearFormatters();
 
     auto index = std::find_if(m_handlers.begin(), m_handlers.end(), [](const auto &x) {
-        return x->type() != MessageHandler::FilterType;
+        return x->type() != HandlerType::Filter;
     });
 
     m_handlers.insert(index, formatter);
@@ -187,7 +187,7 @@ PatternFormatterPtr PipelineHandler::setFormatter(const QString &pattern)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearFormatters()
 {
-    clear(MessageHandler::FormatterType);
+    clear(HandlerType::Formatter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -199,7 +199,7 @@ void PipelineHandler::appendSink(const SinkPtr &sink)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearSinks()
 {
-    clear(MessageHandler::SinkType);
+    clear(HandlerType::Sink);
 }
 
 QTLOGGER_DECL_SPEC
@@ -211,7 +211,7 @@ void PipelineHandler::appendHandler(const PipelineHandlerPtr &pipeline)
 QTLOGGER_DECL_SPEC
 void PipelineHandler::clearHandlers()
 {
-    clear(MessageHandler::PipelineType);
+    clear(HandlerType::Pipeline);
 }
 
 QTLOGGER_DECL_SPEC
@@ -239,13 +239,13 @@ void PipelineHandler::flush()
 {
     for (auto &handler : m_handlers) {
         switch (handler->type()) {
-        case MessageHandler::SinkType: {
+        case HandlerType::Sink: {
             auto sink = handler.dynamicCast<Sink>();
             if (sink)
                 sink->flush();
             break;
         }
-        case MessageHandler::PipelineType: {
+        case HandlerType::Pipeline: {
             auto pipeline = handler.dynamicCast<PipelineHandler>();
             if (pipeline)
                 pipeline->flush();
