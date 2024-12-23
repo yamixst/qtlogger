@@ -52,7 +52,7 @@ SOURCES += \
     $$PWD/formatters/patternformatter.cpp \
     $$PWD/formatters/prettyformatter.cpp \
     $$PWD/logger.cpp \
-    $$PWD/pipelinehandler.cpp \
+    $$PWD/pipeline.cpp \
     $$PWD/setmessagepattern.cpp \
     $$PWD/sinks/filesink.cpp \
     $$PWD/sinks/iodevicesink.cpp \
@@ -78,7 +78,7 @@ HEADERS += \
     $$PWD/logmessage.h \
     $$PWD/messagehandler.h \
     $$PWD/messagepatterns.h \
-    $$PWD/pipelinehandler.h \
+    $$PWD/pipeline.h \
     $$PWD/setmessagepattern.h \
     $$PWD/sink.h \
     $$PWD/sinks/filesink.h \
