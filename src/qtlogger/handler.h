@@ -12,18 +12,18 @@ class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT MessageHandler
+class QTLOGGER_EXPORT Handler
 {
 public:
     enum class HandlerType { Handler, Filter, Formatter, Sink, Pipeline, Mixed };
 
-    virtual ~MessageHandler() = default;
+    virtual ~Handler() = default;
 
     virtual HandlerType type() const { return HandlerType::Handler; }
 
     virtual bool process(LogMessage &logMsg) = 0;
 };
 
-using MessageHandlerPtr = QSharedPointer<MessageHandler>;
+using HandlerPtr = QSharedPointer<Handler>;
 
 } // namespace QtLogger

@@ -16,7 +16,7 @@
 
 #include "filter.h"
 #include "formatter.h"
-#include "messagehandler.h"
+#include "handler.h"
 #include "sink.h"
 #include "logger_global.h"
 #include "pipeline.h"
@@ -69,9 +69,9 @@ public:
     */
     static void setMessagePattern(const QString &pattern);
 
-    Logger &operator<<(const MessageHandlerPtr &handler);
+    Logger &operator<<(const HandlerPtr &handler);
 
-    void configure(std::initializer_list<MessageHandlerPtr> handlers,
+    void configure(std::initializer_list<HandlerPtr> handlers,
                    bool async = false);
     void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {}, int maxFileSize = 0,
                    int maxFileCount = 0, bool async = false);
@@ -141,7 +141,7 @@ private:
 #endif
 };
 
-inline Logger &operator<<(Logger *logger, const MessageHandlerPtr &handler)
+inline Logger &operator<<(Logger *logger, const HandlerPtr &handler)
 {
     return *logger << handler;
 }

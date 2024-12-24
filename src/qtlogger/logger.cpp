@@ -124,14 +124,14 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-Logger &Logger::operator<<(const MessageHandlerPtr &handler)
+Logger &Logger::operator<<(const HandlerPtr &handler)
 {
     append(handler);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(std::initializer_list<MessageHandlerPtr> handlers, bool async)
+void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
     QMutexLocker locker(&m_mutex);

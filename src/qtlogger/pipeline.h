@@ -10,7 +10,7 @@
 
 #include "filter.h"
 #include "formatter.h"
-#include "messagehandler.h"
+#include "handler.h"
 #include "sink.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
@@ -22,19 +22,19 @@ namespace QtLogger {
 
 using PipelinePtr = QSharedPointer<class Pipeline>;
 
-class QTLOGGER_EXPORT Pipeline : public MessageHandler
+class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
     Pipeline();
-    Pipeline(std::initializer_list<MessageHandlerPtr> handlers);
+    Pipeline(std::initializer_list<HandlerPtr> handlers);
 
     HandlerType type() const override { return HandlerType::Pipeline; }
 
-    void append(const MessageHandlerPtr &handler);
-    void append(std::initializer_list<MessageHandlerPtr> handlers);
-    void insertAfter(HandlerType type, const MessageHandlerPtr &handler);
-    void insertAfter(HandlerType type, HandlerType typeRight, const MessageHandlerPtr &handler);
-    void remove(const MessageHandlerPtr &handler);
+    void append(const HandlerPtr &handler);
+    void append(std::initializer_list<HandlerPtr> handlers);
+    void insertAfter(HandlerType type, const HandlerPtr &handler);
+    void insertAfter(HandlerType type, HandlerType typeRight, const HandlerPtr &handler);
+    void remove(const HandlerPtr &handler);
     void clear();
 
     void clear(HandlerType type);
@@ -55,24 +55,24 @@ public:
     void appendHandler(const PipelinePtr &pipeline);
     void clearHandlers();
 
-    Pipeline &operator<<(const MessageHandlerPtr &handler);
+    Pipeline &operator<<(const HandlerPtr &handler);
 
     bool process(LogMessage &logMsg) override;
 
     void flush();
 
 private:
-    QList<MessageHandlerPtr> m_handlers;
+    QList<HandlerPtr> m_handlers;
 };
 
 inline Pipeline &operator<<(Pipeline *pipeline,
-                                  const MessageHandlerPtr &handler)
+                                  const HandlerPtr &handler)
 {
     return *pipeline << handler;
 }
 
 inline Pipeline &operator<<(PipelinePtr pipeline,
-                                  const MessageHandlerPtr &handler)
+                                  const HandlerPtr &handler)
 {
     return *pipeline << handler;
 }
