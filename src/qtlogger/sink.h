@@ -5,7 +5,7 @@
 
 #include <QSharedPointer>
 
-#include "messagehandler.h"
+#include "handler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
@@ -14,7 +14,7 @@ namespace QtLogger {
 
 using SinkPtr = QSharedPointer<class Sink>;
 
-class QTLOGGER_EXPORT Sink : public MessageHandler
+class QTLOGGER_EXPORT Sink : public Handler
 {
 public:
     virtual void send(const LogMessage &logMsg) = 0;
@@ -37,9 +37,9 @@ public:
         return true;
     }
 
-    MessageHandlerPtr preprocessor() const { return m_preprocessor; }
+    HandlerPtr preprocessor() const { return m_preprocessor; }
 
-    inline void setPreprocessor(const MessageHandlerPtr &preprocessor)
+    inline void setPreprocessor(const HandlerPtr &preprocessor)
     {
         if (preprocessor.data() == this)
             return;
@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    MessageHandlerPtr m_preprocessor;
+    HandlerPtr m_preprocessor;
 };
 
 } // namespace QtLogger

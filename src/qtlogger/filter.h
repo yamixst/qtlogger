@@ -5,14 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "messagehandler.h"
+#include "handler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Filter : public MessageHandler
+class QTLOGGER_EXPORT Filter : public Handler
 {
 public:
     virtual ~Filter() = default;

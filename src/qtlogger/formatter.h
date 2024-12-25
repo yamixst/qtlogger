@@ -5,14 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "messagehandler.h"
+#include "handler.h"
 #include "logger_global.h"
 
 class QMessageLogContext;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Formatter : public MessageHandler
+class QTLOGGER_EXPORT Formatter : public Handler
 {
 public:
     virtual ~Formatter() = default;

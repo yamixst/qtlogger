@@ -1,6 +1,6 @@
 #include "filter.h"
 #include "formatter.h"
-#include "messagehandler.h"
+#include "handler.h"
 #include "sink.h"
 #include "logmessage.h"
 #include "filters/functionfilter.h"
@@ -27,7 +27,7 @@
 
 using QtLoggerFilter = QtLogger::Filter;
 using QtLoggerFormatter = QtLogger::Formatter;
-using QtLoggerMessageHandler = QtLogger::MessageHandler;
+using QtLoggerHandler = QtLogger::Handler;
 using QtLoggerSink = QtLogger::Sink;
 using QtLoggerLogMessage = QtLogger::LogMessage;
 using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
@@ -51,7 +51,7 @@ using QtLoggerStdOutSink = QtLogger::StdOutSink;
 
 using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerFormatterPtr = QtLogger::FormatterPtr;
-using QtLoggerMessageHandlerPtr = QtLogger::MessageHandlerPtr;
+using QtLoggerHandlerPtr = QtLogger::HandlerPtr;
 using QtLoggerSinkPtr = QtLogger::SinkPtr;
 using QtLoggerDefaultFormatterPtr = QtLogger::DefaultFormatterPtr;
 using QtLoggerFileSinkPtr = QtLogger::FileSinkPtr;

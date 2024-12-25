@@ -11,13 +11,13 @@ QTLOGGER_DECL_SPEC
 Pipeline::Pipeline() { }
 
 QTLOGGER_DECL_SPEC
-Pipeline::Pipeline(std::initializer_list<MessageHandlerPtr> handlers)
+Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers)
     : m_handlers(handlers)
 {
 }
 
 QTLOGGER_DECL_SPEC
-void Pipeline::append(const MessageHandlerPtr &handler)
+void Pipeline::append(const HandlerPtr &handler)
 {
     if (handler.isNull())
         return;
@@ -26,17 +26,17 @@ void Pipeline::append(const MessageHandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-void Pipeline::append(std::initializer_list<MessageHandlerPtr> handlers)
+void Pipeline::append(std::initializer_list<HandlerPtr> handlers)
 {
     m_handlers.append(handlers);
 }
 
 QTLOGGER_DECL_SPEC
-void Pipeline::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
+void Pipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
 {
     auto first = std::find_if(
             m_handlers.begin(), m_handlers.end(),
-            [type](const MessageHandlerPtr &x) { return x->type() == type; });
+            [type](const HandlerPtr &x) { return x->type() == type; });
 
     if (first == m_handlers.end()) {
         m_handlers.prepend(handler);
@@ -44,7 +44,7 @@ void Pipeline::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
     }
 
     auto last =
-            std::find_if(first, m_handlers.end(), [type](const MessageHandlerPtr &x) {
+            std::find_if(first, m_handlers.end(), [type](const HandlerPtr &x) {
                 return x->type() != type;
             });
 
@@ -53,11 +53,11 @@ void Pipeline::insertAfter(HandlerType type, const MessageHandlerPtr &handler)
 
 QTLOGGER_DECL_SPEC
 void Pipeline::insertAfter(HandlerType type, HandlerType typeRight,
-                                 const MessageHandlerPtr &handler)
+                                 const HandlerPtr &handler)
 {
     auto first = std::find_if(
             m_handlers.begin(), m_handlers.end(),
-            [type](const MessageHandlerPtr &x) { return x->type() == type; });
+            [type](const HandlerPtr &x) { return x->type() == type; });
 
     if (first == m_handlers.end()) {
 
@@ -75,7 +75,7 @@ void Pipeline::insertAfter(HandlerType type, HandlerType typeRight,
     }
 
     auto last =
-            std::find_if(first, m_handlers.end(), [type](const MessageHandlerPtr &x) {
+            std::find_if(first, m_handlers.end(), [type](const HandlerPtr &x) {
                 return x->type() != type;
             });
 
@@ -83,7 +83,7 @@ void Pipeline::insertAfter(HandlerType type, HandlerType typeRight,
 }
 
 QTLOGGER_DECL_SPEC
-void Pipeline::remove(const MessageHandlerPtr &handler)
+void Pipeline::remove(const HandlerPtr &handler)
 {
     if (handler.isNull())
         return;
@@ -100,7 +100,7 @@ void Pipeline::clear()
 QTLOGGER_DECL_SPEC
 void Pipeline::clear(HandlerType type)
 {
-    QMutableListIterator<MessageHandlerPtr> iter(m_handlers);
+    QMutableListIterator<HandlerPtr> iter(m_handlers);
 
     while (iter.hasNext()) {
         if (iter.next()->type() == type) {
@@ -215,7 +215,7 @@ void Pipeline::clearHandlers()
 }
 
 QTLOGGER_DECL_SPEC
-Pipeline &Pipeline::operator<<(const MessageHandlerPtr &handler)
+Pipeline &Pipeline::operator<<(const HandlerPtr &handler)
 {
     append(handler);
     return *this;

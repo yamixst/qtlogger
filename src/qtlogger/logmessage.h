@@ -55,6 +55,7 @@ public:
     void setFormattedMessage(const QString &formattedMessage);
     bool isFormatted() const;
 
+    // Custom attributes
     QVariant attribute(const QByteArray &name) const;
     void setAttribute(const QByteArray &name, const QVariant &value);
     bool hasAttribute(const QByteArray &name) const;

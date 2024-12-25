@@ -73,10 +73,10 @@ HEADERS += \
     $$PWD/formatters/patternformatter.h \
     $$PWD/formatters/prettyformatter.h \
     $$PWD/formatters/qtlogmessageformatter.h \
+    $$PWD/handler.h \
     $$PWD/logger.h \
     $$PWD/logger_global.h \
     $$PWD/logmessage.h \
-    $$PWD/messagehandler.h \
     $$PWD/messagepatterns.h \
     $$PWD/pipeline.h \
     $$PWD/setmessagepattern.h \
