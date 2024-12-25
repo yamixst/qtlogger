@@ -8,10 +8,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device)
-{
-    setPreprocessor(DefaultFormatter::instance());
-}
+IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device) { }
 
 QTLOGGER_DECL_SPEC
 void IODeviceSink::send(const LogMessage &logMsg)

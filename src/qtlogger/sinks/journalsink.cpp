@@ -14,10 +14,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-JournalSink::JournalSink()
-{
-    setPreprocessor(NullFormatter::instance());
-}
+JournalSink::JournalSink() { }
 
 QTLOGGER_DECL_SPEC
 void JournalSink::send(const LogMessage &logMsg)

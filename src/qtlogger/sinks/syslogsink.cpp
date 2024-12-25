@@ -36,6 +36,7 @@ void SysLogSink::send(const LogMessage &logMsg)
 {
 #ifdef QTLOGGER_SYSLOG
     QString formattedMessage;
+
     if (qstrcmp(logMsg.category(), "default") == 0)
         formattedMessage = logMsg.message();
     else
