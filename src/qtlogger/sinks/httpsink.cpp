@@ -31,21 +31,6 @@ HttpSink::HttpSink(const QUrl &url, Format format) : m_url(url)
 #endif
     m_manager->setParent(Logger::instance());
 
-    switch (format) {
-    case None:
-        setPreprocessor(HandlerPtr());
-        break;
-    case Raw:
-        setPreprocessor(NullFormatter::instance());
-        break;
-    case Default:
-        setPreprocessor(DefaultFormatter::instance());
-        break;
-    case Json:
-        setPreprocessor(JsonFormatter::instance());
-        break;
-    }
-
     m_request.setUrl(m_url);
 
     if (format == Json) {

@@ -8,10 +8,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-SignalSink::SignalSink(QObject *parent) : QObject(parent)
-{
-    setPreprocessor(DefaultFormatter::instance());
-}
+SignalSink::SignalSink(QObject *parent) : QObject(parent) { }
 
 QTLOGGER_DECL_SPEC
 void SignalSink::send(const LogMessage &logMsg)
