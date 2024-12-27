@@ -26,6 +26,7 @@
 #include "version.h"
 
 #ifdef QTLOGGER_NETWORK
+#    include "attrhandlers/hostinfoattrs.h"
 #    include "sinks/httpsink.h"
 #endif
 
