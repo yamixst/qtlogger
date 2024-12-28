@@ -6,14 +6,14 @@
 #include <QMap>
 #include <QStringList>
 
-#include "../handler.h"
+#include "../formatter.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
 using PrettyFormatterPtr = QSharedPointer<class PrettyFormatter>;
 
-class QTLOGGER_EXPORT PrettyFormatter : public Handler
+class QTLOGGER_EXPORT PrettyFormatter : public Formatter
 {
 public:
     static PrettyFormatterPtr instance()
@@ -24,10 +24,11 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    bool process(LogMessage &logMsg) override final;
+    QString format(const LogMessage &logMsg) const override;
+    // bool process(LogMessage &logMsg) override final;
 
-    inline bool showThread() const { return m_showThread; }
-    inline void setShowThread(bool newShowThread) { m_showThread = newShowThread; }
+    inline bool showThreadId() const { return m_showThreadId; }
+    inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }
 
     inline int maxCategoryWidth() const { return m_maxCategoryWidth; }
     inline void setMaxCategoryWidth(int newMaxCategoryWidth)
@@ -36,12 +37,12 @@ public:
     }
 
 private:
-    bool m_showThread = true;
-    QMap<int, int> m_threads;
-    int m_threadsIndex = 0;
+    bool m_showThreadId = true;
+    mutable QMap<int, int> m_threads;
+    mutable int m_threadsIndex = 0;
 
     int m_maxCategoryWidth = 15;
-    int m_categoryWidth = 0;
+    mutable int m_categoryWidth = 0;
 };
 
 } // namespace QtLogger
