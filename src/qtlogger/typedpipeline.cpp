@@ -67,10 +67,7 @@ void TypedPipeline::appendFilter(const FilterPtr &filter)
     if (filter.isNull())
         return;
 
-    auto index = std::find_if(handlers().begin(), handlers().end(),
-                              [](const auto &x) { return x->type() != HandlerType::Filter; });
-
-    handlers().insert(index, filter);
+    insertAfter(HandlerType::Filter, filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -108,10 +105,7 @@ void TypedPipeline::setFormatter(const FormatterPtr &formatter)
 
     clearFormatters();
 
-    auto index = std::find_if(handlers().begin(), handlers().end(),
-                              [](const auto &x) { return x->type() != HandlerType::Filter; });
-
-    handlers().insert(index, formatter);
+    insertAfter(HandlerType::Filter, formatter);
 }
 
 QTLOGGER_DECL_SPEC
