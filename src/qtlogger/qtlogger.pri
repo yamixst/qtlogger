@@ -59,7 +59,8 @@ SOURCES += \
     $$PWD/sinks/rotatingfilesink.cpp \
     $$PWD/sinks/signalsink.cpp \
     $$PWD/sinks/stderrsink.cpp \
-    $$PWD/sinks/stdoutsink.cpp
+    $$PWD/sinks/stdoutsink.cpp \
+    $$PWD/typedpipeline.cpp
 
 HEADERS += \
     $$PWD/filter.h \
@@ -88,5 +89,6 @@ HEADERS += \
     $$PWD/sinks/stderrsink.h \
     $$PWD/sinks/stdlogsink.h \
     $$PWD/sinks/stdoutsink.h \
+    $$PWD/typedpipeline.h \
     $$PWD/version.h
 

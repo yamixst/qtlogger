@@ -19,7 +19,7 @@
 #include "handler.h"
 #include "sink.h"
 #include "logger_global.h"
-#include "pipeline.h"
+#include "typedpipeline.h"
 
 #define gQtLogger QtLogger::Logger::instance()
 
@@ -31,7 +31,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Logger : public QObject, Pipeline
+class QTLOGGER_EXPORT Logger : public QObject, TypedPipeline
 {
     Q_OBJECT
 
