@@ -8,6 +8,19 @@ TypedPipeline::~TypedPipeline()
     flush();
 }
 
+void TypedPipeline::insertBefore(HandlerType type, const HandlerPtr &handler)
+{
+    auto first = std::find_if(handlers().cbegin(), handlers().cend(),
+                              [type](const HandlerPtr &x) { return x->type() == type; });
+
+    if (first == handlers().cend()) {
+        handlers().prepend(handler);
+        return;
+    }
+
+    handlers().insert(first, handler);
+}
+
 QTLOGGER_DECL_SPEC
 void TypedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
 {
