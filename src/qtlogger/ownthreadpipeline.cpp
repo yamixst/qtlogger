@@ -6,7 +6,42 @@
 
 namespace QtLogger {
 
+namespace {
 
+static QEvent::Type __processLogMessageEventType = static_cast<QEvent::Type>(QEvent::User + 2000);
+
+struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
+{
+    LogMessage logMsg;
+    ProcessLogMessageEvent(const LogMessage &logMsg)
+        : QEvent(__processLogMessageEventType), logMsg(logMsg)
+    {
+    }
+};
+
+}
+
+class QTLOGGER_EXPORT OwnThreadPipelineWorker : public QObject
+{
+public:
+    explicit OwnThreadPipelineWorker(OwnThreadPipeline *handler, QObject *parent = nullptr)
+        : QObject(parent), m_handler(handler)
+    {
+    }
+
+    void customEvent(QEvent *event) override
+    {
+        if (event->type() == __processLogMessageEventType) {
+            auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
+            if (_event) {
+                m_handler->TypedPipeline::process(_event->logMsg);
+            }
+        }
+    }
+
+private:
+    OwnThreadPipeline *m_handler;
+};
 
 QTLOGGER_DECL_SPEC
 OwnThreadPipeline::OwnThreadPipeline()
@@ -20,6 +55,13 @@ OwnThreadPipeline::~OwnThreadPipeline()
 #ifndef QTLOGGER_NO_THREAD
     if (m_thread) {
         m_thread->quit();
+        m_thread->wait(1000);
+        if (m_thread)
+            delete m_thread;
+    }
+
+    if (m_worker) {
+        delete m_worker;
     }
 #endif
 }
@@ -41,6 +83,7 @@ void OwnThreadPipeline::moveToOwnThread()
         }
 
         QObject::connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
+        QObject::connect(m_thread, &QThread::finished, m_worker, &QThread::deleteLater);
 
         m_thread->start();
     }
