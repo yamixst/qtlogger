@@ -5,21 +5,13 @@
 
 #include "journalsink.h"
 
-#ifdef QTLOGGER_JOURNAL
-#    include <systemd/sd-journal.h>
-#endif
-
-#include "../formatters/nullformatter.h"
+#include <systemd/sd-journal.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-JournalSink::JournalSink() { }
-
-QTLOGGER_DECL_SPEC
 void JournalSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_JOURNAL
     int priority = LOG_DEBUG;
 
     switch (logMsg.type()) {
@@ -51,9 +43,6 @@ void JournalSink::send(const LogMessage &logMsg)
     sd_journal_send_with_location(file.constData(), line.constData(), logMsg.function(), "%s",
                                   qPrintable(logMsg.formattedMessage()), "PRIORITY=%i", priority,
                                   "CATEGORY=%s", logMsg.category(), NULL);
-#else
-    Q_UNUSED(logMsg);
-#endif
 }
 
 } // namespace QtLogger

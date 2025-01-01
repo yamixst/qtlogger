@@ -9,37 +9,22 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 
-#include "../formatters/defaultformatter.h"
-#include "../formatters/jsonformatter.h"
-#include "../formatters/nullformatter.h"
-
 #include "../logger.h"
-
-#include <iostream>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-HttpSink::HttpSink(const QUrl &url, Format format) : m_url(url)
+HttpSink::HttpSink(const QUrl &url) : m_url(url)
 {
     m_manager = new QNetworkAccessManager;
 
 #ifndef QTLOGGER_NO_THREAD
-    if (m_manager->thread() != Logger::instance()->thread()) {
-        m_manager->moveToThread(Logger::instance()->thread());
+    if (m_manager->thread() != Logger::instance()->ownThread()) {
+        m_manager->moveToThread(Logger::instance()->ownThread());
     }
 #endif
-    m_manager->setParent(Logger::instance());
 
     m_request.setUrl(m_url);
-
-    if (format == Json) {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("application/json; charset=utf-8"));
-    } else {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("text/plain; charset=utf-8"));
-    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -57,6 +42,15 @@ void HttpSink::send(const LogMessage &logMsg)
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
             m_manager->deleteLater();
         m_manager = new QNetworkAccessManager;
+    }
+
+    if (logMsg.hasAttribute("mime_type")) {
+        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
+                            QStringLiteral("%1; charset=utf-8")
+                                    .arg(logMsg.attribute("mime_type").toByteArray()));
+    } else {
+        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
+                            QStringLiteral("text/plain; charset=utf-8"));
     }
 
     auto reply = m_manager->post(m_request, logMsg.formattedMessage().toUtf8());

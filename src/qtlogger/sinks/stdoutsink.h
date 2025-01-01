@@ -5,16 +5,14 @@
 
 #include <QSharedPointer>
 
-#include "../sink.h"
 #include "../logger_global.h"
+#include "../sink.h"
 
 namespace QtLogger {
 
 class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
-    StdOutSink();
-
     void send(const LogMessage &logMsg) override;
 };
 

@@ -3,8 +3,6 @@
 
 #include "signalsink.h"
 
-#include "../formatters/defaultformatter.h"
-
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC

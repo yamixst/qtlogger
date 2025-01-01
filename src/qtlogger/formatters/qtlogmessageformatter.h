@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    QtLogMessageFormatter() {}
+    QtLogMessageFormatter() { }
 };
 
 } // namespace QtLogger

@@ -7,9 +7,11 @@
 
 #include <QSharedPointer>
 
-#include "../sink.h"
 #include "../logger_global.h"
+#include "../sink.h"
 
+// Syslog options
+// See syslog.h for more information
 #define QTLOGGER_SYSLOG_LOG_PID  0x01
 #define QTLOGGER_SYSLOG_LOG_USER (1 << 3)
 

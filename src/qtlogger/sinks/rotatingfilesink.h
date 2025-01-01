@@ -5,8 +5,8 @@
 
 #include <QSharedPointer>
 
-#include "filesink.h"
 #include "../logger_global.h"
+#include "filesink.h"
 
 namespace QtLogger {
 

@@ -5,10 +5,8 @@
 
 #include <QSharedPointer>
 
-#include "logmessage.h"
 #include "logger_global.h"
-
-class QMessageLogContext;
+#include "logmessage.h"
 
 namespace QtLogger {
 

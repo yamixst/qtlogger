@@ -15,8 +15,6 @@ namespace QtLogger {
 class QTLOGGER_EXPORT IosLogSink : public Sink
 {
 public:
-    IosLogSink();
-
     void send(const LogMessage &logMsg);
 };
 

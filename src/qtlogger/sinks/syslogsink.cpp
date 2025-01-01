@@ -5,42 +5,32 @@
 
 #include "syslogsink.h"
 
-#ifdef QTLOGGER_SYSLOG
-#    include <syslog.h>
-#endif
+#include <syslog.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
 SysLogSink::SysLogSink(const QString &ident, int option, int facility)
 {
-#ifdef QTLOGGER_SYSLOG
     openlog(qPrintable(ident), option, facility);
-#else
-    Q_UNUSED(ident);
-    Q_UNUSED(option);
-    Q_UNUSED(facility);
-#endif
 }
 
 QTLOGGER_DECL_SPEC
 SysLogSink::~SysLogSink()
 {
-#ifdef QTLOGGER_SYSLOG
     closelog();
-#endif
 }
 
 QTLOGGER_DECL_SPEC
 void SysLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_SYSLOG
     QString formattedMessage;
 
-    if (qstrcmp(logMsg.category(), "default") == 0)
+    if (qstrcmp(logMsg.category(), "default") == 0) {
         formattedMessage = logMsg.message();
-    else
+    } else {
         formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
+    }
 
     int priority = LOG_DEBUG;
 
@@ -65,9 +55,6 @@ void SysLogSink::send(const LogMessage &logMsg)
     }
 
     syslog(priority, "%s", qPrintable(formattedMessage));
-#else
-    Q_UNUSED(logMsg);
-#endif
 }
 
 } // namespace QtLogger

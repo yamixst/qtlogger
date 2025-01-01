@@ -14,14 +14,25 @@ namespace QtLogger {
 
 namespace {
 
+/**
+ * @brief Replaces the time pattern in the given string with the current date and time.
+ *
+ * This function searches for a time pattern in the format `%{time <format>}` within the input
+ * string. If found, it replaces the pattern with the current date and time formatted according to
+ * the specified format. If no format is specified, it defaults to "yyyyMMdd_hhmmss".
+ *
+ * @param path The input string potentially containing the time pattern.
+ * @return A new string with the time pattern replaced by the current date and time.
+ */
+
 QTLOGGER_DECL_SPEC
-QString replaceTimePattern(const QString &str)
+QString replaceTimePattern(const QString &path)
 {
     static auto re = QRegularExpression(QStringLiteral("(.*)%{time *(.*?)}(.*)"));
-    auto match = re.match(str);
+    auto match = re.match(path);
 
     if (!match.hasMatch())
-        return str;
+        return path;
 
     auto format = match.captured(2);
 
