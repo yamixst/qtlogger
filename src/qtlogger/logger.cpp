@@ -21,7 +21,7 @@
 #include "setmessagepattern.h"
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
-#include "sinks/stdlogsink.h"
+#include "sinks/platformstdsink.h"
 #include "sinks/stdoutsink.h"
 
 #ifdef QTLOGGER_NETWORK
@@ -156,7 +156,7 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
     }
 
     if (types.testFlag(SinkType::StdLog)) {
-        appendSink(StdLogSinkPtr::create());
+        appendSink(PlatformStdSinkPtr::create());
     }
 
 #ifdef QTLOGGER_SYSLOG
@@ -244,11 +244,11 @@ void Logger::configure(const QSettings &settings, const QString &group)
         appendSink(StdErrSinkPtr::create());
     }
 
-    if (settings.value(group + QStringLiteral("/stdlog"), true).toBool()) {
+    if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "Logger::configure: stdlog" << std::endl;
+        std::cerr << "Logger::configure: platform_std_log" << std::endl;
 #endif
-        appendSink(StdLogSinkPtr::create());
+        appendSink(PlatformStdSinkPtr::create());
     }
 
 #ifdef QTLOGGER_SYSLOG
