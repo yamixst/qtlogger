@@ -16,6 +16,7 @@
 #include "messagepatterns.h"
 #include "pipeline.h"
 #include "setmessagepattern.h"
+#include "simplepipeline.h"
 #include "sink.h"
 #include "sinks/filesink.h"
 #include "sinks/iodevicesink.h"
@@ -24,6 +25,7 @@
 #include "sinks/signalsink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
+#include "typedpipeline.h"
 #include "version.h"
 
 #ifdef QTLOGGER_NETWORK
