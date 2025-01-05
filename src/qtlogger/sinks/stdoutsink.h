@@ -14,6 +14,7 @@ class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
     void send(const LogMessage &logMsg) override;
+    virtual bool flush() override;
 };
 
 using StdOutSinkPtr = QSharedPointer<StdOutSink>;
