@@ -15,7 +15,7 @@ class QTLOGGER_EXPORT Formatter : public Handler
 public:
     virtual ~Formatter() = default;
 
-    virtual QString format(const LogMessage &logMsg) const = 0;
+    virtual QString format(const LogMessage &logMsg) = 0;
 
     HandlerType type() const override { return HandlerType::Formatter; }
 

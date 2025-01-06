@@ -10,10 +10,10 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SeqNumberAttr : public AttrHandler
 {
 public:
-    QVariantHash attributes() const override;
+    QVariantHash attributes() override;
 
 private:
-    mutable int m_count = 0;
+    int m_count = 0;
 };
 
 using SeqNumberAttrPtr = QSharedPointer<SeqNumberAttr>;

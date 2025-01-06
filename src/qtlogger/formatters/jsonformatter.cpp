@@ -10,7 +10,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QString JsonFormatter::format(const LogMessage &logMsg) const
+QString JsonFormatter::format(const LogMessage &logMsg)
 {
     QJsonObject obj;
 
