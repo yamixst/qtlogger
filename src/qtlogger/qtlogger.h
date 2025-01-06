@@ -1,3 +1,4 @@
+#include "attrhandler.h"
 #include "filter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
