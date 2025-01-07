@@ -3,23 +3,23 @@
 
 #pragma once
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT IosLogSink : public Sink
+class QTLOGGER_EXPORT OslogSink : public Sink
 {
 public:
     void send(const LogMessage &logMsg);
 };
 
-using IosLogSinkPtr = QSharedPointer<IosLogSink>;
+using OslogSinkPtr = QSharedPointer<OslogSink>;
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_IOSLOG
+#endif // QTLOGGER_OSLOG

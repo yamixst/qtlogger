@@ -7,8 +7,8 @@
 
 #if defined(QTLOGGER_ANDROIDLOG)
 #    include "androidlogsink.h"
-#elif defined(QTLOGGER_IOSLOG)
-#    include "ioslogsink.h"
+#elif defined(QTLOGGER_OSLOG)
+#    include "oslogsink.h"
 #else
 #    include "stderrsink.h"
 #endif
@@ -17,8 +17,8 @@ namespace QtLogger {
 
 #if defined(QTLOGGER_ANDROIDLOG)
 using PlatformStdSink = AndroidLogSink;
-#elif defined(QTLOGGER_IOSLOG)
-using PlatformStdSink = IosLogSink;
+#elif defined(QTLOGGER_OSLOG)
+using PlatformStdSink = OslogSink;
 #else
 using PlatformStdSink = StdErrSink;
 #endif
