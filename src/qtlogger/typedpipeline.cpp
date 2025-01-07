@@ -2,7 +2,11 @@
 
 namespace QtLogger {
 
-TypedPipeline::TypedPipeline() { }
+QTLOGGER_DECL_SPEC
+TypedPipeline::~TypedPipeline()
+{
+    flush();
+}
 
 QTLOGGER_DECL_SPEC
 void TypedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
@@ -25,8 +29,9 @@ QTLOGGER_DECL_SPEC
 void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
                                   const HandlerPtr &handler)
 {
-    auto firstLeft = std::find_if(handlers().begin(), handlers().end(),
-                              [leftType](const HandlerPtr &x) { return x->type() == leftType; });
+    auto firstLeft =
+            std::find_if(handlers().begin(), handlers().end(),
+                         [leftType](const HandlerPtr &x) { return x->type() == leftType; });
 
     if (firstLeft == handlers().end()) {
 
@@ -44,7 +49,7 @@ void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
     }
 
     auto lastLeft = std::find_if(firstLeft, handlers().end(),
-                             [leftType](const HandlerPtr &x) { return x->type() != leftType; });
+                                 [leftType](const HandlerPtr &x) { return x->type() != leftType; });
 
     handlers().insert(lastLeft, handler);
 }

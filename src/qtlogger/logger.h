@@ -3,9 +3,6 @@
 
 #pragma once
 
-#include <QList>
-#include <QObject>
-#include <QPointer>
 #include <QSettings>
 
 #ifndef QTLOGGER_NO_THREAD
@@ -17,24 +14,32 @@
 #include "filter.h"
 #include "formatter.h"
 #include "handler.h"
-#include "sink.h"
 #include "logger_global.h"
-#include "typedpipeline.h"
+#include "sink.h"
+
+#ifndef QTLOGGER_NO_THREAD
+#    include "ownthreadpipeline.h"
+#else
+#    include "typedpipeline.h"
+#endif
 
 #define gQtLogger QtLogger::Logger::instance()
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-#define QRMUTEX QRecursiveMutex
+#    define QRMUTEX QRecursiveMutex
 #else
-#define QRMUTEX QMutex
+#    define QRMUTEX QMutex
 #endif
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Logger : public QObject, TypedPipeline
+class QTLOGGER_EXPORT Logger :
+#ifndef QTLOGGER_NO_THREAD
+    public OwnThreadPipeline
+#else
+    public TypedPipeline
+#endif
 {
-    Q_OBJECT
-
 public:
     enum class SinkType {
         Unknown = 0x00,
@@ -52,8 +57,8 @@ public:
 
     static Logger *instance();
 
-    explicit Logger(QObject *parent = nullptr);
-    virtual ~Logger();
+    Logger() = default;
+    ~Logger() override;
 
     /*
         Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
@@ -71,10 +76,9 @@ public:
 
     Logger &operator<<(const HandlerPtr &handler);
 
-    void configure(std::initializer_list<HandlerPtr> handlers,
-                   bool async = false);
-    void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {}, int maxFileSize = 0,
-                   int maxFileCount = 0, bool async = false);
+    void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
+    void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {},
+                   int maxFileSize = 0, int maxFileCount = 0, bool async = false);
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
 
@@ -100,44 +104,24 @@ public:
     void lock() const;
     void unlock() const;
     QRMUTEX *mutex() const;
-
-    void moveToOwnThread();
-    void moveToMainThread();
-    bool ownThreadIsRunning() const;
-    inline QThread *ownThread() { return m_thread.data(); }
-
-protected:
-    struct LogEvent : public QEvent
-    {
-        LogMessage logMsg;
-
-        LogEvent(const LogMessage &logMsg);
-    };
-
-    void customEvent(QEvent *event) override;
 #endif
 
 public:
     void installMessageHandler();
     static void restorePreviousMessageHandler();
 
+    void processMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
+
     static void messageHandler(QtMsgType type, const QMessageLogContext &context,
                                const QString &message);
 
-    void processMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
-    void processMessage(const LogMessage &logMsg);
-
-private:
-    void processMessage(LogMessage &logMsg);
-
 private:
 #ifndef QTLOGGER_NO_THREAD
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#    if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     mutable QRecursiveMutex m_mutex;
-#else
+#    else
     mutable QMutex m_mutex { QMutex::Recursive };
-#endif
-    QPointer<QThread> m_thread;
+#    endif
 #endif
 };
 
@@ -146,7 +130,7 @@ inline Logger &operator<<(Logger *logger, const HandlerPtr &handler)
     return *logger << handler;
 }
 
-inline Logger& operator<<(Logger* logger, const Pipeline& pipeline)
+inline Logger &operator<<(Logger *logger, const Pipeline &pipeline)
 {
     return *logger << PipelinePtr::create(pipeline);
 }

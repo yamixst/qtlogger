@@ -16,7 +16,8 @@ namespace QtLogger {
 class QTLOGGER_EXPORT TypedPipeline : public Pipeline
 {
 public:
-    TypedPipeline();
+    TypedPipeline() = default;
+    ~TypedPipeline() override;
 
     void insertAfter(HandlerType type, const HandlerPtr &handler);
     void insertBetween(HandlerType leftType, HandlerType rightType, const HandlerPtr &handler);

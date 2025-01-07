@@ -14,6 +14,10 @@ qtlogger_debug_output {
 qtlogger_no_thread {
     DEFINES *= QTLOGGER_NO_THREAD
 }
+else {
+    SOURCES += $$PWD/ownthreadpipeline.cpp
+    HEADERS += $$PWD/ownthreadpipeline.h
+}
 
 qtlogger_network {
     DEFINES *= QTLOGGER_NETWORK

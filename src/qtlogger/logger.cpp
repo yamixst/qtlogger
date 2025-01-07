@@ -15,10 +15,8 @@
 
 #include <iostream>
 
-#include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatters/defaultformatter.h"
-#include "formatters/functionformatter.h"
 #include "formatters/prettyformatter.h"
 #include "messagepatterns.h"
 #include "setmessagepattern.h"
@@ -75,12 +73,6 @@ Logger *Logger::instance()
 }
 
 QTLOGGER_DECL_SPEC
-Logger::Logger(QObject *parent) : QObject(parent)
-{
-    qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
-}
-
-QTLOGGER_DECL_SPEC
 Logger::~Logger()
 {
 #ifndef QTLOGGER_NO_THREAD
@@ -88,14 +80,6 @@ Logger::~Logger()
 #else
     if (g_activeLogger == this) {
         g_activeLogger = nullptr;
-    }
-#endif
-
-    flush();
-
-#ifndef QTLOGGER_NO_THREAD
-    if (m_thread) {
-        m_thread->quit();
     }
 #endif
 }
@@ -359,79 +343,7 @@ QRMUTEX *Logger::mutex() const
     return &m_mutex;
 }
 
-QTLOGGER_DECL_SPEC
-void Logger::moveToOwnThread()
-{
-    if (!m_thread) {
-        m_thread = new QThread;
-        if (qApp) {
-            if (qApp->thread() != m_thread->thread())
-                m_thread->moveToThread(qApp->thread());
-            connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
-        }
-        connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
-        m_thread->start();
-    }
-
-    moveToThread(m_thread);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::moveToMainThread()
-{
-    moveToThread(qApp->thread());
-
-    if (m_thread) {
-        m_thread->quit();
-    }
-}
-
-QTLOGGER_DECL_SPEC
-bool Logger::ownThreadIsRunning() const
-{
-    return m_thread && m_thread->isRunning();
-}
-
-namespace {
-
-QTLOGGER_DECL_SPEC
-static QEvent::Type QtLoggerEventType()
-{
-    // TODO: QEvent::registerEventType()
-    static const QEvent::Type type = static_cast<QEvent::Type>(QEvent::User + 1000);
-    return type;
-}
-
-}
-
-QTLOGGER_DECL_SPEC
-Logger::LogEvent::LogEvent(const LogMessage &logMsg) : QEvent(QtLoggerEventType()), logMsg(logMsg) { }
-
-QTLOGGER_DECL_SPEC
-void Logger::customEvent(QEvent *event)
-{
-    if (event->type() == QtLoggerEventType()) {
-        auto ev = dynamic_cast<LogEvent *>(event);
-        if (ev) {
-            process(ev->logMsg);
-        }
-    }
-}
-
 #endif
-
-QTLOGGER_DECL_SPEC
-void Logger::processMessage(LogMessage &logMsg)
-{
-    process(logMsg);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::processMessage(const LogMessage &logMsg)
-{
-    LogMessage __logMsg(logMsg);
-    processMessage(__logMsg);
-}
 
 QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
@@ -439,15 +351,7 @@ void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
 {
     LogMessage logMsg(type, context, message);
 
-#ifndef QTLOGGER_NO_THREAD
-    if (!ownThreadIsRunning()) {
-        processMessage(logMsg);
-    } else {
-        QCoreApplication::postEvent(this, new LogEvent(logMsg));
-    }
-#else
-    processMessage(logMsg);
-#endif
+    process(logMsg);
 }
 
 QTLOGGER_DECL_SPEC
