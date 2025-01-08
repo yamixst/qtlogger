@@ -4,6 +4,7 @@
 #pragma once
 
 #include <qlogging.h>
+
 #include "logger_global.h"
 
 namespace QtLogger {

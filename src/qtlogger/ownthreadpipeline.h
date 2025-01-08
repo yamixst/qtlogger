@@ -1,10 +1,11 @@
 #pragma once
 
 #include <QPointer>
-#include <QThread>
 
 #include "logger_global.h"
 #include "typedpipeline.h"
+
+QT_FORWARD_DECLARE_CLASS(QThread)
 
 namespace QtLogger {
 
@@ -19,6 +20,7 @@ public:
     void moveToOwnThread();
     void moveToMainThread();
     bool ownThreadIsRunning() const;
+    QThread *ownThread() const { return m_thread; }
 
     bool process(LogMessage &logMsg) override;
 

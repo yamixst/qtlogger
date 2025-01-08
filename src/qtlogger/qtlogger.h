@@ -5,10 +5,8 @@
 #include "logmessage.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
-#include "formatters/defaultformatter.h"
 #include "formatters/functionformatter.h"
 #include "formatters/jsonformatter.h"
-#include "formatters/nullformatter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
 #include "formatters/qtlogmessageformatter.h"
@@ -30,7 +28,6 @@ using QtLoggerFormatter = QtLogger::Formatter;
 using QtLoggerHandler = QtLogger::Handler;
 using QtLoggerSink = QtLogger::Sink;
 using QtLoggerLogMessage = QtLogger::LogMessage;
-using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
 using QtLoggerFileSink = QtLogger::FileSink;
 using QtLoggerFunctionFilter = QtLogger::FunctionFilter;
 using QtLoggerFunctionFormatter = QtLogger::FunctionFormatter;
@@ -38,7 +35,6 @@ using QtLoggerIODeviceSink = QtLogger::IODeviceSink;
 using QtLoggerJsonFormatter = QtLogger::JsonFormatter;
 using QtLoggerLogger = QtLogger::Logger;
 using QtLoggerPipeline = QtLogger::Pipeline;
-using QtLoggerNullFormatter = QtLogger::NullFormatter;
 using QtLoggerPatternFormatter = QtLogger::PatternFormatter;
 using QtLoggerPrettyFormatter = QtLogger::PrettyFormatter;
 using QtLoggerQtLogMessageFormatter = QtLogger::QtLogMessageFormatter;
@@ -53,14 +49,12 @@ using QtLoggerFilterPtr = QtLogger::FilterPtr;
 using QtLoggerFormatterPtr = QtLogger::FormatterPtr;
 using QtLoggerHandlerPtr = QtLogger::HandlerPtr;
 using QtLoggerSinkPtr = QtLogger::SinkPtr;
-using QtLoggerDefaultFormatterPtr = QtLogger::DefaultFormatterPtr;
 using QtLoggerFileSinkPtr = QtLogger::FileSinkPtr;
 using QtLoggerFunctionFilterPtr = QtLogger::FunctionFilterPtr;
 using QtLoggerFunctionFormatterPtr = QtLogger::FunctionFormatterPtr;
 using QtLoggerIODeviceSinkPtr = QtLogger::IODeviceSinkPtr;
 using QtLoggerJsonFormatterPtr = QtLogger::JsonFormatterPtr;
 using QtLoggerPipelinePtr = QtLogger::PipelinePtr;
-using QtLoggerNullFormatterPtr = QtLogger::NullFormatterPtr;
 using QtLoggerPatternFormatterPtr = QtLogger::PatternFormatterPtr;
 using QtLoggerPrettyFormatterPtr = QtLogger::PrettyFormatterPtr;
 using QtLoggerQtLogMessageFormatterPtr = QtLogger::QtLogMessageFormatterPtr;

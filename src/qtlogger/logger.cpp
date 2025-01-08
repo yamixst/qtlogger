@@ -16,7 +16,6 @@
 #include <iostream>
 
 #include "filters/regexpfilter.h"
-#include "formatters/defaultformatter.h"
 #include "formatters/prettyformatter.h"
 #include "messagepatterns.h"
 #include "setmessagepattern.h"
@@ -205,7 +204,7 @@ void Logger::configure(const QSettings &settings, const QString &group)
 
     clear();
 
-    DefaultFormatter::instance()->setFormatter(PrettyFormatter::instance());
+    setFormatter(PrettyFormatter::instance());
 
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
     if (!filterRules.isEmpty()) {
@@ -222,8 +221,7 @@ void Logger::configure(const QSettings &settings, const QString &group)
         std::cerr << "Logger::configure: messagePattern: " << messagePattern.toStdString()
                   << std::endl;
 #endif
-        DefaultFormatter::instance()->setFormatter(QtLogMessageFormatter::instance());
-        setMessagePattern(messagePattern);
+        setFormatter(PatternFormatterPtr::create(messagePattern));
     }
 
     const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
@@ -297,13 +295,8 @@ void Logger::configure(const QSettings &settings, const QString &group)
         const auto httpMsgFormat = settings.value(group + QStringLiteral("/http_msg_format"),
                                                   QStringLiteral("default"))
                                            .toString();
-        static QMap<QString, HttpSink::Format> formats {
-            { QStringLiteral("raw"), HttpSink::Raw },
-            { QStringLiteral("default"), HttpSink::Default },
-            { QStringLiteral("json"), HttpSink::Json },
-        };
-        appendSink(HttpSinkPtr::create(QUrl(httpUrl),
-                                       formats.value(httpMsgFormat, HttpSink::Default)));
+        // TODO: add support for http_msg_format (json)
+        appendSink(HttpSinkPtr::create(QUrl(httpUrl)));
     }
 #endif
 

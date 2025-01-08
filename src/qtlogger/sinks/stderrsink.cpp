@@ -5,12 +5,7 @@
 
 #include <iostream>
 
-#include "../formatters/defaultformatter.h"
-
 namespace QtLogger {
-
-QTLOGGER_DECL_SPEC
-StdErrSink::StdErrSink() { }
 
 QTLOGGER_DECL_SPEC
 void StdErrSink::send(const LogMessage &logMsg)

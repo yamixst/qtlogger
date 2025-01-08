@@ -8,7 +8,7 @@
 #include <QJsonObject>
 
 #ifdef QTLOGGER_NETWORK
-#include <QHostInfo>
+#    include <QHostInfo>
 #endif
 
 namespace QtLogger {
@@ -30,6 +30,10 @@ QString JsonFormatter::format(const LogMessage &logMsg) const
     obj[QStringLiteral("category")] = QString::fromUtf8(logMsg.category());
     obj[QStringLiteral("time")] = logMsg.time().toString(QStringLiteral("yyyy-MM-ddThh:mm:ss.zZ"));
     obj[QStringLiteral("thread")] = logMsg.threadId();
+
+    for (const auto &key : logMsg.attributes().keys()) {
+        obj[key] = QJsonValue::fromVariant(logMsg.attribute(key));
+    }
 
     if (qApp) {
         obj[QStringLiteral("pid")] = qApp->applicationPid();

@@ -56,9 +56,10 @@ public:
     bool isFormatted() const;
 
     // Custom attributes
-    QVariant attribute(const QByteArray &name) const;
-    void setAttribute(const QByteArray &name, const QVariant &value);
-    bool hasAttribute(const QByteArray &name) const;
+    QVariant attribute(const QString &name) const;
+    void setAttribute(const QString &name, const QVariant &value);
+    bool hasAttribute(const QString &name) const;
+    QVariantHash attributes() const { return m_attributes; }
 
 private:
     // context buffers
@@ -74,7 +75,7 @@ private:
     const Qt::HANDLE m_threadId = QThread::currentThreadId();
 
     QString m_formattedMessage;
-    QHash<QByteArray, QVariant> m_attributes;
+    QVariantHash m_attributes;
 };
 
 inline QtMsgType LogMessage::type() const
@@ -127,17 +128,17 @@ inline bool LogMessage::isFormatted() const
     return !m_formattedMessage.isNull();
 }
 
-inline QVariant LogMessage::attribute(const QByteArray &name) const
+inline QVariant LogMessage::attribute(const QString &name) const
 {
     return m_attributes.value(name);
 }
 
-inline void LogMessage::setAttribute(const QByteArray &name, const QVariant &value)
+inline void LogMessage::setAttribute(const QString &name, const QVariant &value)
 {
     m_attributes.insert(name, value);
 }
 
-inline bool LogMessage::hasAttribute(const QByteArray &name) const
+inline bool LogMessage::hasAttribute(const QString &name) const
 {
     return m_attributes.contains(name);
 }

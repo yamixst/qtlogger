@@ -13,8 +13,6 @@
 
 namespace QtLogger {
 
-using PipelinePtr = QSharedPointer<class Pipeline>;
-
 class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
@@ -38,6 +36,8 @@ protected:
 private:
     QList<HandlerPtr> m_handlers;
 };
+
+using PipelinePtr = QSharedPointer<Pipeline>;
 
 inline Pipeline &operator<<(Pipeline *pipeline, const HandlerPtr &handler)
 {

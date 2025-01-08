@@ -3,6 +3,8 @@
 
 #pragma once
 
+#ifdef QTLOGGER_NETWORK
+
 #include <QNetworkRequest>
 #include <QSharedPointer>
 #include <QPointer>
@@ -18,14 +20,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT HttpSink : public Sink
 {
 public:
-    enum Format {
-        None,
-        Raw,
-        Default,
-        Json
-    };
-
-    explicit HttpSink(const QUrl &url, Format format = Default);
+    explicit HttpSink(const QUrl &url);
     ~HttpSink();
 
     void send(const LogMessage &logMsg) override;
@@ -42,3 +37,6 @@ private:
 using HttpSinkPtr = QSharedPointer<HttpSink>;
 
 } // namespace QtLogger
+
+#endif // QTLOGGER_NETWORK
+

@@ -8,11 +8,7 @@
 #include "handler.h"
 #include "logger_global.h"
 
-class QMessageLogContext;
-
 namespace QtLogger {
-
-using SinkPtr = QSharedPointer<class Sink>;
 
 class QTLOGGER_EXPORT Sink : public Handler
 {
@@ -28,5 +24,7 @@ public:
         return true;
     }
 };
+
+using SinkPtr = QSharedPointer<Sink>;
 
 } // namespace QtLogger

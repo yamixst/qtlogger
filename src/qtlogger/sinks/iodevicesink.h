@@ -6,8 +6,8 @@
 #include <QIODevice>
 #include <QSharedPointer>
 
-#include "../sink.h"
 #include "../logger_global.h"
+#include "../sink.h"
 
 namespace QtLogger {
 

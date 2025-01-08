@@ -71,10 +71,8 @@ HEADERS += \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
     $$PWD/formatter.h \
-    $$PWD/formatters/defaultformatter.h \
     $$PWD/formatters/functionformatter.h \
     $$PWD/formatters/jsonformatter.h \
-    $$PWD/formatters/nullformatter.h \
     $$PWD/formatters/patternformatter.h \
     $$PWD/formatters/prettyformatter.h \
     $$PWD/formatters/qtlogmessageformatter.h \

@@ -5,20 +5,15 @@
 
 #include "androidlogsink.h"
 
-#ifdef QTLOGGER_ANDROIDLOG
-#    include <android/log.h>
-#endif
+#include <android/log.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-AndroidLogSink::AndroidLogSink() {}
-
-QTLOGGER_DECL_SPEC
 void AndroidLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_ANDROIDLOG
     android_LogPriority priority = ANDROID_LOG_DEBUG;
+
     switch (logMsg.type()) {
     case QtDebugMsg:
         priority = ANDROID_LOG_DEBUG;
@@ -38,9 +33,6 @@ void AndroidLogSink::send(const LogMessage &logMsg)
     };
 
     __android_log_print(priority, logMsg.category(), "%s\n", qPrintable(logMsg.message()));
-#else
-    Q_UNUSED(logMsg);
-#endif
 }
 
 } // namespace QtLogger

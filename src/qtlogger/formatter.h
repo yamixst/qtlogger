@@ -8,8 +8,6 @@
 #include "handler.h"
 #include "logger_global.h"
 
-class QMessageLogContext;
-
 namespace QtLogger {
 
 class QTLOGGER_EXPORT Formatter : public Handler
