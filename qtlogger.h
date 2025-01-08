@@ -16,21 +16,13 @@
 
 // qtlogger.h
 
-// abstractmessagefilter.h
+// filter.h
 
 #include <QSharedPointer>
 
-// abstractmessageprocessor.h
+// handler.h
 
 #include <QSharedPointer>
-
-// debugmessage.h
-
-#include <QDateTime>
-#include <QMetaType>
-#include <QString>
-#include <QThread>
-#include <qlogging.h>
 
 // logger_global.h
 
@@ -50,14 +42,41 @@
 
 // end logger_global.h
 
+// logmessage.h
+
+#include <QDateTime>
+#include <QHash>
+#include <QThread>
+#include <qlogging.h>
+
 namespace QtLogger {
 
-class QTLOGGER_EXPORT DebugMessage
+class QTLOGGER_EXPORT LogMessage
 {
 public:
-    DebugMessage() = default;
-    DebugMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
-    DebugMessage(const DebugMessage &dmesg);
+    constexpr LogMessage() noexcept = default;
+
+    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
+        : m_type(type),
+          m_context(context.file, context.line, context.function, context.category),
+          m_message(message)
+    {
+    }
+
+    LogMessage(const LogMessage &logMsg) noexcept
+        : m_file(logMsg.m_context.file),
+          m_function(logMsg.m_context.function),
+          m_category(logMsg.m_context.category),
+          m_type(logMsg.m_type),
+          m_context(m_file.constData(), logMsg.m_context.line, m_function.constData(),
+                    m_category.constData()),
+          m_message(logMsg.m_message),
+          m_time(logMsg.m_time),
+          m_threadId(logMsg.m_threadId),
+          m_formattedMessage(logMsg.m_formattedMessage),
+          m_attributes(logMsg.m_attributes)
+    {
+    }
 
     QtMsgType type() const;
     const QMessageLogContext &context() const;
@@ -69,206 +88,198 @@ public:
     const char *category() const;
 
     inline QDateTime time() const { return m_time; }
-    inline qint64 threadId() const { return reinterpret_cast<qint64>(m_threadId); }
+    inline qintptr threadId() const { return reinterpret_cast<qintptr>(m_threadId); }
 
     QString formattedMessage() const;
     void setFormattedMessage(const QString &formattedMessage);
     bool isFormatted() const;
 
+    // Custom attributes
+    QVariant attribute(const QString &name) const;
+    void setAttribute(const QString &name, const QVariant &value);
+    bool hasAttribute(const QString &name) const;
+    QVariantHash attributes() const { return m_attributes; }
+
 private:
-    QtMsgType m_type = QtDebugMsg;
-    QMessageLogContext m_context;
-    QString m_message;
-
     // context buffers
-    QByteArray m_file;
-    QByteArray m_function;
-    QByteArray m_category;
+    const QByteArray m_file;
+    const QByteArray m_function;
+    const QByteArray m_category;
 
-    QDateTime m_time = QDateTime::currentDateTime();
-    Qt::HANDLE m_threadId = QThread::currentThreadId();
+    const QtMsgType m_type = QtDebugMsg;
+    const QMessageLogContext m_context;
+    const QString m_message;
+
+    const QDateTime m_time = QDateTime::currentDateTime();
+    const Qt::HANDLE m_threadId = QThread::currentThreadId();
 
     QString m_formattedMessage;
+    QVariantHash m_attributes;
 };
 
-inline QtMsgType DebugMessage::type() const
+inline QtMsgType LogMessage::type() const
 {
     return m_type;
 }
 
-inline const QMessageLogContext &DebugMessage::context() const
+inline const QMessageLogContext &LogMessage::context() const
 {
     return m_context;
 }
 
-inline QString DebugMessage::message() const
+inline QString LogMessage::message() const
 {
     return m_message;
 }
 
-inline int DebugMessage::line() const
+inline int LogMessage::line() const
 {
     return m_context.line;
 }
 
-inline const char *DebugMessage::file() const
+inline const char *LogMessage::file() const
 {
     return m_context.file;
 }
 
-inline const char *DebugMessage::function() const
+inline const char *LogMessage::function() const
 {
     return m_context.function;
 }
 
-inline const char *DebugMessage::category() const
+inline const char *LogMessage::category() const
 {
     return m_context.category;
 }
 
-inline QString DebugMessage::formattedMessage() const
+inline QString LogMessage::formattedMessage() const
 {
     return isFormatted() ? m_formattedMessage : m_message;
 }
 
-inline void DebugMessage::setFormattedMessage(const QString &formattedMessage)
+inline void LogMessage::setFormattedMessage(const QString &formattedMessage)
 {
     m_formattedMessage = formattedMessage;
 }
 
-inline bool DebugMessage::isFormatted() const
+inline bool LogMessage::isFormatted() const
 {
     return !m_formattedMessage.isNull();
 }
 
+inline QVariant LogMessage::attribute(const QString &name) const
+{
+    return m_attributes.value(name);
 }
 
-// end debugmessage.h
-
-class QMessageLogContext;
-
-namespace QtLogger {
-
-class QTLOGGER_EXPORT AbstractMessageProcessor
+inline void LogMessage::setAttribute(const QString &name, const QVariant &value)
 {
-public:
-    enum Type { Processor, Filter, Formatter, Sink, Handler };
+    m_attributes.insert(name, value);
+}
 
-    virtual ~AbstractMessageProcessor() = default;
-
-    virtual Type processorType() const { return AbstractMessageProcessor::Processor; }
-
-    virtual bool process(DebugMessage &dmesg) = 0;
-};
-
-using AbstractMessageProcessorPtr = QSharedPointer<AbstractMessageProcessor>;
+inline bool LogMessage::hasAttribute(const QString &name) const
+{
+    return m_attributes.contains(name);
+}
 
 } // namespace QtLogger
 
-// end abstractmessageprocessor.h
-
-class QMessageLogContext;
+// end logmessage.h
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFilter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT Handler
 {
 public:
-    virtual ~AbstractMessageFilter() = default;
+    enum class HandlerType { Handler, Filter, Formatter, Sink, Pipeline, Mixed };
 
-    virtual bool filter(const DebugMessage &dmesg) const = 0;
+    virtual ~Handler() = default;
 
-    Type processorType() const override { return AbstractMessageProcessor::Filter; }
+    virtual HandlerType type() const { return HandlerType::Handler; }
 
-    bool process(DebugMessage &dmesg) override final { return filter(dmesg); }
+    virtual bool process(LogMessage &logMsg) = 0;
 };
 
-using AbstractMessageFilterPtr = QSharedPointer<AbstractMessageFilter>;
+using HandlerPtr = QSharedPointer<Handler>;
 
 } // namespace QtLogger
 
-// end abstractmessagefilter.h
+// end handler.h
 
-// abstractmessageformatter.h
+namespace QtLogger {
+
+class QTLOGGER_EXPORT Filter : public Handler
+{
+public:
+    virtual ~Filter() = default;
+
+    virtual bool filter(const LogMessage &logMsg) const = 0;
+
+    HandlerType type() const override { return HandlerType::Filter; }
+
+    bool process(LogMessage &logMsg) override final { return filter(logMsg); }
+};
+
+using FilterPtr = QSharedPointer<Filter>;
+
+} // namespace QtLogger
+
+// end filter.h
+
+// formatter.h
 
 #include <QSharedPointer>
 
-class QMessageLogContext;
-
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AbstractMessageFormatter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT Formatter : public Handler
 {
 public:
-    virtual ~AbstractMessageFormatter() = default;
+    virtual ~Formatter() = default;
 
-    virtual QString format(const DebugMessage &dmesg) const = 0;
+    virtual QString format(const LogMessage &logMsg) const = 0;
 
-    Type processorType() const override { return AbstractMessageProcessor::Formatter; }
+    HandlerType type() const override { return HandlerType::Formatter; }
 
-    bool process(DebugMessage &dmesg) override final
+    bool process(LogMessage &logMsg) override final
     {
-        dmesg.setFormattedMessage(format(dmesg));
+        logMsg.setFormattedMessage(format(logMsg));
         return true;
     }
 };
 
-using AbstractMessageFormatterPtr = QSharedPointer<AbstractMessageFormatter>;
+using FormatterPtr = QSharedPointer<Formatter>;
 
 } // namespace QtLogger
 
-// end abstractmessageformatter.h
+// end formatter.h
 
-// abstractmessagesink.h
+// sink.h
 
 #include <QSharedPointer>
 
-class QMessageLogContext;
-
 namespace QtLogger {
 
-using AbstractMessageSinkPtr = QSharedPointer<class AbstractMessageSink>;
-
-class QTLOGGER_EXPORT AbstractMessageSink : public AbstractMessageProcessor
+class QTLOGGER_EXPORT Sink : public Handler
 {
 public:
-    virtual void send(const DebugMessage &dmesg) = 0;
-
+    virtual void send(const LogMessage &logMsg) = 0;
     virtual bool flush() { return true; }
 
-    Type processorType() const override { return AbstractMessageProcessor::Sink; }
+    HandlerType type() const override { return HandlerType::Sink; }
 
-    bool process(DebugMessage &dmesg) override final
+    bool process(LogMessage &logMsg) override final
     {
-        if (!m_preprocessor.isNull()) {
-            auto _dmesg = dmesg;
-            m_preprocessor->process(_dmesg);
-            send(_dmesg);
-            return true;
-        }
-
-        send(dmesg);
-
+        send(logMsg);
         return true;
     }
-
-    AbstractMessageProcessorPtr preprocessor() const { return m_preprocessor; }
-
-    inline void setPreprocessor(const AbstractMessageProcessorPtr &preprocessor)
-    {
-        if (preprocessor.data() == this)
-            return;
-
-        m_preprocessor = preprocessor;
-    }
-
-private:
-    AbstractMessageProcessorPtr m_preprocessor;
 };
+
+using SinkPtr = QSharedPointer<Sink>;
 
 } // namespace QtLogger
 
-// end abstractmessagesink.h
+// end sink.h
 
 // functionfilter.h
 
@@ -278,14 +289,14 @@ private:
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT FunctionFilter : public AbstractMessageFilter
+class QTLOGGER_EXPORT FunctionFilter : public Filter
 {
 public:
-    using Function = std::function<bool(const DebugMessage &)>;
+    using Function = std::function<bool(const LogMessage &)>;
 
     FunctionFilter(const Function &function);
 
-    bool filter(const DebugMessage &dmesg) const override;
+    bool filter(const LogMessage &logMsg) const override;
 
 private:
     Function m_function;
@@ -295,9 +306,9 @@ using FunctionFilterPtr = QSharedPointer<FunctionFilter>;
 
 inline FunctionFilter::FunctionFilter(const Function &function) : m_function(function) { }
 
-inline bool FunctionFilter::filter(const DebugMessage &dmesg) const
+inline bool FunctionFilter::filter(const LogMessage &logMsg) const
 {
-    return m_function(dmesg);
+    return m_function(logMsg);
 }
 
 } // namespace QtLogger
@@ -311,13 +322,13 @@ inline bool FunctionFilter::filter(const DebugMessage &dmesg) const
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT RegExpFilter : public AbstractMessageFilter
+class QTLOGGER_EXPORT RegExpFilter : public Filter
 {
 public:
     explicit RegExpFilter(const QRegularExpression &regExp);
     explicit RegExpFilter(const QString &regExp);
 
-    bool filter(const DebugMessage &dmesg) const override;
+    bool filter(const LogMessage &logMsg) const override;
 
 private:
     QRegularExpression m_regExp;
@@ -329,94 +340,6 @@ using RegExpFilterPtr = QSharedPointer<RegExpFilter>;
 
 // end regexpfilter.h
 
-// defaultformatter.h
-
-#include <QSharedPointer>
-
-// qtlogmessageformatter.h
-
-#include <QSharedPointer>
-
-namespace QtLogger {
-
-using QtLogMessageFormatterPtr = QSharedPointer<class QtLogMessageFormatter>;
-
-class QTLOGGER_EXPORT QtLogMessageFormatter : public AbstractMessageFormatter
-{
-public:
-    static QtLogMessageFormatterPtr instance()
-    {
-        static const auto s_instance = QtLogMessageFormatterPtr(new QtLogMessageFormatter());
-        return s_instance;
-    }
-
-    QString format(const DebugMessage &dmesg) const override
-    {
-        return qFormatLogMessage(dmesg.type(), dmesg.context(), dmesg.message());
-    }
-
-private:
-    QtLogMessageFormatter() {}
-};
-
-} // namespace QtLogger
-
-// end qtlogmessageformatter.h
-
-namespace QtLogger {
-
-using DefaultFormatterPtr = QSharedPointer<class DefaultFormatter>;
-
-class QTLOGGER_EXPORT DefaultFormatter : public AbstractMessageProcessor
-{
-public:
-    static DefaultFormatterPtr instance();
-
-    bool process(DebugMessage &dmesg) override;
-
-    AbstractMessageProcessorPtr formatter() const;
-    void setFormatter(AbstractMessageProcessorPtr formatter);
-
-private:
-    explicit DefaultFormatter(const AbstractMessageProcessorPtr &formatter);
-
-    AbstractMessageProcessorPtr m_formatter;
-};
-
-inline DefaultFormatterPtr DefaultFormatter::instance()
-{
-    static const auto s_instance = DefaultFormatterPtr(new DefaultFormatter(QtLogMessageFormatter::instance()));
-    return s_instance;
-}
-
-inline DefaultFormatter::DefaultFormatter(const AbstractMessageProcessorPtr &formatter)
-    : m_formatter(formatter)
-{
-}
-
-inline bool DefaultFormatter::process(DebugMessage &dmesg)
-{
-    if (!dmesg.isFormatted() && m_formatter) {
-        m_formatter->process(dmesg);
-    }
-
-    return true;
-}
-
-inline AbstractMessageProcessorPtr DefaultFormatter::formatter() const
-{
-    return m_formatter;
-}
-
-inline void DefaultFormatter::setFormatter(AbstractMessageProcessorPtr formatter)
-{
-    m_formatter = formatter;
-}
-
-} // namespace QtLogger
-
-// end defaultformatter.h
-
 // functionformatter.h
 
 #include <functional>
@@ -425,14 +348,14 @@ inline void DefaultFormatter::setFormatter(AbstractMessageProcessorPtr formatter
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT FunctionFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT FunctionFormatter : public Formatter
 {
 public:
-    using Function = std::function<QString(const DebugMessage &)>;
+    using Function = std::function<QString(const LogMessage &)>;
 
     FunctionFormatter(const Function &func) : m_func(func) { }
 
-    QString format(const DebugMessage &dmesg) const override { return m_func(dmesg); }
+    QString format(const LogMessage &logMsg) const override { return m_func(logMsg); }
 
 private:
     Function m_func;
@@ -452,7 +375,7 @@ namespace QtLogger {
 
 using JsonFormatterPtr = QSharedPointer<class JsonFormatter>;
 
-class QTLOGGER_EXPORT JsonFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT JsonFormatter : public Formatter
 {
 public:
     static JsonFormatterPtr instance()
@@ -461,36 +384,12 @@ public:
         return s_instance;
     }
 
-    QString format(const DebugMessage &dmesg) const override;
+    QString format(const LogMessage &logMsg) const override;
 };
 
 } // namespace QtLogger
 
 // end jsonformatter.h
-
-// nullformatter.h
-
-#include <QSharedPointer>
-
-namespace QtLogger {
-
-using NullFormatterPtr = QSharedPointer<class NullFormatter>;
-
-class QTLOGGER_EXPORT NullFormatter : public AbstractMessageFormatter
-{
-public:
-    static NullFormatterPtr instance()
-    {
-        static const auto s_instance = NullFormatterPtr::create();
-        return s_instance;
-    }
-
-    QString format(const DebugMessage &dmesg) const override { return dmesg.message(); }
-};
-
-} // namespace QtLogger
-
-// end nullformatter.h
 
 // patternformatter.h
 
@@ -500,12 +399,12 @@ namespace QtLogger {
 
 using PatternFormatterPtr = QSharedPointer<class PatternFormatter>;
 
-class QTLOGGER_EXPORT PatternFormatter : public AbstractMessageFormatter
+class QTLOGGER_EXPORT PatternFormatter : public Formatter
 {
 public:
     explicit PatternFormatter(const QString &pattern);
 
-    QString format(const DebugMessage &dmesg) const override;
+    QString format(const LogMessage &logMsg) const override;
 
 private:
     QString m_pattern;
@@ -524,7 +423,7 @@ namespace QtLogger {
 
 using PrettyFormatterPtr = QSharedPointer<class PrettyFormatter>;
 
-class QTLOGGER_EXPORT PrettyFormatter : public AbstractMessageProcessor
+class QTLOGGER_EXPORT PrettyFormatter : public Formatter
 {
 public:
     static PrettyFormatterPtr instance()
@@ -535,10 +434,10 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    bool process(DebugMessage &dmesg) override final;
+    QString format(const LogMessage &logMsg) const override;
 
-    inline bool showThread() const { return m_showThread; }
-    inline void setShowThread(bool newShowThread) { m_showThread = newShowThread; }
+    inline bool showThreadId() const { return m_showThreadId; }
+    inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }
 
     inline int maxCategoryWidth() const { return m_maxCategoryWidth; }
     inline void setMaxCategoryWidth(int newMaxCategoryWidth)
@@ -547,23 +446,50 @@ public:
     }
 
 private:
-    bool m_showThread = true;
-    QMap<int, int> m_threads;
-    int m_threadsIndex = 0;
+    bool m_showThreadId = true;
+    mutable QMap<int, int> m_threads;
+    mutable int m_threadsIndex = 0;
 
     int m_maxCategoryWidth = 15;
-    int m_categoryWidth = 0;
+    mutable int m_categoryWidth = 0;
 };
 
 } // namespace QtLogger
 
 // end prettyformatter.h
 
+// qtlogmessageformatter.h
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+using QtLogMessageFormatterPtr = QSharedPointer<class QtLogMessageFormatter>;
+
+class QTLOGGER_EXPORT QtLogMessageFormatter : public Formatter
+{
+public:
+    static QtLogMessageFormatterPtr instance()
+    {
+        static const auto s_instance = QtLogMessageFormatterPtr(new QtLogMessageFormatter());
+        return s_instance;
+    }
+
+    QString format(const LogMessage &logMsg) const override
+    {
+        return qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
+    }
+
+private:
+    QtLogMessageFormatter() { }
+};
+
+} // namespace QtLogger
+
+// end qtlogmessageformatter.h
+
 // logger.h
 
-#include <QList>
-#include <QObject>
-#include <QPointer>
 #include <QSettings>
 
 #ifndef QTLOGGER_NO_THREAD
@@ -572,109 +498,168 @@ private:
 #    include <QThread>
 #endif
 
-// messagehandler.h
+#ifndef QTLOGGER_NO_THREAD
+
+// ownthreadpipeline.h
+
+#include <QPointer>
+
+// typedpipeline.h
+
+// pipeline.h
+
+#include <initializer_list>
 
 #include <QList>
 #include <QSharedPointer>
 
-#include <initializer_list>
-
 namespace QtLogger {
 
-using MessageHandlerPtr = QSharedPointer<class MessageHandler>;
-
-class QTLOGGER_EXPORT MessageHandler : public AbstractMessageProcessor
+class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
-    MessageHandler();
-    MessageHandler(std::initializer_list<AbstractMessageProcessorPtr> processors);
+    Pipeline() = default;
+    Pipeline(std::initializer_list<HandlerPtr> handlers);
 
-    Type processorType() const override { return AbstractMessageProcessor::Handler; }
+    HandlerType type() const override { return HandlerType::Pipeline; }
 
-    void append(const AbstractMessageProcessorPtr &processor);
-    void append(std::initializer_list<AbstractMessageProcessorPtr> processors);
-    void insertAfter(Type type, const AbstractMessageProcessorPtr &processor);
-    void insertAfter(Type type, Type typeRight, const AbstractMessageProcessorPtr &processor);
-    void remove(const AbstractMessageProcessorPtr &processor);
+    void append(const HandlerPtr &handler);
+    void append(std::initializer_list<HandlerPtr> handlers);
+    void remove(const HandlerPtr &handler);
     void clear();
 
-    void clear(Type type);
+    Pipeline &operator<<(const HandlerPtr &handler);
 
-    void appendFilter(const AbstractMessageFilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const DebugMessage &)> &function);
-    RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
-    void clearFilters();
+    bool process(LogMessage &logMsg) override;
 
-    void setFormatter(const AbstractMessageFormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const DebugMessage &)> &function);
-    PatternFormatterPtr setFormatter(const QString &pattern);
-    void clearFormatters();
-
-    void appendSink(const AbstractMessageSinkPtr &sink);
-    void clearSinks();
-
-    void appendHandler(const MessageHandlerPtr &handler);
-    void clearHandlers();
-
-    MessageHandler &operator<<(const AbstractMessageProcessorPtr &processor);
-
-    bool process(DebugMessage &dmesg) override;
-
-    void flush();
+protected:
+    QList<HandlerPtr> &handlers() { return m_handlers; }
 
 private:
-    QList<AbstractMessageProcessorPtr> m_processors;
+    QList<HandlerPtr> m_handlers;
 };
 
-inline MessageHandler &operator<<(MessageHandler *handler,
-                                  const AbstractMessageProcessorPtr &processor)
+using PipelinePtr = QSharedPointer<Pipeline>;
+
+inline Pipeline &operator<<(Pipeline *pipeline, const HandlerPtr &handler)
 {
-    return *handler << processor;
+    return *pipeline << handler;
 }
 
-inline MessageHandler &operator<<(MessageHandlerPtr handler,
-                                  const AbstractMessageProcessorPtr &processor)
+inline Pipeline &operator<<(PipelinePtr pipeline, const HandlerPtr &handler)
 {
-    return *handler << processor;
+    return *pipeline << handler;
 }
 
 } // namespace QtLogger
 
-// end messagehandler.h
+// end pipeline.h
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT TypedPipeline : public Pipeline
+{
+public:
+    TypedPipeline() = default;
+    ~TypedPipeline() override;
+
+    void insertAfter(HandlerType type, const HandlerPtr &handler);
+    void insertBetween(HandlerType leftType, HandlerType rightType, const HandlerPtr &handler);
+    void clearType(HandlerType type);
+
+    void appendFilter(const FilterPtr &filter);
+    FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
+    RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
+    void clearFilters();
+
+    void setFormatter(const FormatterPtr &formatter);
+    FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
+    PatternFormatterPtr setFormatter(const QString &pattern);
+    void clearFormatters();
+
+    void appendSink(const SinkPtr &sink);
+    void clearSinks();
+
+    void appendPipeline(const PipelinePtr &pipeline);
+    void clearPipelines();
+
+    void flush();
+};
+
+using TypedPipelinePtr = QSharedPointer<TypedPipeline>;
+
+} // namespace QtLogger
+
+// end typedpipeline.h
+
+QT_FORWARD_DECLARE_CLASS(QThread)
+
+namespace QtLogger {
+
+class OwnThreadPipelineWorker;
+
+class QTLOGGER_EXPORT OwnThreadPipeline : public TypedPipeline
+{
+public:
+    OwnThreadPipeline();
+    ~OwnThreadPipeline() override;
+
+    void moveToOwnThread();
+    void moveToMainThread();
+    bool ownThreadIsRunning() const;
+    QThread *ownThread() const { return m_thread; }
+
+    bool process(LogMessage &logMsg) override;
+
+private:
+    QPointer<OwnThreadPipelineWorker> m_worker;
+    QPointer<QThread> m_thread;
+};
+
+} // namespace QtLogger
+
+// end ownthreadpipeline.h
+
+#else
+
+#endif
 
 #define gQtLogger QtLogger::Logger::instance()
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-#define QRMUTEX QRecursiveMutex
+#    define QRMUTEX QRecursiveMutex
 #else
-#define QRMUTEX QMutex
+#    define QRMUTEX QMutex
 #endif
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT Logger : public QObject
+class QTLOGGER_EXPORT Logger :
+#ifndef QTLOGGER_NO_THREAD
+    public OwnThreadPipeline
+#else
+    public TypedPipeline
+#endif
 {
-    Q_OBJECT
-
 public:
-    enum SinkTypeFlag {
-        None = 0x00,
+    enum class SinkType {
+        Unknown = 0x00,
         StdOut = 0x01,
         StdErr = 0x02,
         SysLog = 0x04,
         Journal = 0x8,
-        StdLog = 0x10, // For Android, iOS
+        StdLog = 0x10, // For Android and iOS
         NTEventLog = 0x20,
         File = 0x40,
         RotatingFile = 0x80
     };
 
-    Q_DECLARE_FLAGS(SinkType, SinkTypeFlag)
+    Q_DECLARE_FLAGS(SinkTypeFlags, SinkType)
 
     static Logger *instance();
 
-    explicit Logger(QObject *parent = nullptr);
-    virtual ~Logger();
+    Logger() = default;
+    ~Logger() override;
 
     /*
         Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
@@ -690,34 +675,11 @@ public:
     */
     static void setMessagePattern(const QString &pattern);
 
-    void append(const AbstractMessageProcessorPtr &processor);
-    void append(std::initializer_list<AbstractMessageProcessorPtr> processors);
-    void remove(const AbstractMessageProcessorPtr &processor);
-    void clear();
+    Logger &operator<<(const HandlerPtr &handler);
 
-    void appendFilter(const AbstractMessageFilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const DebugMessage &)> &function);
-    RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
-    void clearFilters();
-
-    void setFormatter(const AbstractMessageFormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const DebugMessage &)> &function);
-    PatternFormatterPtr setFormatter(const QString &pattern);
-    void clearFormatters();
-
-    void appendSink(const AbstractMessageSinkPtr &sink);
-    void appendHttpSink(const QString &url, int format);
-    void clearSinks();
-
-    void appendHandler(const MessageHandlerPtr &handler);
-    void clearHandlers();
-
-    Logger &operator<<(const AbstractMessageProcessorPtr &processor);
-
-    void configure(std::initializer_list<AbstractMessageProcessorPtr> processors,
-                   bool async = false);
-    void configure(const SinkType &types = StdLog, const QString &path = {}, int maxFileSize = 0,
-                   int maxFileCount = 0, bool async = false);
+    void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
+    void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {},
+                   int maxFileSize = 0, int maxFileCount = 0, bool async = false);
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
 
@@ -738,64 +700,40 @@ public:
     void configure(const QSettings &settings, const QString &group = QStringLiteral("logger"));
     void configure(const QString &path, const QString &group = QStringLiteral("logger"));
 
-    void flush();
-
 #ifndef QTLOGGER_NO_THREAD
 public:
     void lock() const;
     void unlock() const;
     QRMUTEX *mutex() const;
-
-    void moveToOwnThread();
-    void moveToMainThread();
-    bool ownThreadIsRunning() const;
-    inline QThread *ownThread() { return m_thread.data(); }
-
-protected:
-    struct LogEvent : public QEvent
-    {
-        DebugMessage dmesg;
-
-        LogEvent(const DebugMessage &dmesg);
-    };
-
-    void customEvent(QEvent *event) override;
 #endif
 
 public:
     void installMessageHandler();
     static void restorePreviousMessageHandler();
 
+    void processMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
+
     static void messageHandler(QtMsgType type, const QMessageLogContext &context,
                                const QString &message);
 
-    void processMessage(QtMsgType type, const QMessageLogContext &context, const QString &message);
-    void processMessage(const DebugMessage &dmesg);
-
 private:
-    void processMessage(DebugMessage &dmesg);
-
-private:
-    MessageHandlerPtr m_handler = MessageHandlerPtr::create();
-
 #ifndef QTLOGGER_NO_THREAD
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#    if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     mutable QRecursiveMutex m_mutex;
-#else
+#    else
     mutable QMutex m_mutex { QMutex::Recursive };
-#endif
-    QPointer<QThread> m_thread;
+#    endif
 #endif
 };
 
-inline Logger &operator<<(Logger *logger, const AbstractMessageProcessorPtr &processor)
+inline Logger &operator<<(Logger *logger, const HandlerPtr &handler)
 {
-    return *logger << processor;
+    return *logger << handler;
 }
 
-inline Logger& operator<<(Logger* logger, const MessageHandler& handler)
+inline Logger &operator<<(Logger *logger, const Pipeline &pipeline)
 {
-    return *logger << MessageHandlerPtr::create(handler);
+    return *logger << PipelinePtr::create(pipeline);
 }
 
 } // namespace QtLogger
@@ -848,12 +786,12 @@ namespace QtLogger {
 
 using QIODevicePtr = QSharedPointer<QIODevice>;
 
-class QTLOGGER_EXPORT IODeviceSink : public AbstractMessageSink
+class QTLOGGER_EXPORT IODeviceSink : public Sink
 {
 public:
     explicit IODeviceSink(const QIODevicePtr &device);
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
 protected:
     const QIODevicePtr &device() const;
@@ -869,7 +807,7 @@ using IODeviceSinkPtr = QSharedPointer<IODeviceSink>;
 
 // end iodevicesink.h
 
-class QFile;
+QT_FORWARD_DECLARE_CLASS(QFile)
 
 namespace QtLogger {
 
@@ -907,7 +845,7 @@ public:
     explicit RotatingFileSink(const QString &path, int maxFileSize = RotatingFileDefaultMaxFileSize,
                               int maxFileCount = RotatingFileDefaultMaxFileCount);
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
 private:
     void rotate();
@@ -929,17 +867,17 @@ using RotatingFileSinkPtr = QSharedPointer<RotatingFileSink>;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SignalSink : public QObject, AbstractMessageSink
+class QTLOGGER_EXPORT SignalSink : public QObject, Sink
 {
     Q_OBJECT
 
 public:
     explicit SignalSink(QObject *parent = nullptr);
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
 Q_SIGNALS:
-    void message(const QtLogger::DebugMessage &dmesg);
+    void message(const QtLogger::LogMessage &logMsg);
 };
 
 using SignalSinkPtr = QSharedPointer<SignalSink>;
@@ -954,12 +892,10 @@ using SignalSinkPtr = QSharedPointer<SignalSink>;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdErrSink : public AbstractMessageSink
+class QTLOGGER_EXPORT StdErrSink : public Sink
 {
 public:
-    StdErrSink();
-
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;
@@ -980,14 +916,14 @@ using StdErrSinkPtr = QSharedPointer<StdErrSink>;
 
 #include <QSharedPointer>
 
+#include "../abstractmessagesink.h"
+
 namespace QtLogger {
 
-class QTLOGGER_EXPORT AndroidLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT AndroidLogSink : public Sink
 {
 public:
-    AndroidLogSink();
-
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using AndroidLogSinkPtr = QSharedPointer<AndroidLogSink>;
@@ -1006,14 +942,14 @@ using AndroidLogSinkPtr = QSharedPointer<AndroidLogSink>;
 
 #include <QSharedPointer>
 
+#include "../abstractmessagesink.h"
+
 namespace QtLogger {
 
-class QTLOGGER_EXPORT IosLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT IosLogSink : public Sink
 {
 public:
-    IosLogSink();
-
-    void send(const DebugMessage &dmesg);
+    void send(const LogMessage &logMsg);
 };
 
 using IosLogSinkPtr = QSharedPointer<IosLogSink>;
@@ -1050,12 +986,10 @@ using StdLogSinkPtr = QSharedPointer<StdLogSink>;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdOutSink : public AbstractMessageSink
+class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
-    StdOutSink();
-
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using StdOutSinkPtr = QSharedPointer<StdOutSink>;
@@ -1066,24 +1000,22 @@ using StdOutSinkPtr = QSharedPointer<StdOutSink>;
 
 // version.h
 
-#define QTLOGGER_VERSION 0.3.0
+#define QTLOGGER_VERSION 0.4.0
 
 // end version.h
 
-using QtLoggerAbstractMessageFilter = QtLogger::AbstractMessageFilter;
-using QtLoggerAbstractMessageFormatter = QtLogger::AbstractMessageFormatter;
-using QtLoggerAbstractMessageProcessor = QtLogger::AbstractMessageProcessor;
-using QtLoggerAbstractMessageSink = QtLogger::AbstractMessageSink;
-using QtLoggerDebugMessage = QtLogger::DebugMessage;
-using QtLoggerDefaultFormatter = QtLogger::DefaultFormatter;
+using QtLoggerFilter = QtLogger::Filter;
+using QtLoggerFormatter = QtLogger::Formatter;
+using QtLoggerHandler = QtLogger::Handler;
+using QtLoggerSink = QtLogger::Sink;
+using QtLoggerLogMessage = QtLogger::LogMessage;
 using QtLoggerFileSink = QtLogger::FileSink;
 using QtLoggerFunctionFilter = QtLogger::FunctionFilter;
 using QtLoggerFunctionFormatter = QtLogger::FunctionFormatter;
 using QtLoggerIODeviceSink = QtLogger::IODeviceSink;
 using QtLoggerJsonFormatter = QtLogger::JsonFormatter;
 using QtLoggerLogger = QtLogger::Logger;
-using QtLoggerMessageHandler = QtLogger::MessageHandler;
-using QtLoggerNullFormatter = QtLogger::NullFormatter;
+using QtLoggerPipeline = QtLogger::Pipeline;
 using QtLoggerPatternFormatter = QtLogger::PatternFormatter;
 using QtLoggerPrettyFormatter = QtLogger::PrettyFormatter;
 using QtLoggerQtLogMessageFormatter = QtLogger::QtLogMessageFormatter;
@@ -1094,18 +1026,16 @@ using QtLoggerStdErrSink = QtLogger::StdErrSink;
 using QtLoggerStdLogSink = QtLogger::StdLogSink;
 using QtLoggerStdOutSink = QtLogger::StdOutSink;
 
-using QtLoggerAbstractMessageFilterPtr = QtLogger::AbstractMessageFilterPtr;
-using QtLoggerAbstractMessageFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
-using QtLoggerAbstractMessageProcessorPtr = QtLogger::AbstractMessageProcessorPtr;
-using QtLoggerAbstractMessageSinkPtr = QtLogger::AbstractMessageSinkPtr;
-using QtLoggerDefaultFormatterPtr = QtLogger::DefaultFormatterPtr;
+using QtLoggerFilterPtr = QtLogger::FilterPtr;
+using QtLoggerFormatterPtr = QtLogger::FormatterPtr;
+using QtLoggerHandlerPtr = QtLogger::HandlerPtr;
+using QtLoggerSinkPtr = QtLogger::SinkPtr;
 using QtLoggerFileSinkPtr = QtLogger::FileSinkPtr;
 using QtLoggerFunctionFilterPtr = QtLogger::FunctionFilterPtr;
 using QtLoggerFunctionFormatterPtr = QtLogger::FunctionFormatterPtr;
 using QtLoggerIODeviceSinkPtr = QtLogger::IODeviceSinkPtr;
 using QtLoggerJsonFormatterPtr = QtLogger::JsonFormatterPtr;
-using QtLoggerMessageHandlerPtr = QtLogger::MessageHandlerPtr;
-using QtLoggerNullFormatterPtr = QtLogger::NullFormatterPtr;
+using QtLoggerPipelinePtr = QtLogger::PipelinePtr;
 using QtLoggerPatternFormatterPtr = QtLogger::PatternFormatterPtr;
 using QtLoggerPrettyFormatterPtr = QtLogger::PrettyFormatterPtr;
 using QtLoggerQtLogMessageFormatterPtr = QtLogger::QtLogMessageFormatterPtr;
@@ -1116,21 +1046,11 @@ using QtLoggerStdErrSinkPtr = QtLogger::StdErrSinkPtr;
 using QtLoggerStdLogSinkPtr = QtLogger::StdLogSinkPtr;
 using QtLoggerStdOutSinkPtr = QtLogger::StdOutSinkPtr;
 
-using QtLoggerFilter = QtLogger::AbstractMessageFilter;
-using QtLoggerFormatter = QtLogger::AbstractMessageFormatter;
-using QtLoggerProcessor = QtLogger::AbstractMessageProcessor;
-using QtLoggerSink = QtLogger::AbstractMessageSink;
-using QtLoggerHandler = QtLogger::MessageHandler;
-
-using QtLoggerFilterPtr = QtLogger::AbstractMessageFilterPtr;
-using QtLoggerFormatterPtr = QtLogger::AbstractMessageFormatterPtr;
-using QtLoggerProcessorPtr = QtLogger::AbstractMessageProcessorPtr;
-using QtLoggerSinkPtr = QtLogger::AbstractMessageSinkPtr;
-using QtLoggerHandlerPtr = QtLogger::MessageHandlerPtr;
-
 #ifdef QTLOGGER_NETWORK
 
 // httpsink.h
+
+#ifdef QTLOGGER_NETWORK
 
 #include <QNetworkRequest>
 #include <QSharedPointer>
@@ -1141,20 +1061,13 @@ QT_FORWARD_DECLARE_CLASS(QNetworkAccessManager)
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT HttpSink : public AbstractMessageSink
+class QTLOGGER_EXPORT HttpSink : public Sink
 {
 public:
-    enum Format {
-        None,
-        Raw,
-        Default,
-        Json
-    };
-
-    explicit HttpSink(const QUrl &url, Format format = Default);
+    explicit HttpSink(const QUrl &url);
     ~HttpSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     void setRequest(const QNetworkRequest &request);
@@ -1168,6 +1081,8 @@ private:
 using HttpSinkPtr = QSharedPointer<HttpSink>;
 
 } // namespace QtLogger
+
+#endif // QTLOGGER_NETWORK
 
 // end httpsink.h
 
@@ -1195,19 +1110,21 @@ using QtLoggerAndroidLogSinkPtr = QtLogger::AndroidLogSinkPtr;
 
 #include <QSharedPointer>
 
+// Syslog options
+// See syslog.h for more information
 #define QTLOGGER_SYSLOG_LOG_PID  0x01
 #define QTLOGGER_SYSLOG_LOG_USER (1 << 3)
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SysLogSink : public AbstractMessageSink
+class QTLOGGER_EXPORT SysLogSink : public Sink
 {
 public:
     explicit SysLogSink(const QString &ident, int option = QTLOGGER_SYSLOG_LOG_PID,
                         int facility = QTLOGGER_SYSLOG_LOG_USER);
     ~SysLogSink();
 
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using SysLogSinkPtr = QSharedPointer<SysLogSink>;
@@ -1230,14 +1147,14 @@ using QtLoggerSysLogSinkPtr = QtLogger::SysLogSinkPtr;
 
 #include <QSharedPointer>
 
+#include "../abstractmessagesink.h"
+
 namespace QtLogger {
 
-class QTLOGGER_EXPORT JournalSink : public AbstractMessageSink
+class QTLOGGER_EXPORT JournalSink : public Sink
 {
 public:
-    JournalSink();
-
-    void send(const DebugMessage &dmesg) override;
+    void send(const LogMessage &logMsg) override;
 };
 
 using JournalSinkPtr = QSharedPointer<JournalSink>;
@@ -1251,45 +1168,6 @@ using JournalSinkPtr = QSharedPointer<JournalSink>;
 using QtLoggerJournalSink = QtLogger::JournalSink;
 using QtLoggerJournalSinkPtr = QtLogger::JournalSinkPtr;
 #endif
-
-// debugmessage.cpp
-
-namespace QtLogger {
-
-QTLOGGER_DECL_SPEC
-DebugMessage::DebugMessage(QtMsgType type, const QMessageLogContext &context,
-                           const QString &message)
-    : m_type(type), m_message(message)
-{
-    m_context.version = context.version;
-    m_context.line = context.line;
-    m_context.file = context.file;
-    m_context.function = context.function;
-    m_context.category = context.category;
-}
-
-QTLOGGER_DECL_SPEC
-DebugMessage::DebugMessage(const DebugMessage &dmesg)
-{
-    m_file = QByteArray(dmesg.m_context.file);
-    m_function = QByteArray(dmesg.m_context.function);
-    m_category = QByteArray(dmesg.m_context.category);
-
-    m_type = dmesg.m_type;
-    m_context.version = dmesg.m_context.version;
-    m_context.line = dmesg.m_context.line;
-    m_context.file = m_file.constData();
-    m_context.function = m_function.constData();
-    m_context.category = m_category.constData();
-    m_message = dmesg.m_message;
-
-    m_time = dmesg.m_time;
-    m_threadId = dmesg.m_threadId;
-
-    m_formattedMessage = dmesg.m_formattedMessage;
-}
-
-}
 
 // regexpfilter.cpp
 
@@ -1306,9 +1184,9 @@ QtLogger::RegExpFilter::RegExpFilter(const QString &regExp) : m_regExp(QRegularE
 }
 
 QTLOGGER_DECL_SPEC
-bool RegExpFilter::filter(const DebugMessage &dmesg) const
+bool RegExpFilter::filter(const LogMessage &logMsg) const
 {
-    return m_regExp.match(dmesg.message()).hasMatch();
+    return m_regExp.match(logMsg.message()).hasMatch();
 }
 
 } // namespace QtLogger
@@ -1320,13 +1198,13 @@ bool RegExpFilter::filter(const DebugMessage &dmesg) const
 #include <QJsonObject>
 
 #ifdef QTLOGGER_NETWORK
-#include <QHostInfo>
+#    include <QHostInfo>
 #endif
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QString JsonFormatter::format(const DebugMessage &dmesg) const
+QString JsonFormatter::format(const LogMessage &logMsg) const
 {
     static QStringList types { QStringLiteral("debug"),    QStringLiteral("warning"),
                                QStringLiteral("critical"), QStringLiteral("fatal"),
@@ -1334,14 +1212,18 @@ QString JsonFormatter::format(const DebugMessage &dmesg) const
 
     QJsonObject obj;
 
-    obj[QStringLiteral("message")] = dmesg.message();
-    obj[QStringLiteral("type")] = types.value(dmesg.type(), QStringLiteral("debug"));
-    obj[QStringLiteral("line")] = dmesg.line();
-    obj[QStringLiteral("file")] = QString::fromUtf8(dmesg.file());
-    obj[QStringLiteral("function")] = QString::fromUtf8(dmesg.function());
-    obj[QStringLiteral("category")] = QString::fromUtf8(dmesg.category());
-    obj[QStringLiteral("time")] = dmesg.time().toString(QStringLiteral("yyyy-MM-ddThh:mm:ss.zZ"));
-    obj[QStringLiteral("thread")] = dmesg.threadId();
+    obj[QStringLiteral("message")] = logMsg.message();
+    obj[QStringLiteral("type")] = types.value(logMsg.type(), QStringLiteral("debug"));
+    obj[QStringLiteral("line")] = logMsg.line();
+    obj[QStringLiteral("file")] = QString::fromUtf8(logMsg.file());
+    obj[QStringLiteral("function")] = QString::fromUtf8(logMsg.function());
+    obj[QStringLiteral("category")] = QString::fromUtf8(logMsg.category());
+    obj[QStringLiteral("time")] = logMsg.time().toString(QStringLiteral("yyyy-MM-ddThh:mm:ss.zZ"));
+    obj[QStringLiteral("thread")] = logMsg.threadId();
+
+    for (const auto &key : logMsg.attributes().keys()) {
+        obj[key] = QJsonValue::fromVariant(logMsg.attribute(key));
+    }
 
     if (qApp) {
         obj[QStringLiteral("pid")] = qApp->applicationPid();
@@ -1366,13 +1248,13 @@ QTLOGGER_DECL_SPEC
 PatternFormatter::PatternFormatter(const QString &pattern) : m_pattern(pattern) { }
 
 QTLOGGER_DECL_SPEC
-QString PatternFormatter::format(const DebugMessage &dmesg) const
+QString PatternFormatter::format(const LogMessage &logMsg) const
 {
-    // TODO: write own formatter
+    // TODO: write own implementation
 
     QtLogger::setMessagePattern(m_pattern);
 
-    auto result = qFormatLogMessage(dmesg.type(), dmesg.context(), dmesg.message());
+    auto result = qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
 
     QtLogger::restorePreviousMessagePattern();
 
@@ -1387,12 +1269,12 @@ namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
 PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth)
-    : m_showThread(showThread), m_maxCategoryWidth(maxCategoryWidth)
+    : m_showThreadId(showThread), m_maxCategoryWidth(maxCategoryWidth)
 {
 }
 
 QTLOGGER_DECL_SPEC
-bool PrettyFormatter::process(DebugMessage &dmesg)
+QString PrettyFormatter::format(const LogMessage &logMsg) const
 {
     static const QString msg_f { QStringLiteral("%1 %2 %3%4%5%6") };
     static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss.zzz") };
@@ -1404,12 +1286,12 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
     static const QString category_f { QStringLiteral("[%1] ") };
 
     QString thread;
-    if (m_showThread) {
-        if (!m_threads.contains(dmesg.threadId())) {
-            m_threads[dmesg.threadId()] = m_threadsIndex++;
+    if (m_showThreadId) {
+        if (!m_threads.contains(logMsg.threadId())) {
+            m_threads[logMsg.threadId()] = m_threadsIndex++;
         }
         if (m_threads.count() > 1) {
-            const auto index = m_threads.value(dmesg.threadId());
+            const auto index = m_threads.value(logMsg.threadId());
             thread = thread_f.arg(index);
             if (index == 0) {
                 thread.fill(QChar::fromLatin1(' '));
@@ -1418,8 +1300,8 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
     }
 
     QString category;
-    if (qstrcmp(dmesg.category(), "default") != 0) {
-        category = category_f.arg(QString::fromUtf8(dmesg.category()));
+    if (qstrcmp(logMsg.category(), "default") != 0) {
+        category = category_f.arg(QString::fromUtf8(logMsg.category()));
     }
 
     QString space;
@@ -1431,12 +1313,10 @@ bool PrettyFormatter::process(DebugMessage &dmesg)
         space.fill(QChar::fromLatin1(' '), qMax(m_categoryWidth - categoryLength, 0));
     }
 
-    auto result = msg_f.arg(dmesg.time().toString(time_f), type_l.at(dmesg.type()), thread,
-                            category, space, dmesg.message());
+    auto result = msg_f.arg(logMsg.time().toString(time_f), type_l.at(logMsg.type()), thread,
+                            category, space, logMsg.message());
 
-    dmesg.setFormattedMessage(result);
-
-    return true;
+    return result;
 }
 
 } // namespace QtLogger
@@ -1503,12 +1383,6 @@ Logger *Logger::instance()
 }
 
 QTLOGGER_DECL_SPEC
-Logger::Logger(QObject *parent) : QObject(parent)
-{
-    qRegisterMetaType<QtLogger::DebugMessage>("QtLogger::DebugMessage");
-}
-
-QTLOGGER_DECL_SPEC
 Logger::~Logger()
 {
 #ifndef QTLOGGER_NO_THREAD
@@ -1516,14 +1390,6 @@ Logger::~Logger()
 #else
     if (g_activeLogger == this) {
         g_activeLogger = nullptr;
-    }
-#endif
-
-    flush();
-
-#ifndef QTLOGGER_NO_THREAD
-    if (m_thread) {
-        m_thread->quit();
     }
 #endif
 }
@@ -1552,124 +1418,24 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::append(const AbstractMessageProcessorPtr &processor)
+Logger &Logger::operator<<(const HandlerPtr &handler)
 {
-    m_handler->append(processor);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::append(std::initializer_list<AbstractMessageProcessorPtr> processors)
-{
-    m_handler->append(processors);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::remove(const AbstractMessageProcessorPtr &processor)
-{
-    m_handler->remove(processor);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clear()
-{
-    m_handler->clear();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendFilter(const AbstractMessageFilterPtr &filter)
-{
-    m_handler->appendFilter(filter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFilterPtr Logger::appendFilter(const FunctionFilter::Function &function)
-{
-    return m_handler->appendFilter(function);
-}
-
-QTLOGGER_DECL_SPEC
-RegExpFilterPtr Logger::appendFilter(const QRegularExpression &regExp)
-{
-    return m_handler->appendFilter(regExp);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearFilters()
-{
-    m_handler->clearFilters();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::setFormatter(const AbstractMessageFormatterPtr &formatter)
-{
-    m_handler->setFormatter(formatter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFormatterPtr Logger::setFormatter(const FunctionFormatter::Function &function)
-{
-    return m_handler->setFormatter(function);
-}
-
-QTLOGGER_DECL_SPEC
-PatternFormatterPtr Logger::setFormatter(const QString &pattern)
-{
-    return m_handler->setFormatter(pattern);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearFormatters()
-{
-    m_handler->clearFormatters();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendSink(const AbstractMessageSinkPtr &sink)
-{
-    m_handler->appendSink(sink);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendHttpSink(const QString &url, int format)
-{
-#ifdef QTLOGGER_NETWORK
-    appendSink(HttpSinkPtr::create(QUrl(url), static_cast<HttpSink::Format>(format)));
-#endif
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearSinks()
-{
-    m_handler->clearSinks();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::appendHandler(const MessageHandlerPtr &handler)
-{
-    m_handler->appendHandler(handler);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::clearHandlers()
-{
-    m_handler->clearHandlers();
-}
-
-QTLOGGER_DECL_SPEC
-Logger &Logger::operator<<(const AbstractMessageProcessorPtr &processor)
-{
-    append(processor);
+    append(handler);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(std::initializer_list<AbstractMessageProcessorPtr> processors, bool async)
+void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
     QMutexLocker locker(&m_mutex);
 #endif
 
-    m_handler = MessageHandlerPtr::create(processors);
+    clear();
+
+    for (const auto &handler : handlers) {
+        append(handler);
+    }
 
 #ifndef QTLOGGER_NO_THREAD
     if (async) {
@@ -1681,7 +1447,7 @@ void Logger::configure(std::initializer_list<AbstractMessageProcessorPtr> proces
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(const SinkType &types, const QString &path, int maxFileSize,
+void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
@@ -1690,37 +1456,37 @@ void Logger::configure(const SinkType &types, const QString &path, int maxFileSi
 
     clear();
 
-    DefaultFormatter::instance()->setFormatter(PrettyFormatter::instance());
+    setFormatter(PrettyFormatter::instance());
 
-    if (types.testFlag(StdOut)) {
+    if (types.testFlag(SinkType::StdOut)) {
         appendSink(StdOutSinkPtr::create());
     }
 
-    if (types.testFlag(StdErr)) {
+    if (types.testFlag(SinkType::StdErr)) {
         appendSink(StdErrSinkPtr::create());
     }
 
-    if (types.testFlag(StdLog)) {
+    if (types.testFlag(SinkType::StdLog)) {
         appendSink(StdLogSinkPtr::create());
     }
 
 #ifdef QTLOGGER_SYSLOG
-    if (types.testFlag(SysLog)) {
+    if (types.testFlag(SinkType::SysLog)) {
         appendSink(SysLogSinkPtr::create(QFileInfo(path).baseName()));
     }
 #endif
 
 #ifdef QTLOGGER_JOURNAL
-    if (types.testFlag(Journal)) {
+    if (types.testFlag(SinkType::Journal)) {
         appendSink(JournalSinkPtr::create());
     }
 #endif
 
-    if (types.testFlag(File) && !path.isEmpty()) {
+    if (types.testFlag(SinkType::File) && !path.isEmpty()) {
         appendSink(FileSinkPtr::create(path));
     }
 
-    if (types.testFlag(RotatingFile) && !path.isEmpty()) {
+    if (types.testFlag(SinkType::RotatingFile) && !path.isEmpty()) {
         appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
     }
 
@@ -1737,7 +1503,7 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(int types, const QString &path, int maxFileSize, int maxFileCount,
                        bool async)
 {
-    configure(SinkType(QFlag(types)), path, maxFileSize, maxFileCount, async);
+    configure(SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount, async);
 }
 
 QTLOGGER_DECL_SPEC
@@ -1749,7 +1515,7 @@ void Logger::configure(const QSettings &settings, const QString &group)
 
     clear();
 
-    DefaultFormatter::instance()->setFormatter(PrettyFormatter::instance());
+    setFormatter(PrettyFormatter::instance());
 
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
     if (!filterRules.isEmpty()) {
@@ -1766,8 +1532,7 @@ void Logger::configure(const QSettings &settings, const QString &group)
         std::cerr << "Logger::configure: messagePattern: " << messagePattern.toStdString()
                   << std::endl;
 #endif
-        DefaultFormatter::instance()->setFormatter(QtLogMessageFormatter::instance());
-        setMessagePattern(messagePattern);
+        setFormatter(PatternFormatterPtr::create(messagePattern));
     }
 
     const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
@@ -1841,13 +1606,8 @@ void Logger::configure(const QSettings &settings, const QString &group)
         const auto httpMsgFormat = settings.value(group + QStringLiteral("/http_msg_format"),
                                                   QStringLiteral("default"))
                                            .toString();
-        static QMap<QString, HttpSink::Format> formats {
-            { QStringLiteral("raw"), HttpSink::Raw },
-            { QStringLiteral("default"), HttpSink::Default },
-            { QStringLiteral("json"), HttpSink::Json },
-        };
-        appendSink(HttpSinkPtr::create(QUrl(httpUrl),
-                                       formats.value(httpMsgFormat, HttpSink::Default)));
+        // TODO: add support for http_msg_format (json)
+        appendSink(HttpSinkPtr::create(QUrl(httpUrl)));
     }
 #endif
 
@@ -1865,12 +1625,6 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(const QString &path, const QString &group)
 {
     configure(QSettings(path, QSettings::IniFormat), group);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::flush()
-{
-    m_handler->flush();
 }
 
 #ifndef QTLOGGER_NO_THREAD
@@ -1893,95 +1647,15 @@ QRMUTEX *Logger::mutex() const
     return &m_mutex;
 }
 
-QTLOGGER_DECL_SPEC
-void Logger::moveToOwnThread()
-{
-    if (!m_thread) {
-        m_thread = new QThread;
-        if (qApp) {
-            if (qApp->thread() != m_thread->thread())
-                m_thread->moveToThread(qApp->thread());
-            connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
-        }
-        connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
-        m_thread->start();
-    }
-
-    moveToThread(m_thread);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::moveToMainThread()
-{
-    moveToThread(qApp->thread());
-
-    if (m_thread) {
-        m_thread->quit();
-    }
-}
-
-QTLOGGER_DECL_SPEC
-bool Logger::ownThreadIsRunning() const
-{
-    return m_thread && m_thread->isRunning();
-}
-
-namespace {
-
-QTLOGGER_DECL_SPEC
-static QEvent::Type QtLoggerEventType()
-{
-    // TODO: QEvent::registerEventType()
-    static const QEvent::Type type = static_cast<QEvent::Type>(QEvent::User + 1000);
-    return type;
-}
-
-}
-
-QTLOGGER_DECL_SPEC
-Logger::LogEvent::LogEvent(const DebugMessage &dmesg) : QEvent(QtLoggerEventType()), dmesg(dmesg) { }
-
-QTLOGGER_DECL_SPEC
-void Logger::customEvent(QEvent *event)
-{
-    if (event->type() == QtLoggerEventType()) {
-        auto ev = dynamic_cast<LogEvent *>(event);
-        if (ev) {
-            m_handler->process(ev->dmesg);
-        }
-    }
-}
-
 #endif
-
-QTLOGGER_DECL_SPEC
-void Logger::processMessage(DebugMessage &dmesg)
-{
-    m_handler->process(dmesg);
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::processMessage(const DebugMessage &dmesg)
-{
-    DebugMessage __dmesg(dmesg);
-    processMessage(__dmesg);
-}
 
 QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
-    DebugMessage dmesg(type, context, message);
+    LogMessage logMsg(type, context, message);
 
-#ifndef QTLOGGER_NO_THREAD
-    if (!ownThreadIsRunning()) {
-        processMessage(dmesg);
-    } else {
-        QCoreApplication::postEvent(this, new LogEvent(dmesg));
-    }
-#else
-    processMessage(dmesg);
-#endif
+    process(logMsg);
 }
 
 QTLOGGER_DECL_SPEC
@@ -2037,258 +1711,183 @@ void Logger::restorePreviousMessageHandler()
 
 } // namespace QtLogger
 
-// messagehandler.cpp
+// ownthreadpipeline.cpp
+
+#include <QCoreApplication>
+#include <QEvent>
+#include <QThread>
+
+namespace QtLogger {
+
+namespace {
+
+static QEvent::Type __processLogMessageEventType = static_cast<QEvent::Type>(QEvent::User + 2000);
+
+struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
+{
+    LogMessage logMsg;
+    ProcessLogMessageEvent(const LogMessage &logMsg)
+        : QEvent(__processLogMessageEventType), logMsg(logMsg)
+    {
+    }
+};
+
+}
+
+class QTLOGGER_EXPORT OwnThreadPipelineWorker : public QObject
+{
+public:
+    explicit OwnThreadPipelineWorker(OwnThreadPipeline *handler, QObject *parent = nullptr)
+        : QObject(parent), m_handler(handler)
+    {
+    }
+
+    void customEvent(QEvent *event) override
+    {
+        if (event->type() == __processLogMessageEventType) {
+            auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
+            if (_event) {
+                m_handler->TypedPipeline::process(_event->logMsg);
+            }
+        }
+    }
+
+private:
+    OwnThreadPipeline *m_handler;
+};
+
+QTLOGGER_DECL_SPEC
+OwnThreadPipeline::OwnThreadPipeline()
+{
+    qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
+}
+
+QTLOGGER_DECL_SPEC
+OwnThreadPipeline::~OwnThreadPipeline()
+{
+#ifndef QTLOGGER_NO_THREAD
+    if (m_thread) {
+        m_thread->quit();
+        m_thread->wait(1000);
+        if (m_thread)
+            delete m_thread;
+    }
+
+    if (m_worker) {
+        delete m_worker;
+    }
+#endif
+}
+
+QTLOGGER_DECL_SPEC
+void OwnThreadPipeline::moveToOwnThread()
+{
+    if (!m_worker) {
+        m_worker = new OwnThreadPipelineWorker(this);
+    }
+
+    if (!m_thread) {
+        m_thread = new QThread;
+
+        if (qApp) {
+            if (qApp->thread() != m_thread->thread())
+                m_thread->moveToThread(qApp->thread());
+            QObject::connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
+        }
+
+        QObject::connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
+        QObject::connect(m_thread, &QThread::finished, m_worker, &QThread::deleteLater);
+
+        m_thread->start();
+    }
+
+    m_worker->moveToThread(m_thread);
+}
+
+QTLOGGER_DECL_SPEC
+void OwnThreadPipeline::moveToMainThread()
+{
+    m_worker->moveToThread(qApp->thread());
+
+    if (m_thread) {
+        m_thread->quit();
+    }
+}
+
+QTLOGGER_DECL_SPEC
+bool OwnThreadPipeline::ownThreadIsRunning() const
+{
+    return m_thread && m_thread->isRunning();
+}
+
+QTLOGGER_DECL_SPEC
+bool OwnThreadPipeline::process(LogMessage &logMsg)
+{
+    if (!ownThreadIsRunning()) {
+        TypedPipeline::process(logMsg);
+    } else {
+        QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(logMsg));
+    }
+    return true;
+}
+
+} // namespace QtLogger
+
+// pipeline.cpp
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-MessageHandler::MessageHandler() { }
+Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers) : m_handlers(handlers) { }
 
 QTLOGGER_DECL_SPEC
-MessageHandler::MessageHandler(std::initializer_list<AbstractMessageProcessorPtr> processors)
-    : m_processors(processors)
+void Pipeline::append(const HandlerPtr &handler)
 {
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::append(const AbstractMessageProcessorPtr &processor)
-{
-    if (processor.isNull())
+    if (handler.isNull())
         return;
 
-    m_processors.append(processor);
+    m_handlers.append(handler);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::append(std::initializer_list<AbstractMessageProcessorPtr> processors)
+void Pipeline::append(std::initializer_list<HandlerPtr> handlers)
 {
-    m_processors.append(processors);
+    m_handlers.append(handlers);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::insertAfter(Type type, const AbstractMessageProcessorPtr &processor)
+void Pipeline::remove(const HandlerPtr &handler)
 {
-    auto first = std::find_if(
-            m_processors.begin(), m_processors.end(),
-            [type](const AbstractMessageProcessorPtr &x) { return x->processorType() == type; });
-
-    if (first == m_processors.end()) {
-        m_processors.prepend(processor);
-        return;
-    }
-
-    auto last =
-            std::find_if(first, m_processors.end(), [type](const AbstractMessageProcessorPtr &x) {
-                return x->processorType() != type;
-            });
-
-    m_processors.insert(last, processor);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::insertAfter(Type type, Type typeRight,
-                                 const AbstractMessageProcessorPtr &processor)
-{
-    auto first = std::find_if(
-            m_processors.begin(), m_processors.end(),
-            [type](const AbstractMessageProcessorPtr &x) { return x->processorType() == type; });
-
-    if (first == m_processors.end()) {
-
-        auto right = std::find_if(first, m_processors.end(), [typeRight](const auto &x) {
-            return x->processorType() == typeRight;
-        });
-
-        if (first != m_processors.end()) {
-            m_processors.insert(--right, processor);
-        } else {
-            m_processors.prepend(processor);
-        }
-
-        return;
-    }
-
-    auto last =
-            std::find_if(first, m_processors.end(), [type](const AbstractMessageProcessorPtr &x) {
-                return x->processorType() != type;
-            });
-
-    m_processors.insert(last, processor);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::remove(const AbstractMessageProcessorPtr &processor)
-{
-    if (processor.isNull())
+    if (handler.isNull())
         return;
 
-    m_processors.removeAll(processor);
+    m_handlers.removeAll(handler);
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clear()
+void Pipeline::clear()
 {
-    m_processors.clear();
+    m_handlers.clear();
 }
 
 QTLOGGER_DECL_SPEC
-void MessageHandler::clear(Type type)
-{
-    QMutableListIterator<AbstractMessageProcessorPtr> iter(m_processors);
-
-    while (iter.hasNext()) {
-        if (iter.next()->processorType() == type) {
-            iter.remove();
-        }
-    }
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::appendFilter(const AbstractMessageFilterPtr &filter)
-{
-    if (filter.isNull())
-        return;
-
-    auto index = std::find_if(m_processors.begin(), m_processors.end(), [](const auto &x) {
-        return x->processorType() != AbstractMessageProcessor::Filter;
-    });
-
-    m_processors.insert(index, filter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFilterPtr
-MessageHandler::appendFilter(const std::function<bool(const DebugMessage &)> &function)
-{
-    const auto f = FunctionFilterPtr::create(function);
-
-    appendFilter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-RegExpFilterPtr MessageHandler::appendFilter(const QRegularExpression &regExp)
-{
-    const auto f = RegExpFilterPtr::create(regExp);
-
-    appendFilter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::clearFilters()
-{
-    clear(Filter);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::setFormatter(const AbstractMessageFormatterPtr &formatter)
-{
-    if (formatter.isNull())
-        return;
-
-    clearFormatters();
-
-    auto index = std::find_if(m_processors.begin(), m_processors.end(), [](const auto &x) {
-        return x->processorType() != AbstractMessageProcessor::Filter;
-    });
-
-    m_processors.insert(index, formatter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFormatterPtr MessageHandler::setFormatter(const FunctionFormatter::Function &function)
-{
-    const auto f = FunctionFormatterPtr::create(function);
-
-    setFormatter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-PatternFormatterPtr MessageHandler::setFormatter(const QString &pattern)
-{
-    const auto f = PatternFormatterPtr::create(pattern);
-
-    setFormatter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::clearFormatters()
-{
-    clear(AbstractMessageProcessor::Formatter);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::appendSink(const AbstractMessageSinkPtr &sink)
-{
-    append(sink);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::clearSinks()
-{
-    clear(AbstractMessageProcessor::Sink);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::appendHandler(const MessageHandlerPtr &handler)
+Pipeline &Pipeline::operator<<(const HandlerPtr &handler)
 {
     append(handler);
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::clearHandlers()
-{
-    clear(AbstractMessageProcessor::Handler);
-}
-
-QTLOGGER_DECL_SPEC
-MessageHandler &MessageHandler::operator<<(const AbstractMessageProcessorPtr &processor)
-{
-    append(processor);
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-bool MessageHandler::process(DebugMessage &dmesg)
+bool Pipeline::process(LogMessage &logMsg)
 {
-    for (auto &processor : m_processors) {
-        if (!processor)
+    for (auto &handler : m_handlers) {
+        if (!handler)
             continue;
-        if (!processor->process(dmesg))
+        if (!handler->process(logMsg))
             break;
     }
 
     return true;
-}
-
-QTLOGGER_DECL_SPEC
-void MessageHandler::flush()
-{
-    for (auto &processor : m_processors) {
-        switch (processor->processorType()) {
-        case AbstractMessageProcessor::Sink: {
-            auto sink = processor.dynamicCast<AbstractMessageSink>();
-            if (sink)
-                sink->flush();
-            break;
-        }
-        case AbstractMessageProcessor::Handler: {
-            auto handler = processor.dynamicCast<MessageHandler>();
-            if (handler)
-                handler->flush();
-            break;
-        }
-        default:
-            break;
-        }
-    }
 }
 
 } // namespace QtLogger
@@ -2343,21 +1942,16 @@ QString restorePreviousMessagePattern()
 
 #ifdef QTLOGGER_ANDROIDLOG
 
-#ifdef QTLOGGER_ANDROIDLOG
-#    include <android/log.h>
-#endif
+#include <android/log.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-AndroidLogSink::AndroidLogSink() {}
-
-QTLOGGER_DECL_SPEC
-void AndroidLogSink::send(const DebugMessage &dmesg)
+void AndroidLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_ANDROIDLOG
     android_LogPriority priority = ANDROID_LOG_DEBUG;
-    switch (dmesg.type()) {
+
+    switch (logMsg.type()) {
     case QtDebugMsg:
         priority = ANDROID_LOG_DEBUG;
         break;
@@ -2375,10 +1969,7 @@ void AndroidLogSink::send(const DebugMessage &dmesg)
         break;
     };
 
-    __android_log_print(priority, dmesg.category(), "%s\n", qPrintable(dmesg.message()));
-#else
-    Q_UNUSED(dmesg);
-#endif
+    __android_log_print(priority, logMsg.category(), "%s\n", qPrintable(logMsg.message()));
 }
 
 } // namespace QtLogger
@@ -2398,14 +1989,25 @@ namespace QtLogger {
 
 namespace {
 
+/**
+ * @brief Replaces the time pattern in the given string with the current date and time.
+ *
+ * This function searches for a time pattern in the format `%{time <format>}` within the input
+ * string. If found, it replaces the pattern with the current date and time formatted according to
+ * the specified format. If no format is specified, it defaults to "yyyyMMdd_hhmmss".
+ *
+ * @param path The input string potentially containing the time pattern.
+ * @return A new string with the time pattern replaced by the current date and time.
+ */
+
 QTLOGGER_DECL_SPEC
-QString replaceTimePattern(const QString &str)
+QString replaceTimePattern(const QString &path)
 {
     static auto re = QRegularExpression(QStringLiteral("(.*)%{time *(.*?)}(.*)"));
-    auto match = re.match(str);
+    auto match = re.match(path);
 
     if (!match.hasMatch())
-        return str;
+        return path;
 
     auto format = match.captured(2);
 
@@ -2461,46 +2063,20 @@ QFile *FileSink::file() const
 #include <QNetworkReply>
 #include <QNetworkRequest>
 
-#include <iostream>
-
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-HttpSink::HttpSink(const QUrl &url, Format format) : m_url(url)
+HttpSink::HttpSink(const QUrl &url) : m_url(url)
 {
     m_manager = new QNetworkAccessManager;
 
 #ifndef QTLOGGER_NO_THREAD
-    if (m_manager->thread() != Logger::instance()->thread()) {
-        m_manager->moveToThread(Logger::instance()->thread());
+    if (m_manager->thread() != Logger::instance()->ownThread()) {
+        m_manager->moveToThread(Logger::instance()->ownThread());
     }
 #endif
-    m_manager->setParent(Logger::instance());
-
-    switch (format) {
-    case None:
-        setPreprocessor(AbstractMessageProcessorPtr());
-        break;
-    case Raw:
-        setPreprocessor(NullFormatter::instance());
-        break;
-    case Default:
-        setPreprocessor(DefaultFormatter::instance());
-        break;
-    case Json:
-        setPreprocessor(JsonFormatter::instance());
-        break;
-    }
 
     m_request.setUrl(m_url);
-
-    if (format == Json) {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("application/json; charset=utf-8"));
-    } else {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("text/plain; charset=utf-8"));
-    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -2512,7 +2088,7 @@ HttpSink::~HttpSink()
 }
 
 QTLOGGER_DECL_SPEC
-void HttpSink::send(const DebugMessage &dmesg)
+void HttpSink::send(const LogMessage &logMsg)
 {
     if (!Logger::instance()->ownThreadIsRunning()) {
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
@@ -2520,7 +2096,16 @@ void HttpSink::send(const DebugMessage &dmesg)
         m_manager = new QNetworkAccessManager;
     }
 
-    auto reply = m_manager->post(m_request, dmesg.formattedMessage().toUtf8());
+    if (logMsg.hasAttribute("mime_type")) {
+        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
+                            QStringLiteral("%1; charset=utf-8")
+                                    .arg(logMsg.attribute("mime_type").toByteArray()));
+    } else {
+        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
+                            QStringLiteral("text/plain; charset=utf-8"));
+    }
+
+    auto reply = m_manager->post(m_request, logMsg.formattedMessage().toUtf8());
 
     QObject::connect(reply, &QNetworkReply::finished, reply, &QObject::deleteLater);
 
@@ -2554,19 +2139,16 @@ void HttpSink::setRequest(const QNetworkRequest &request)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device)
-{
-    setPreprocessor(DefaultFormatter::instance());
-}
+IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device) { }
 
 QTLOGGER_DECL_SPEC
-void IODeviceSink::send(const DebugMessage &dmesg)
+void IODeviceSink::send(const LogMessage &logMsg)
 {
     if (m_device.isNull()) {
         return;
     }
 
-    m_device->write(dmesg.formattedMessage().toLocal8Bit().append("\n"));
+    m_device->write(logMsg.formattedMessage().toLocal8Bit().append("\n"));
 }
 
 QTLOGGER_DECL_SPEC
@@ -2587,27 +2169,23 @@ void IODeviceSink::setDevice(const QIODevicePtr &device)
 
 #ifdef QTLOGGER_IOSLOG
 
-#ifdef QTLOGGER_IOSLOG
-#    include <os/log.h>
-#endif
+#include <os/log.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-IosLogSink::IosLogSink() { }
-
-QTLOGGER_DECL_SPEC
-void IosLogSink::send(const DebugMessage &dmesg)
+void IosLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_IOSLOG
     QString formattedMessage;
-    if (qstrcmp(dmesg.category(), "default") == 0)
-        formattedMessage = dmesg.message();
-    else
-        formattedMessage = QStringLiteral("%1: %2").arg(dmesg.category(), dmesg.message());
+
+    if (qstrcmp(logMsg.category(), "default") == 0) {
+        formattedMessage = logMsg.message();
+    } else {
+        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
+    }
 
     os_log_type_t type = OS_LOG_TYPE_DEBUG;
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         type = OS_LOG_TYPE_DEBUG;
         break;
@@ -2625,10 +2203,7 @@ void IosLogSink::send(const DebugMessage &dmesg)
         break;
     };
 
-    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(dmesg.message()));
-#else
-    Q_UNUSED(dmesg);
-#endif
+    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(logMsg.message()));
 }
 
 } // namespace QtLogger
@@ -2639,25 +2214,16 @@ void IosLogSink::send(const DebugMessage &dmesg)
 
 #ifdef QTLOGGER_JOURNAL
 
-#ifdef QTLOGGER_JOURNAL
-#    include <systemd/sd-journal.h>
-#endif
+#include <systemd/sd-journal.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-JournalSink::JournalSink()
+void JournalSink::send(const LogMessage &logMsg)
 {
-    setPreprocessor(NullFormatter::instance());
-}
-
-QTLOGGER_DECL_SPEC
-void JournalSink::send(const DebugMessage &dmesg)
-{
-#ifdef QTLOGGER_JOURNAL
     int priority = LOG_DEBUG;
 
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         priority = LOG_DEBUG;
         break;
@@ -2677,18 +2243,15 @@ void JournalSink::send(const DebugMessage &dmesg)
         return;
     }
 
-    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(dmesg.file());
-    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(dmesg.line());
+    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(logMsg.file());
+    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(logMsg.line());
 
-    sd_journal_print_with_location(priority, file.constData(), line.constData(), dmesg.function(),
-                                   "%s", qPrintable(dmesg.formattedMessage()));
+    sd_journal_print_with_location(priority, file.constData(), line.constData(), logMsg.function(),
+                                   "%s", qPrintable(logMsg.formattedMessage()));
 
-    sd_journal_send_with_location(file.constData(), line.constData(), dmesg.function(), "%s",
-                                  qPrintable(dmesg.formattedMessage()), "PRIORITY=%i", priority,
-                                  "CATEGORY=%s", dmesg.category(), NULL);
-#else
-    Q_UNUSED(dmesg);
-#endif
+    sd_journal_send_with_location(file.constData(), line.constData(), logMsg.function(), "%s",
+                                  qPrintable(logMsg.formattedMessage()), "PRIORITY=%i", priority,
+                                  "CATEGORY=%s", logMsg.category(), NULL);
 }
 
 } // namespace QtLogger
@@ -2713,15 +2276,15 @@ RotatingFileSink::RotatingFileSink(const QString &path, int maxFileSize, int max
 }
 
 QTLOGGER_DECL_SPEC
-void RotatingFileSink::send(const DebugMessage &dmesg)
+void RotatingFileSink::send(const LogMessage &logMsg)
 {
-    const auto newFileSize = file()->size() + dmesg.formattedMessage().toLocal8Bit().size();
+    const auto newFileSize = file()->size() + logMsg.formattedMessage().toLocal8Bit().size();
 
     if (m_maxFileSize > 0 && file()->size() != 0 && newFileSize > m_maxFileSize) {
         rotate();
     }
 
-    FileSink::send(dmesg);
+    FileSink::send(logMsg);
 }
 
 QTLOGGER_DECL_SPEC
@@ -2772,15 +2335,12 @@ void RotatingFileSink::rotate()
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-SignalSink::SignalSink(QObject *parent) : QObject(parent)
-{
-    setPreprocessor(DefaultFormatter::instance());
-}
+SignalSink::SignalSink(QObject *parent) : QObject(parent) { }
 
 QTLOGGER_DECL_SPEC
-void SignalSink::send(const DebugMessage &dmesg)
+void SignalSink::send(const LogMessage &logMsg)
 {
-    Q_EMIT message(dmesg);
+    Q_EMIT message(logMsg);
 }
 
 } // namespace QtLogger
@@ -2792,15 +2352,9 @@ void SignalSink::send(const DebugMessage &dmesg)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-StdErrSink::StdErrSink()
+void StdErrSink::send(const LogMessage &logMsg)
 {
-    setPreprocessor(DefaultFormatter::instance());
-}
-
-QTLOGGER_DECL_SPEC
-void StdErrSink::send(const DebugMessage &dmesg)
-{
-    std::cerr << qPrintable(dmesg.formattedMessage()) << std::endl;
+    std::cerr << qPrintable(logMsg.formattedMessage()) << std::endl;
 }
 
 } // namespace QtLogger
@@ -2812,15 +2366,9 @@ void StdErrSink::send(const DebugMessage &dmesg)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-StdOutSink::StdOutSink()
+void StdOutSink::send(const LogMessage &logMsg)
 {
-    setPreprocessor(DefaultFormatter::instance());
-}
-
-QTLOGGER_DECL_SPEC
-void StdOutSink::send(const DebugMessage &dmesg)
-{
-    std::cout << qPrintable(dmesg.formattedMessage()) << std::endl;
+    std::cout << qPrintable(logMsg.formattedMessage()) << std::endl;
 }
 
 } // namespace QtLogger
@@ -2829,45 +2377,36 @@ void StdOutSink::send(const DebugMessage &dmesg)
 
 #ifdef QTLOGGER_SYSLOG
 
-#ifdef QTLOGGER_SYSLOG
-#    include <syslog.h>
-#endif
+#include <syslog.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
 SysLogSink::SysLogSink(const QString &ident, int option, int facility)
 {
-#ifdef QTLOGGER_SYSLOG
     openlog(qPrintable(ident), option, facility);
-#else
-    Q_UNUSED(ident);
-    Q_UNUSED(option);
-    Q_UNUSED(facility);
-#endif
 }
 
 QTLOGGER_DECL_SPEC
 SysLogSink::~SysLogSink()
 {
-#ifdef QTLOGGER_SYSLOG
     closelog();
-#endif
 }
 
 QTLOGGER_DECL_SPEC
-void SysLogSink::send(const DebugMessage &dmesg)
+void SysLogSink::send(const LogMessage &logMsg)
 {
-#ifdef QTLOGGER_SYSLOG
     QString formattedMessage;
-    if (qstrcmp(dmesg.category(), "default") == 0)
-        formattedMessage = dmesg.message();
-    else
-        formattedMessage = QStringLiteral("%1: %2").arg(dmesg.category(), dmesg.message());
+
+    if (qstrcmp(logMsg.category(), "default") == 0) {
+        formattedMessage = logMsg.message();
+    } else {
+        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
+    }
 
     int priority = LOG_DEBUG;
 
-    switch (dmesg.type()) {
+    switch (logMsg.type()) {
     case QtDebugMsg:
         priority = LOG_DEBUG;
         break;
@@ -2888,12 +2427,199 @@ void SysLogSink::send(const DebugMessage &dmesg)
     }
 
     syslog(priority, "%s", qPrintable(formattedMessage));
-#else
-    Q_UNUSED(dmesg);
-#endif
 }
 
 } // namespace QtLogger
 
 #endif // QTLOGGER_SYSLOG
+
+// typedpipeline.cpp
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+TypedPipeline::~TypedPipeline()
+{
+    flush();
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
+{
+    auto first = std::find_if(handlers().begin(), handlers().end(),
+                              [type](const HandlerPtr &x) { return x->type() == type; });
+
+    if (first == handlers().end()) {
+        handlers().prepend(handler);
+        return;
+    }
+
+    auto last = std::find_if(first, handlers().end(),
+                             [type](const HandlerPtr &x) { return x->type() != type; });
+
+    handlers().insert(last, handler);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
+                                  const HandlerPtr &handler)
+{
+    auto firstLeft =
+            std::find_if(handlers().begin(), handlers().end(),
+                         [leftType](const HandlerPtr &x) { return x->type() == leftType; });
+
+    if (firstLeft == handlers().end()) {
+
+        auto firstRight =
+                std::find_if(handlers().begin(), handlers().end(),
+                             [rightType](const auto &x) { return x->type() == rightType; });
+
+        if (firstRight != handlers().end()) {
+            handlers().insert(firstRight, handler);
+        } else {
+            handlers().prepend(handler);
+        }
+
+        return;
+    }
+
+    auto lastLeft = std::find_if(firstLeft, handlers().end(),
+                                 [leftType](const HandlerPtr &x) { return x->type() != leftType; });
+
+    handlers().insert(lastLeft, handler);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::clearType(HandlerType type)
+{
+    QMutableListIterator<HandlerPtr> iter(handlers());
+
+    while (iter.hasNext()) {
+        if (iter.next()->type() == type) {
+            iter.remove();
+        }
+    }
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::appendFilter(const FilterPtr &filter)
+{
+    if (filter.isNull())
+        return;
+
+    insertAfter(HandlerType::Filter, filter);
+}
+
+QTLOGGER_DECL_SPEC
+FunctionFilterPtr
+TypedPipeline::appendFilter(const std::function<bool(const LogMessage &)> &function)
+{
+    const auto f = FunctionFilterPtr::create(function);
+
+    appendFilter(f);
+
+    return f;
+}
+
+QTLOGGER_DECL_SPEC
+RegExpFilterPtr TypedPipeline::appendFilter(const QRegularExpression &regExp)
+{
+    const auto f = RegExpFilterPtr::create(regExp);
+
+    appendFilter(f);
+
+    return f;
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::clearFilters()
+{
+    clearType(HandlerType::Filter);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::setFormatter(const FormatterPtr &formatter)
+{
+    if (formatter.isNull())
+        return;
+
+    clearFormatters();
+
+    insertAfter(HandlerType::Filter, formatter);
+}
+
+QTLOGGER_DECL_SPEC
+FunctionFormatterPtr TypedPipeline::setFormatter(const FunctionFormatter::Function &function)
+{
+    const auto f = FunctionFormatterPtr::create(function);
+
+    setFormatter(f);
+
+    return f;
+}
+
+QTLOGGER_DECL_SPEC
+PatternFormatterPtr TypedPipeline::setFormatter(const QString &pattern)
+{
+    const auto f = PatternFormatterPtr::create(pattern);
+
+    setFormatter(f);
+
+    return f;
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::clearFormatters()
+{
+    clearType(HandlerType::Formatter);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::appendSink(const SinkPtr &sink)
+{
+    append(sink);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::clearSinks()
+{
+    clearType(HandlerType::Sink);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::appendPipeline(const PipelinePtr &pipeline)
+{
+    append(pipeline);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::clearPipelines()
+{
+    clearType(HandlerType::Pipeline);
+}
+
+QTLOGGER_DECL_SPEC
+void TypedPipeline::flush()
+{
+    for (auto &handler : handlers()) {
+        switch (handler->type()) {
+        case HandlerType::Sink: {
+            auto sink = handler.dynamicCast<Sink>();
+            if (sink)
+                sink->flush();
+            break;
+        }
+        case HandlerType::Pipeline: {
+            auto pipeline = handler.dynamicCast<TypedPipeline>();
+            if (pipeline)
+                pipeline->flush();
+            break;
+        }
+        default:
+            break;
+        }
+    }
+}
+
+} // namespace QtLogger
 
