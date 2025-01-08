@@ -86,10 +86,10 @@ HEADERS += \
     $$PWD/sink.h \
     $$PWD/sinks/filesink.h \
     $$PWD/sinks/iodevicesink.h \
+    $$PWD/sinks/platformstdsink.h \
     $$PWD/sinks/rotatingfilesink.h \
     $$PWD/sinks/signalsink.h \
     $$PWD/sinks/stderrsink.h \
-    $$PWD/sinks/stdlogsink.h \
     $$PWD/sinks/stdoutsink.h \
     $$PWD/typedpipeline.h \
     $$PWD/version.h

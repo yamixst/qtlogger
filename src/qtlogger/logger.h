@@ -85,7 +85,7 @@ public:
        logger/regexp_filter = <regexp>
        logger/stdout = true|false
        logger/stderr = true|false
-       logger/stdlog = true|false
+       logger/platform_std_log = true|false
        logger/syslog_ident = <string>
        logger/journal = true|false
        logger/path = <string>

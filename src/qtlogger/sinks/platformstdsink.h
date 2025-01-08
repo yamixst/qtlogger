@@ -16,13 +16,13 @@
 namespace QtLogger {
 
 #if defined(QTLOGGER_ANDROIDLOG)
-using StdLogSink = AndroidLogSink;
+using PlatformStdSink = AndroidLogSink;
 #elif defined(QTLOGGER_IOSLOG)
-using StdLogSink = IosLogSink;
+using PlatformStdSink = IosLogSink;
 #else
-using StdLogSink = StdErrSink;
+using PlatformStdSink = StdErrSink;
 #endif
 
-using StdLogSinkPtr = QSharedPointer<StdLogSink>;
+using PlatformStdSinkPtr = QSharedPointer<PlatformStdSink>;
 
 }
