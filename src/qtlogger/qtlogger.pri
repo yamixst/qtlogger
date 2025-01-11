@@ -22,8 +22,12 @@ else {
 qtlogger_network {
     DEFINES *= QTLOGGER_NETWORK
     QT *= network
-    SOURCES += $$PWD/sinks/httpsink.cpp
-    HEADERS += $$PWD/sinks/httpsink.h
+    SOURCES += \
+        $$PWD/attrhandlers/hostinfoattrs.cpp \
+        $$PWD/sinks/httpsink.cpp
+    HEADERS += \
+        $$PWD/attrhandlers/hostinfoattrs.h \
+        $$PWD/sinks/httpsink.h
 }
 
 ios {
