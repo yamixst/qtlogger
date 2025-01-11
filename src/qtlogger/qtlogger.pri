@@ -67,6 +67,7 @@ SOURCES += \
     $$PWD/typedpipeline.cpp
 
 HEADERS += \
+    $$PWD/attrhandler.h \
     $$PWD/filter.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \

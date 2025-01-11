@@ -13,7 +13,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT Handler
 {
 public:
-    enum class HandlerType { Handler, Filter, Formatter, Sink, Pipeline, Mixed };
+    enum class HandlerType { Handler, AttrHandler, Filter, Formatter, Sink, Pipeline, Mixed };
 
     virtual ~Handler() = default;
 
