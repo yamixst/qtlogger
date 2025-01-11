@@ -1,4 +1,5 @@
 #include "attrhandler.h"
+#include "attrhandlers/appinfoattrs.h"
 #include "filter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
