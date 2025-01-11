@@ -19,6 +19,7 @@ public:
     TypedPipeline() = default;
     ~TypedPipeline() override;
 
+    void insertBefore(HandlerType type, const HandlerPtr &handler);
     void insertAfter(HandlerType type, const HandlerPtr &handler);
     void insertBetween(HandlerType leftType, HandlerType rightType, const HandlerPtr &handler);
     void clearType(HandlerType type);
