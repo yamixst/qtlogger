@@ -42,7 +42,7 @@ public:
         Unknown = 0x00,
         StdOut = 0x01,
         StdErr = 0x02,
-        SysLog = 0x04,
+        Syslog = 0x04,
         Journal = 0x8,
         StdLog = 0x10, // For Android and iOS
         NTEventLog = 0x20,

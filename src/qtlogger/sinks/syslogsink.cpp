@@ -10,19 +10,19 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-SysLogSink::SysLogSink(const QString &ident, int option, int facility)
+SyslogSink::SyslogSink(const QString &ident, int option, int facility)
 {
     openlog(qPrintable(ident), option, facility);
 }
 
 QTLOGGER_DECL_SPEC
-SysLogSink::~SysLogSink()
+SyslogSink::~SyslogSink()
 {
     closelog();
 }
 
 QTLOGGER_DECL_SPEC
-void SysLogSink::send(const LogMessage &logMsg)
+void SyslogSink::send(const LogMessage &logMsg)
 {
     QString formattedMessage;
 
