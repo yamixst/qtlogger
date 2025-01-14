@@ -7,7 +7,7 @@
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
+#include "../sink.h"
 #include "../logger_global.h"
 
 namespace QtLogger {
