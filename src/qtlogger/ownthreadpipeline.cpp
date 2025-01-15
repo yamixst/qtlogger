@@ -34,7 +34,7 @@ public:
         if (event->type() == __processLogMessageEventType) {
             auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
             if (_event) {
-                m_handler->TypedPipeline::process(_event->logMsg);
+                m_handler->SimplePipeline::process(_event->logMsg);
             }
         }
     }
@@ -67,7 +67,7 @@ OwnThreadPipeline::~OwnThreadPipeline()
 }
 
 QTLOGGER_DECL_SPEC
-void OwnThreadPipeline::moveToOwnThread()
+OwnThreadPipeline &OwnThreadPipeline::moveToOwnThread()
 {
     if (!m_worker) {
         m_worker = new OwnThreadPipelineWorker(this);
@@ -89,6 +89,8 @@ void OwnThreadPipeline::moveToOwnThread()
     }
 
     m_worker->moveToThread(m_thread);
+
+    return *this;
 }
 
 QTLOGGER_DECL_SPEC
@@ -111,7 +113,7 @@ QTLOGGER_DECL_SPEC
 bool OwnThreadPipeline::process(LogMessage &logMsg)
 {
     if (!ownThreadIsRunning()) {
-        TypedPipeline::process(logMsg);
+        SimplePipeline::process(logMsg);
     } else {
         QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(logMsg));
     }

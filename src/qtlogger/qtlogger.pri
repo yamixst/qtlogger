@@ -64,6 +64,7 @@ SOURCES += \
     $$PWD/logger.cpp \
     $$PWD/pipeline.cpp \
     $$PWD/setmessagepattern.cpp \
+    $$PWD/simplepipeline.cpp \
     $$PWD/sinks/filesink.cpp \
     $$PWD/sinks/iodevicesink.cpp \
     $$PWD/sinks/rotatingfilesink.cpp \
@@ -92,6 +93,7 @@ HEADERS += \
     $$PWD/messagepatterns.h \
     $$PWD/pipeline.h \
     $$PWD/setmessagepattern.h \
+    $$PWD/simplepipeline.h \
     $$PWD/sink.h \
     $$PWD/sinks/filesink.h \
     $$PWD/sinks/iodevicesink.h \

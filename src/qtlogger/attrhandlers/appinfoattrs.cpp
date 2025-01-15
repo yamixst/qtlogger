@@ -4,6 +4,7 @@
 
 namespace QtLogger {
 
+QTLOGGER_DECL_SPEC
 QVariantHash AppInfoAttrs::attributes() const
 {
     return QVariantHash {
