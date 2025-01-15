@@ -11,15 +11,15 @@ TypedPipeline::~TypedPipeline()
 QTLOGGER_DECL_SPEC
 void TypedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
 {
-    auto first = std::find_if(handlers().begin(), handlers().end(),
+    auto first = std::find_if(handlers().cbegin(), handlers().cend(),
                               [type](const HandlerPtr &x) { return x->type() == type; });
 
-    if (first == handlers().end()) {
+    if (first == handlers().cend()) {
         handlers().prepend(handler);
         return;
     }
 
-    auto last = std::find_if(first, handlers().end(),
+    auto last = std::find_if(first, handlers().cend(),
                              [type](const HandlerPtr &x) { return x->type() != type; });
 
     handlers().insert(last, handler);
@@ -30,16 +30,16 @@ void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
                                   const HandlerPtr &handler)
 {
     auto firstLeft =
-            std::find_if(handlers().begin(), handlers().end(),
+            std::find_if(handlers().cbegin(), handlers().cend(),
                          [leftType](const HandlerPtr &x) { return x->type() == leftType; });
 
-    if (firstLeft == handlers().end()) {
+    if (firstLeft == handlers().cend()) {
 
         auto firstRight =
-                std::find_if(handlers().begin(), handlers().end(),
+                std::find_if(handlers().cbegin(), handlers().cend(),
                              [rightType](const auto &x) { return x->type() == rightType; });
 
-        if (firstRight != handlers().end()) {
+        if (firstRight != handlers().cend()) {
             handlers().insert(firstRight, handler);
         } else {
             handlers().prepend(handler);
@@ -48,7 +48,7 @@ void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
         return;
     }
 
-    auto lastLeft = std::find_if(firstLeft, handlers().end(),
+    auto lastLeft = std::find_if(firstLeft, handlers().cend(),
                                  [leftType](const HandlerPtr &x) { return x->type() != leftType; });
 
     handlers().insert(lastLeft, handler);
