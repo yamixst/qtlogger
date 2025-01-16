@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 
-#include "journalsink.h"
+#include "sdjournalsink.h"
 
 #include <systemd/sd-journal.h>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void JournalSink::send(const LogMessage &logMsg)
+void SdJournalSink::send(const LogMessage &logMsg)
 {
     auto priority = LOG_DEBUG;
 
@@ -47,4 +47,4 @@ void JournalSink::send(const LogMessage &logMsg)
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_JOURNAL
+#endif // QTLOGGER_SDJOURNAL
