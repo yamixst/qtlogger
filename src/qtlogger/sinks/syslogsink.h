@@ -17,17 +17,17 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SysLogSink : public Sink
+class QTLOGGER_EXPORT SyslogSink : public Sink
 {
 public:
-    explicit SysLogSink(const QString &ident, int option = QTLOGGER_SYSLOG_LOG_PID,
+    explicit SyslogSink(const QString &ident, int option = QTLOGGER_SYSLOG_LOG_PID,
                         int facility = QTLOGGER_SYSLOG_LOG_USER);
-    ~SysLogSink();
+    ~SyslogSink();
 
     void send(const LogMessage &logMsg) override;
 };
 
-using SysLogSinkPtr = QSharedPointer<SysLogSink>;
+using SyslogSinkPtr = QSharedPointer<SyslogSink>;
 
 } // namespace QtLogger
 

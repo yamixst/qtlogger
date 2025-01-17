@@ -160,8 +160,8 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
     }
 
 #ifdef QTLOGGER_SYSLOG
-    if (types.testFlag(SinkType::SysLog)) {
-        appendSink(SysLogSinkPtr::create(QFileInfo(path).baseName()));
+    if (types.testFlag(SinkType::Syslog)) {
+        appendSink(SyslogSinkPtr::create(QFileInfo(path).baseName()));
     }
 #endif
 
@@ -252,12 +252,12 @@ void Logger::configure(const QSettings &settings, const QString &group)
     }
 
 #ifdef QTLOGGER_SYSLOG
-    const auto sysLogIdent = settings.value(group + QStringLiteral("/syslog_ident")).toString();
-    if (!sysLogIdent.isEmpty()) {
+    const auto syslogIdent = settings.value(group + QStringLiteral("/syslog_ident")).toString();
+    if (!syslogIdent.isEmpty()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "Logger::configure: sysLogIdent: " << sysLogIdent.toStdString() << std::endl;
+        std::cerr << "Logger::configure: syslogIdent: " << syslogIdent.toStdString() << std::endl;
 #    endif
-        appendSink(SysLogSinkPtr::create(sysLogIdent));
+        appendSink(SyslogSinkPtr::create(syslogIdent));
     }
 #endif
 
