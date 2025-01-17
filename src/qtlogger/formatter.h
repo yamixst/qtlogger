@@ -15,13 +15,13 @@ class QTLOGGER_EXPORT Formatter : public Handler
 public:
     virtual ~Formatter() = default;
 
-    virtual QString format(const LogMessage &logMsg) = 0;
+    virtual QString format(const LogMessage &lmsg) = 0;
 
     HandlerType type() const override { return HandlerType::Formatter; }
 
-    bool process(LogMessage &logMsg) override final
+    bool process(LogMessage &lmsg) override final
     {
-        logMsg.setFormattedMessage(format(logMsg));
+        lmsg.setFormattedMessage(format(lmsg));
         return true;
     }
 };

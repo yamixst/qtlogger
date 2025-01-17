@@ -10,11 +10,11 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void SdJournalSink::send(const LogMessage &logMsg)
+void SdJournalSink::send(const LogMessage &lmsg)
 {
     auto priority = LOG_DEBUG;
 
-    switch (logMsg.type()) {
+    switch (lmsg.type()) {
     case QtDebugMsg:
         priority = LOG_DEBUG;
         break;
@@ -34,15 +34,15 @@ void SdJournalSink::send(const LogMessage &logMsg)
         return;
     }
 
-    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(logMsg.file());
-    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(logMsg.line());
+    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(lmsg.file());
+    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(lmsg.line());
 
-    sd_journal_print_with_location(priority, file.constData(), line.constData(), logMsg.function(),
-                                   "%s", qPrintable(logMsg.formattedMessage()));
+    sd_journal_print_with_location(priority, file.constData(), line.constData(), lmsg.function(),
+                                   "%s", qPrintable(lmsg.formattedMessage()));
 
-    sd_journal_send_with_location(file.constData(), line.constData(), logMsg.function(), "%s",
-                                  qPrintable(logMsg.formattedMessage()), "PRIORITY=%i", priority,
-                                  "CATEGORY=%s", logMsg.category(), NULL);
+    sd_journal_send_with_location(file.constData(), line.constData(), lmsg.function(), "%s",
+                                  qPrintable(lmsg.formattedMessage()), "PRIORITY=%i", priority,
+                                  "CATEGORY=%s", lmsg.category(), NULL);
 }
 
 } // namespace QtLogger

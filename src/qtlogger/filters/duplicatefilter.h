@@ -8,7 +8,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT DuplicateFilter : public Filter
 {
 public:
-    bool filter(const LogMessage &logMsg) override;
+    bool filter(const LogMessage &lmsg) override;
 
 private:
     QString m_lastMessage;

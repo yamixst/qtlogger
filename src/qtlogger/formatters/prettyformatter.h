@@ -24,7 +24,7 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    QString format(const LogMessage &logMsg) override;
+    QString format(const LogMessage &lmsg) override;
 
     inline bool showThreadId() const { return m_showThreadId; }
     inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }

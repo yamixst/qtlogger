@@ -12,9 +12,9 @@ static QEvent::Type __processLogMessageEventType = static_cast<QEvent::Type>(QEv
 
 struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
 {
-    LogMessage logMsg;
-    ProcessLogMessageEvent(const LogMessage &logMsg)
-        : QEvent(__processLogMessageEventType), logMsg(logMsg)
+    LogMessage lmsg;
+    ProcessLogMessageEvent(const LogMessage &lmsg)
+        : QEvent(__processLogMessageEventType), lmsg(lmsg)
     {
     }
 };
@@ -34,7 +34,7 @@ public:
         if (event->type() == __processLogMessageEventType) {
             auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
             if (_event) {
-                m_handler->SimplePipeline::process(_event->logMsg);
+                m_handler->SimplePipeline::process(_event->lmsg);
             }
         }
     }
@@ -110,12 +110,12 @@ bool OwnThreadPipeline::ownThreadIsRunning() const
 }
 
 QTLOGGER_DECL_SPEC
-bool OwnThreadPipeline::process(LogMessage &logMsg)
+bool OwnThreadPipeline::process(LogMessage &lmsg)
 {
     if (!ownThreadIsRunning()) {
-        SimplePipeline::process(logMsg);
+        SimplePipeline::process(lmsg);
     } else {
-        QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(logMsg));
+        QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(lmsg));
     }
     return true;
 }

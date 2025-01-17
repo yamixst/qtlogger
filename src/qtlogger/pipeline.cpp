@@ -46,28 +46,28 @@ Pipeline &Pipeline::operator<<(const HandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-bool Pipeline::process(LogMessage &logMsg)
+bool Pipeline::process(LogMessage &lmsg)
 {
     QString fmsg;
     QVariantHash attrs;
 
     if (m_scoped) {
-        if (logMsg.isFormatted()) {
-            fmsg = logMsg.formattedMessage();
+        if (lmsg.isFormatted()) {
+            fmsg = lmsg.formattedMessage();
         }
-        attrs = logMsg.attributes();
+        attrs = lmsg.attributes();
     }
 
     for (auto &handler : m_handlers) {
         if (!handler)
             continue;
-        if (!handler->process(logMsg))
+        if (!handler->process(lmsg))
             break;
     }
 
     if (m_scoped) {
-        logMsg.setFormattedMessage(fmsg);
-        logMsg.attributes() = attrs;
+        lmsg.setFormattedMessage(fmsg);
+        lmsg.attributes() = attrs;
     }
 
     return true;

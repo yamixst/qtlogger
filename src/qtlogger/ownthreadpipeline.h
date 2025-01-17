@@ -22,7 +22,7 @@ public:
     bool ownThreadIsRunning() const;
     QThread *ownThread() const { return m_thread; }
 
-    bool process(LogMessage &logMsg) override;
+    bool process(LogMessage &lmsg) override;
 
 private:
     QPointer<OwnThreadPipelineWorker> m_worker;

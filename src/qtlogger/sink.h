@@ -13,14 +13,14 @@ namespace QtLogger {
 class QTLOGGER_EXPORT Sink : public Handler
 {
 public:
-    virtual void send(const LogMessage &logMsg) = 0;
+    virtual void send(const LogMessage &lmsg) = 0;
     virtual bool flush() { return true; }
 
     HandlerType type() const override { return HandlerType::Sink; }
 
-    bool process(LogMessage &logMsg) override final
+    bool process(LogMessage &lmsg) override final
     {
-        send(logMsg);
+        send(lmsg);
         return true;
     }
 };
