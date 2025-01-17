@@ -29,6 +29,7 @@ public:
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);
+    SimplePipeline &formatByQt();
     SimplePipeline &formatPretty();
     SimplePipeline &formatToJson();
 
