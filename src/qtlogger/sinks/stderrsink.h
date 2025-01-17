@@ -14,6 +14,7 @@ class QTLOGGER_EXPORT StdErrSink : public Sink
 {
 public:
     void send(const LogMessage &logMsg) override;
+    virtual bool flush() override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;
