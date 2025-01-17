@@ -155,7 +155,7 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
         appendSink(StdErrSinkPtr::create());
     }
 
-    if (types.testFlag(SinkType::StdLog)) {
+    if (types.testFlag(SinkType::PlatformStdLog)) {
         appendSink(PlatformStdSinkPtr::create());
     }
 

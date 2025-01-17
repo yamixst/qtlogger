@@ -44,7 +44,7 @@ public:
         StdErr = 0x02,
         Syslog = 0x04,
         Journal = 0x8,
-        StdLog = 0x10, // For Android and iOS
+        PlatformStdLog = 0x10, // For Android and iOS
         NTEventLog = 0x20,
         File = 0x40,
         RotatingFile = 0x80
@@ -74,7 +74,7 @@ public:
     Logger &operator<<(const HandlerPtr &handler);
 
     void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
-    void configure(const SinkTypeFlags &types = SinkType::StdLog, const QString &path = {},
+    void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
                    int maxFileSize = 0, int maxFileCount = 0, bool async = false);
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
