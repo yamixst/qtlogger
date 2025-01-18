@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QList>
+#include <QSharedPointer>
+
 #include "logger_global.h"
 #include "typedpipeline.h"
 
@@ -8,6 +11,11 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SimplePipeline : public TypedPipeline
 {
 public:
+    explicit SimplePipeline(bool scoped = false, SimplePipeline *parent = nullptr)
+        : TypedPipeline(scoped), m_parent(parent)
+    {
+    }
+
     SimplePipeline &addSeqNumber();
     SimplePipeline &addAppInfo();
 #ifdef QTLOGGER_NETWORK
@@ -35,6 +43,14 @@ public:
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
 #endif
+
+    SimplePipeline &pipeline();
+    SimplePipeline &end();
+
+private:
+    SimplePipeline *m_parent = nullptr;
 };
+
+using SimplePipelinePtr = QSharedPointer<SimplePipeline>;
 
 } // namespace QtLogger

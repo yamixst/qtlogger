@@ -16,7 +16,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
-    Pipeline() = default;
+    explicit Pipeline(bool scoped = false) : m_scoped(scoped) {};
     Pipeline(std::initializer_list<HandlerPtr> handlers);
 
     HandlerType type() const override { return HandlerType::Pipeline; }
@@ -35,6 +35,7 @@ protected:
 
 private:
     QList<HandlerPtr> m_handlers;
+    bool m_scoped = false;
 };
 
 using PipelinePtr = QSharedPointer<Pipeline>;
