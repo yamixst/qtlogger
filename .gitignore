@@ -100,3 +100,5 @@ captures/
 .qmake.stash
 .qmake.conf.user
 .venv
+.local
+.clangd
