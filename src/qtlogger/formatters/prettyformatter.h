@@ -24,7 +24,7 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    QString format(const LogMessage &logMsg) const override;
+    QString format(const LogMessage &logMsg) override;
 
     inline bool showThreadId() const { return m_showThreadId; }
     inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }
@@ -37,11 +37,11 @@ public:
 
 private:
     bool m_showThreadId = true;
-    mutable QMap<int, int> m_threads;
-    mutable int m_threadsIndex = 0;
+    QMap<int, int> m_threads;
+    int m_threadsIndex = 0;
 
     int m_maxCategoryWidth = 15;
-    mutable int m_categoryWidth = 0;
+    int m_categoryWidth = 0;
 };
 
 } // namespace QtLogger

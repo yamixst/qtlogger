@@ -15,7 +15,7 @@ class QTLOGGER_EXPORT Filter : public Handler
 public:
     virtual ~Filter() = default;
 
-    virtual bool filter(const LogMessage &logMsg) const = 0;
+    virtual bool filter(const LogMessage &logMsg) = 0;
 
     HandlerType type() const override { return HandlerType::Filter; }
 

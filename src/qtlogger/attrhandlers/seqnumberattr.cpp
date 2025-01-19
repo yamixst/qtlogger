@@ -3,7 +3,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash SeqNumberAttr::attributes() const
+QVariantHash SeqNumberAttr::attributes()
 {
     return { { "seq_number", m_count++ } };
 }

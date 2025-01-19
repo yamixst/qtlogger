@@ -12,7 +12,7 @@ PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth)
 }
 
 QTLOGGER_DECL_SPEC
-QString PrettyFormatter::format(const LogMessage &logMsg) const
+QString PrettyFormatter::format(const LogMessage &logMsg)
 {
     static const QString msg_f { QStringLiteral("%1 %2 %3%4%5%6") };
     static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss.zzz") };

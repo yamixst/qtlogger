@@ -17,7 +17,7 @@ class QTLOGGER_EXPORT PatternFormatter : public Formatter
 public:
     explicit PatternFormatter(const QString &pattern);
 
-    QString format(const LogMessage &logMsg) const override;
+    QString format(const LogMessage &logMsg) override;
 
 private:
     QString m_pattern;

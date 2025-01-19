@@ -5,7 +5,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash AppInfoAttrs::attributes() const
+QVariantHash AppInfoAttrs::attributes()
 {
     return QVariantHash {
         { QStringLiteral("app_name"), QCoreApplication::applicationName() },
