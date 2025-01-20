@@ -16,7 +16,7 @@ namespace QtLogger {
 QTLOGGER_DECL_SPEC
 HttpSink::HttpSink(const QUrl &url) : m_url(url)
 {
-    m_manager = new QNetworkAccessManager;
+    m_manager = new QNetworkAccessManager();
 
 #ifndef QTLOGGER_NO_THREAD
     if (m_manager->thread() != Logger::instance()->ownThread()) {
@@ -41,7 +41,7 @@ void HttpSink::send(const LogMessage &lmsg)
     if (!Logger::instance()->ownThreadIsRunning()) {
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
             m_manager->deleteLater();
-        m_manager = new QNetworkAccessManager;
+        m_manager = new QNetworkAccessManager();
     }
 
     if (lmsg.hasAttribute("mime_type")) {
