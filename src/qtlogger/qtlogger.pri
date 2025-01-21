@@ -30,10 +30,10 @@ qtlogger_network {
         $$PWD/sinks/httpsink.h
 }
 
-ios {
-    DEFINES *= QTLOGGER_IOSLOG
-    SOURCES += $$PWD/sinks/ioslogsink.cpp
-    HEADERS += $$PWD/sinks/ioslogsink.h
+macos | ios {
+    DEFINES *= QTLOGGER_OSLOG
+    SOURCES += $$PWD/sinks/oslogsink.cpp
+    HEADERS += $$PWD/sinks/oslogsink.h
 }
 
 linux:android {
