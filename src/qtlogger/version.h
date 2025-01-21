@@ -3,4 +3,4 @@
 
 #pragma once
 
-#define QTLOGGER_VERSION 0.4.0
+#define QTLOGGER_VERSION 0.5.0
