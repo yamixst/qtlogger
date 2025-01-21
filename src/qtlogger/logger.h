@@ -17,7 +17,7 @@
 #ifndef QTLOGGER_NO_THREAD
 #    include "ownthreadpipeline.h"
 #else
-#    include "typedpipeline.h"
+#    include "simplepipeline.h"
 #endif
 
 #define gQtLogger QtLogger::Logger::instance()
@@ -34,7 +34,7 @@ class QTLOGGER_EXPORT Logger :
 #ifndef QTLOGGER_NO_THREAD
     public OwnThreadPipeline
 #else
-    public TypedPipeline
+    public SimplePipeline
 #endif
 {
 public:

@@ -6,6 +6,7 @@
 
 namespace QtLogger {
 
+QTLOGGER_DECL_SPEC
 QVariantHash HostInfoAttrs::attributes() const
 {
     return QVariantHash {

@@ -3,7 +3,7 @@
 #include <QPointer>
 
 #include "logger_global.h"
-#include "typedpipeline.h"
+#include "simplepipeline.h"
 
 QT_FORWARD_DECLARE_CLASS(QThread)
 
@@ -11,13 +11,13 @@ namespace QtLogger {
 
 class OwnThreadPipelineWorker;
 
-class QTLOGGER_EXPORT OwnThreadPipeline : public TypedPipeline
+class QTLOGGER_EXPORT OwnThreadPipeline : public SimplePipeline
 {
 public:
     OwnThreadPipeline();
     ~OwnThreadPipeline() override;
 
-    void moveToOwnThread();
+    OwnThreadPipeline &moveToOwnThread();
     void moveToMainThread();
     bool ownThreadIsRunning() const;
     QThread *ownThread() const { return m_thread; }
