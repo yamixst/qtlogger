@@ -24,15 +24,7 @@ SyslogSink::~SyslogSink()
 QTLOGGER_DECL_SPEC
 void SyslogSink::send(const LogMessage &logMsg)
 {
-    QString formattedMessage;
-
-    if (qstrcmp(logMsg.category(), "default") == 0) {
-        formattedMessage = logMsg.message();
-    } else {
-        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
-    }
-
-    int priority = LOG_DEBUG;
+    auto priority = LOG_DEBUG;
 
     switch (logMsg.type()) {
     case QtDebugMsg:
@@ -52,6 +44,13 @@ void SyslogSink::send(const LogMessage &logMsg)
         break;
     default:
         return;
+    }
+
+    QString formattedMessage;
+    if (qstrcmp(logMsg.category(), "default") == 0) {
+        formattedMessage = logMsg.message();
+    } else {
+        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
     }
 
     syslog(priority, "%s", qPrintable(formattedMessage));
