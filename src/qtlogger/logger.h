@@ -44,8 +44,7 @@ public:
         StdErr = 0x02,
         Syslog = 0x04,
         Journal = 0x8,
-        PlatformStdLog = 0x10, // For Android and iOS
-        NTEventLog = 0x20,
+        PlatformStdLog = 0x10,
         File = 0x40,
         RotatingFile = 0x80
     };
