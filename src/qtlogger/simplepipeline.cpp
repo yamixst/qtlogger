@@ -4,6 +4,7 @@
 
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/seqnumberattr.h"
+#include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatters/functionformatter.h"
@@ -65,6 +66,12 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filterCategory(const QString &filter)
 {
     // TODO: Implement
+    return *this;
+}
+
+SimplePipeline &SimplePipeline::filterDuplicate()
+{
+    append(DuplicateFilterPtr::create());
     return *this;
 }
 

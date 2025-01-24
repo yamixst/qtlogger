@@ -57,6 +57,7 @@ qtlogger_journal {
 SOURCES += \
     $$PWD/attrhandlers/appinfoattrs.cpp \
     $$PWD/attrhandlers/seqnumberattr.cpp \
+    $$PWD/filters/duplicatefilter.cpp \
     $$PWD/filters/regexpfilter.cpp \
     $$PWD/formatters/jsonformatter.cpp \
     $$PWD/formatters/patternformatter.cpp \
@@ -78,6 +79,7 @@ HEADERS += \
     $$PWD/attrhandlers/appinfoattrs.h \
     $$PWD/attrhandlers/seqnumberattr.h \
     $$PWD/filter.h \
+    $$PWD/filters/duplicatefilter.h \
     $$PWD/filters/functionfilter.h \
     $$PWD/filters/regexpfilter.h \
     $$PWD/formatter.h \

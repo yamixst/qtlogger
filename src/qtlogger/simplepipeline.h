@@ -23,8 +23,9 @@ public:
 #endif
 
     SimplePipeline &filter(std::function<bool(const LogMessage &)> func);
-    SimplePipeline &filterCategory(const QString &filter);
     SimplePipeline &filter(const QString &regexp);
+    SimplePipeline &filterCategory(const QString &filter);
+    SimplePipeline &filterDuplicate();
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);

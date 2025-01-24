@@ -2,6 +2,7 @@
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "filter.h"
+#include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatter.h"
@@ -34,7 +35,7 @@
 #endif
 
 #ifdef QTLOGGER_IOSLOG
-#    include "sinks/ioslogsink.h"
+#    include "sinks/oslogsink.h"
 #endif
 
 #ifdef QTLOGGER_ANDROIDLOG
