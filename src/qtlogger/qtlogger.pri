@@ -15,7 +15,6 @@ qtlogger_no_thread {
     DEFINES *= QTLOGGER_NO_THREAD
 }
 else {
-    SOURCES += $$PWD/ownthreadpipeline.cpp
     HEADERS += $$PWD/ownthreadpipeline.h
 }
 
