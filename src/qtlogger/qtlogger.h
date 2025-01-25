@@ -46,6 +46,6 @@
 #    include "sinks/syslogsink.h"
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-#    include "sinks/journalsink.h"
+#ifdef QTLOGGER_SDJOURNAL
+#    include "sinks/sdjournalsink.h"
 #endif

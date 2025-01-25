@@ -37,8 +37,8 @@ public:
 #ifdef QTLOGGER_SYSLOG
     SimplePipeline &sendToSyslog();
 #endif
-#ifdef QTLOGGER_JOURNAL
-    SimplePipeline &sendToJournal();
+#ifdef QTLOGGER_SDJOURNAL
+    SimplePipeline &sendToSdJournal();
 #endif
     SimplePipeline &sendToPlatformStdLog();
     SimplePipeline &sendToFile(const QString &fileName, int maxFileSize = 0, int maxFileCount = 0);

@@ -43,7 +43,7 @@ public:
         StdOut = 0x01,
         StdErr = 0x02,
         Syslog = 0x04,
-        Journal = 0x8,
+        SdJournal = 0x8,
         PlatformStdLog = 0x10,
         File = 0x40,
         RotatingFile = 0x80
@@ -92,7 +92,7 @@ public:
        logger/stderr = true|false
        logger/platform_std_log = true|false
        logger/syslog_ident = <string>
-       logger/journal = true|false
+       logger/sdjournal = true|false
        logger/path = <string>
        logger/max_file_size = <int>
        logger/max_file_count = <int>
