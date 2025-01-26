@@ -16,7 +16,7 @@ public:
     virtual void send(const LogMessage &lmsg) = 0;
     virtual bool flush() { return true; }
 
-    HandlerType type() const override { return HandlerType::Sink; }
+    HandlerType type() const override final { return HandlerType::Sink; }
 
     bool process(LogMessage &lmsg) override final
     {
