@@ -17,7 +17,7 @@ public:
     explicit RegExpFilter(const QRegularExpression &regExp);
     explicit RegExpFilter(const QString &regExp);
 
-    bool filter(const LogMessage &logMsg) const override;
+    bool filter(const LogMessage &logMsg) override;
 
 private:
     QRegularExpression m_regExp;

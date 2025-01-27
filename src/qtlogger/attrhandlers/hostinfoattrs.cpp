@@ -7,7 +7,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash HostInfoAttrs::attributes() const
+QVariantHash HostInfoAttrs::attributes()
 {
     return QVariantHash {
         { QStringLiteral("host_name"), QHostInfo::localHostName() },

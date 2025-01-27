@@ -17,21 +17,14 @@ class QTLOGGER_EXPORT FunctionFilter : public Filter
 public:
     using Function = std::function<bool(const LogMessage &)>;
 
-    FunctionFilter(const Function &function);
+    FunctionFilter(const Function &function) : m_function(function) { }
 
-    bool filter(const LogMessage &logMsg) const override;
+    bool filter(const LogMessage &logMsg) override { return m_function(logMsg); }
 
 private:
     Function m_function;
 };
 
 using FunctionFilterPtr = QSharedPointer<FunctionFilter>;
-
-inline FunctionFilter::FunctionFilter(const Function &function) : m_function(function) { }
-
-inline bool FunctionFilter::filter(const LogMessage &logMsg) const
-{
-    return m_function(logMsg);
-}
 
 } // namespace QtLogger

@@ -11,7 +11,7 @@ QTLOGGER_DECL_SPEC
 PatternFormatter::PatternFormatter(const QString &pattern) : m_pattern(pattern) { }
 
 QTLOGGER_DECL_SPEC
-QString PatternFormatter::format(const LogMessage &logMsg) const
+QString PatternFormatter::format(const LogMessage &logMsg)
 {
     // TODO: write own implementation
 
