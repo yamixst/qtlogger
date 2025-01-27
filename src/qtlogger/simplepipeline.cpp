@@ -160,4 +160,19 @@ SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 }
 #endif
 
+SimplePipeline &SimplePipeline::pipeline()
+{
+    auto pipeline = SimplePipelinePtr::create(true, this);
+    append(pipeline);
+    return *pipeline.data();
+}
+
+SimplePipeline &SimplePipeline::end()
+{
+    if (m_parent)
+        return *m_parent;
+    else
+        return *this;
+}
+
 } // namespace QtLogger
