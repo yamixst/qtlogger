@@ -342,9 +342,9 @@ QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
-    LogMessage logMsg(type, context, message);
+    LogMessage lmsg(type, context, message);
 
-    process(logMsg);
+    process(lmsg);
 }
 
 QTLOGGER_DECL_SPEC

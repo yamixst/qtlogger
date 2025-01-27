@@ -15,7 +15,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT OslogSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg);
+    void send(const LogMessage &lmsg);
 };
 
 using OslogSinkPtr = QSharedPointer<OslogSink>;

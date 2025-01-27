@@ -21,7 +21,7 @@ public:
         return s_instance;
     }
 
-    QString format(const LogMessage &logMsg) override;
+    QString format(const LogMessage &lmsg) override;
 };
 
 } // namespace QtLogger
