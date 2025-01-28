@@ -57,22 +57,20 @@ public:
     Logger() = default;
     ~Logger() override;
 
-    /*
-        Set global filter rules
-
-        Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
-        Example: "app.*.debug=false;app.logger.debug=true"
-    */
+    /** Set global filter rules
+     *
+     *  Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
+     *  Example: "app.*.debug=false;app.logger.debug=true"
+     */
     static void setFilterRules(const QString &rules);
 
-    /*
-       Set global message pattern
-
-       Following placeholders are supported:
-       %{appname} %{category} %{file} %{function} %{line} %{message} %{pid} %{threadid}
-       %{qthreadptr} %{type} %{time process} %{time boot} %{time [format]} %{backtrace [depth=N]
-       [separator="..."]}
-    */
+    /** Set global message pattern
+     *
+     * Following placeholders are supported:
+     * %{appname} %{category} %{file} %{function} %{line} %{message} %{pid} %{threadid}
+     * %{qthreadptr} %{type} %{time process} %{time boot} %{time [format]} %{backtrace [depth=N]
+     * [separator="..."]}
+     */
     static void setMessagePattern(const QString &pattern);
 
     Logger &operator<<(const HandlerPtr &handler);
@@ -85,20 +83,21 @@ public:
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
 
-    /*
-       logger/filter_rules = [<category>|*][.debug|.info|.warning|.critical]=true|false;...
-       logger/message_pattern = <string>
-       logger/regexp_filter = <regexp>
-       logger/stdout = true|false
-       logger/stderr = true|false
-       logger/platform_std_log = true|false
-       logger/syslog_ident = <string>
-       logger/sdjournal = true|false
-       logger/path = <string>
-       logger/max_file_size = <int>
-       logger/max_file_count = <int>
-       logger/async = true|false
-    */
+    /** Configure logger from QSettings or ini file
+     *
+     * logger/filter_rules = [<category>|*][.debug|.info|.warning|.critical]=true|false;...
+     * logger/regexp_filter = <regexp>
+     * logger/message_pattern = <string>
+     * logger/stdout = true|false
+     * logger/stderr = true|false
+     * logger/platform_std_log = true|false
+     * logger/syslog_ident = <string>
+     * logger/sdjournal = true|false
+     * logger/path = <string>
+     * logger/max_file_size = <int>
+     * logger/max_file_count = <int>
+     * logger/async = true|false
+     */
     void configure(const QSettings &settings, const QString &group = QStringLiteral("logger"));
     void configure(const QString &path, const QString &group = QStringLiteral("logger"));
 
@@ -106,7 +105,7 @@ public:
 public:
     void lock() const;
     void unlock() const;
-    QRMUTEX *mutex() const;
+    inline QRMUTEX *mutex() const { return &m_mutex; }
 #endif
 
 public:
