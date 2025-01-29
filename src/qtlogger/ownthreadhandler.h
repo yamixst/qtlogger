@@ -15,20 +15,20 @@
 namespace QtLogger {
 
 template<typename BaseHandler>
-class QTLOGGER_EXPORT OwnThreadPipeline : public BaseHandler
+class QTLOGGER_EXPORT OwnThreadHandler : public BaseHandler
 {
     static_assert(std::is_base_of<Handler, BaseHandler>::value,
                   "BaseHandler must inherit from Handler");
 
 public:
     template<typename... Args>
-    OwnThreadPipeline(Args &&...args) : BaseHandler(std::forward<Args>(args)...)
+    OwnThreadHandler(Args &&...args) : BaseHandler(std::forward<Args>(args)...)
     {
         static auto __once = qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
         Q_UNUSED(__once)
     }
 
-    ~OwnThreadPipeline() override { reset(); }
+    ~OwnThreadHandler() override { reset(); }
 
     void reset()
     {
@@ -48,7 +48,7 @@ public:
         }
     }
 
-    OwnThreadPipeline &moveToOwnThread()
+    OwnThreadHandler &moveToOwnThread()
     {
         reset();
 
@@ -77,7 +77,7 @@ public:
         return *this;
     }
 
-    OwnThreadPipeline &moveToMainThread()
+    OwnThreadHandler &moveToMainThread()
     {
         reset();
 
@@ -124,16 +124,16 @@ private:
 };
 
 template<typename BaseHandler>
-class OwnThreadPipeline<BaseHandler>::Worker : public QObject
+class OwnThreadHandler<BaseHandler>::Worker : public QObject
 {
 public:
-    explicit Worker(OwnThreadPipeline<BaseHandler> *handler) : QObject(), m_handler(handler) { }
+    explicit Worker(OwnThreadHandler<BaseHandler> *handler) : QObject(), m_handler(handler) { }
 
     void customEvent(QEvent *event) override
     {
-        if (event->type() == OwnThreadPipeline<BaseHandler>::getProcLogMsgEventType()) {
+        if (event->type() == OwnThreadHandler<BaseHandler>::getProcLogMsgEventType()) {
             auto ev =
-                    dynamic_cast<typename OwnThreadPipeline<BaseHandler>::ProcLogMsgEvent *>(event);
+                    dynamic_cast<typename OwnThreadHandler<BaseHandler>::ProcLogMsgEvent *>(event);
             if (ev) {
                 m_handler->BaseHandler::process(ev->lmsg);
             }
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    OwnThreadPipeline<BaseHandler> *m_handler;
+    OwnThreadHandler<BaseHandler> *m_handler;
 };
 
 } // namespace QtLogger
