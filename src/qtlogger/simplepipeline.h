@@ -46,6 +46,9 @@ public:
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
 #endif
+#ifdef Q_OS_WIN
+    SimplePipeline &sendToWinDebug();
+#endif
 
     SimplePipeline &pipeline();
     SimplePipeline &end();

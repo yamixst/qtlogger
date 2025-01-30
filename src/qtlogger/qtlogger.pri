@@ -30,6 +30,11 @@ qtlogger_network {
         $$PWD/sinks/httpsink.h
 }
 
+windows {
+    SOURCES += $$PWD/sinks/windebugsink.cpp
+    HEADERS += $$PWD/sinks/windebugsink.h
+}
+
 macos | ios {
     DEFINES *= QTLOGGER_OSLOG
     SOURCES += $$PWD/sinks/oslogsink.cpp
