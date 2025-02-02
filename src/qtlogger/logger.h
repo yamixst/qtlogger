@@ -58,12 +58,16 @@ public:
     ~Logger() override;
 
     /*
+        Set global filter rules
+
         Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
         Example: "app.*.debug=false;app.logger.debug=true"
     */
     static void setFilterRules(const QString &rules);
 
     /*
+       Set global message pattern
+
        Following placeholders are supported:
        %{appname} %{category} %{file} %{function} %{line} %{message} %{pid} %{threadid}
        %{qthreadptr} %{type} %{time process} %{time boot} %{time [format]} %{backtrace [depth=N]
@@ -74,8 +78,10 @@ public:
     Logger &operator<<(const HandlerPtr &handler);
 
     void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
+
     void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
                    int maxFileSize = 0, int maxFileCount = 0, bool async = false);
+
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
 

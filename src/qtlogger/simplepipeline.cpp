@@ -94,6 +94,12 @@ SimplePipeline &SimplePipeline::format(const QString &pattern)
     return *this;
 }
 
+SimplePipeline &SimplePipeline::formatPretty()
+{
+    append(PrettyFormatterPtr::create());
+    return *this;
+}
+
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::formatToJson()
 {

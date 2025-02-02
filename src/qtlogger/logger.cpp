@@ -19,9 +19,9 @@
 #include "formatters/prettyformatter.h"
 #include "messagepatterns.h"
 #include "setmessagepattern.h"
+#include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
-#include "sinks/platformstdsink.h"
 #include "sinks/stdoutsink.h"
 
 #ifdef QTLOGGER_NETWORK
@@ -98,7 +98,7 @@ void Logger::setMessagePattern(const QString &pattern)
         return;
     }
 
-    if (pattern.toLower() == QStringLiteral("default")) {
+    if (pattern.toLower() == QStringLiteral("pretty")) {
         QtLogger::setMessagePattern(QString::fromUtf8(PrettyMessagePattern));
         return;
     }
