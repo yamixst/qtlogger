@@ -1,26 +1,23 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
-#include "ioslogsink.h"
+#include "oslogsink.h"
 
 #include <os/log.h>
+
+#include <QCoreApplication>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void IosLogSink::send(const LogMessage &logMsg)
+void OslogSink::send(const LogMessage &logMsg)
 {
-    QString formattedMessage;
+    auto customLog = os_log_create(qPrintable(QCoreApplication::applicationName()),
+                                   qPrintable(logMsg.category()));
 
-    if (qstrcmp(logMsg.category(), "default") == 0) {
-        formattedMessage = logMsg.message();
-    } else {
-        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
-    }
-
-    os_log_type_t type = OS_LOG_TYPE_DEBUG;
+    auto type = OS_LOG_TYPE_DEBUG;
     switch (logMsg.type()) {
     case QtDebugMsg:
         type = OS_LOG_TYPE_DEBUG;
@@ -39,9 +36,9 @@ void IosLogSink::send(const LogMessage &logMsg)
         break;
     };
 
-    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(logMsg.message()));
+    os_log_with_type(customLog, type, "%s", qPrintable(logMsg.message()));
 }
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_IOSLOG
+#endif // QTLOGGER_OSLOG

@@ -24,8 +24,8 @@ qtlogger_network {
     QT *= network
 }
 
-ios {
-    DEFINES *= QTLOGGER_IOSLOG
+macos | ios {
+    DEFINES *= QTLOGGER_OSLOG
 }
 
 linux:android {

@@ -36,8 +36,8 @@
 #    include "sinks/journalsink.h"
 #endif
 
-#ifdef QTLOGGER_IOSLOG
-#    include "sinks/ioslogsink.h"
+#ifdef QTLOGGER_OSLOG
+#    include "sinks/oslogsink.h"
 #endif
 
 #ifdef QTLOGGER_ANDROIDLOG
