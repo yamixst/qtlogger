@@ -12,7 +12,7 @@ namespace QtLogger {
 QTLOGGER_DECL_SPEC
 void JournalSink::send(const LogMessage &logMsg)
 {
-    int priority = LOG_DEBUG;
+    auto priority = LOG_DEBUG;
 
     switch (logMsg.type()) {
     case QtDebugMsg:
