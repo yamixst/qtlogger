@@ -11,6 +11,7 @@
 #include "formatters/jsonformatter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
+#include "formatters/qtlogmessageformatter.h"
 #include "messagepatterns.h"
 #include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
@@ -94,10 +95,18 @@ SimplePipeline &SimplePipeline::format(const QString &pattern)
 {
     if (pattern == "default")
         append(PatternFormatterPtr::create(DefaultMessagePattern));
+    else if (pattern == "qt")
+        append(QtLogMessageFormatter::instance());
     else if (pattern == "pretty")
         append(PrettyFormatterPtr::create());
     else
         append(PatternFormatterPtr::create(pattern));
+    return *this;
+}
+
+SimplePipeline &SimplePipeline::formatByQt()
+{
+    append(QtLogMessageFormatter::instance());
     return *this;
 }
 
