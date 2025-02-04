@@ -10,11 +10,11 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void AndroidLogSink::send(const LogMessage &logMsg)
+void AndroidLogSink::send(const LogMessage &lmsg)
 {
     auto priority = ANDROID_LOG_DEBUG;
 
-    switch (logMsg.type()) {
+    switch (lmsg.type()) {
     case QtDebugMsg:
         priority = ANDROID_LOG_DEBUG;
         break;
@@ -32,7 +32,7 @@ void AndroidLogSink::send(const LogMessage &logMsg)
         break;
     };
 
-    __android_log_print(priority, logMsg.category(), "%s", qPrintable(logMsg.message()));
+    __android_log_print(priority, lmsg.category(), "%s", qPrintable(lmsg.message()));
 
     // TODO: use __android_log_write_log_message for API level 30 and above
 }

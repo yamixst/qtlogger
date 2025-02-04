@@ -15,11 +15,11 @@ class QTLOGGER_EXPORT Filter : public Handler
 public:
     virtual ~Filter() = default;
 
-    virtual bool filter(const LogMessage &logMsg) = 0;
+    virtual bool filter(const LogMessage &lmsg) = 0;
 
     HandlerType type() const override { return HandlerType::Filter; }
 
-    bool process(LogMessage &logMsg) override final { return filter(logMsg); }
+    bool process(LogMessage &lmsg) override final { return filter(lmsg); }
 };
 
 using FilterPtr = QSharedPointer<Filter>;

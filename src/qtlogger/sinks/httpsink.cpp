@@ -36,7 +36,7 @@ HttpSink::~HttpSink()
 }
 
 QTLOGGER_DECL_SPEC
-void HttpSink::send(const LogMessage &logMsg)
+void HttpSink::send(const LogMessage &lmsg)
 {
     if (!Logger::instance()->ownThreadIsRunning()) {
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
@@ -44,16 +44,16 @@ void HttpSink::send(const LogMessage &logMsg)
         m_manager = new QNetworkAccessManager;
     }
 
-    if (logMsg.hasAttribute("mime_type")) {
+    if (lmsg.hasAttribute("mime_type")) {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("%1; charset=utf-8")
-                                    .arg(logMsg.attribute("mime_type").toByteArray()));
+                                    .arg(lmsg.attribute("mime_type").toByteArray()));
     } else {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("text/plain; charset=utf-8"));
     }
 
-    auto reply = m_manager->post(m_request, logMsg.formattedMessage().toUtf8());
+    auto reply = m_manager->post(m_request, lmsg.formattedMessage().toUtf8());
 
     QObject::connect(reply, &QNetworkReply::finished, reply, &QObject::deleteLater);
 

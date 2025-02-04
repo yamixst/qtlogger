@@ -19,7 +19,7 @@ public:
 
     virtual HandlerType type() const { return HandlerType::Handler; }
 
-    virtual bool process(LogMessage &logMsg) = 0;
+    virtual bool process(LogMessage &lmsg) = 0;
 };
 
 using HandlerPtr = QSharedPointer<Handler>;

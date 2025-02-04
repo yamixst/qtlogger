@@ -19,7 +19,7 @@ public:
 
     FunctionFormatter(const Function &func) : m_func(func) { }
 
-    QString format(const LogMessage &logMsg) override { return m_func(logMsg); }
+    QString format(const LogMessage &lmsg) override { return m_func(lmsg); }
 
 private:
     Function m_func;

@@ -23,18 +23,18 @@ public:
     {
     }
 
-    LogMessage(const LogMessage &logMsg) noexcept
-        : m_file(logMsg.m_context.file),
-          m_function(logMsg.m_context.function),
-          m_category(logMsg.m_context.category),
-          m_type(logMsg.m_type),
-          m_context(m_file.constData(), logMsg.m_context.line, m_function.constData(),
+    LogMessage(const LogMessage &lmsg) noexcept
+        : m_file(lmsg.m_context.file),
+          m_function(lmsg.m_context.function),
+          m_category(lmsg.m_context.category),
+          m_type(lmsg.m_type),
+          m_context(m_file.constData(), lmsg.m_context.line, m_function.constData(),
                     m_category.constData()),
-          m_message(logMsg.m_message),
-          m_time(logMsg.m_time),
-          m_threadId(logMsg.m_threadId),
-          m_formattedMessage(logMsg.m_formattedMessage),
-          m_attributes(logMsg.m_attributes)
+          m_message(lmsg.m_message),
+          m_time(lmsg.m_time),
+          m_threadId(lmsg.m_threadId),
+          m_formattedMessage(lmsg.m_formattedMessage),
+          m_attributes(lmsg.m_attributes)
     {
     }
 

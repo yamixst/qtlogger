@@ -19,15 +19,15 @@ RotatingFileSink::RotatingFileSink(const QString &path, int maxFileSize, int max
 }
 
 QTLOGGER_DECL_SPEC
-void RotatingFileSink::send(const LogMessage &logMsg)
+void RotatingFileSink::send(const LogMessage &lmsg)
 {
-    const auto newFileSize = file()->size() + logMsg.formattedMessage().toLocal8Bit().size();
+    const auto newFileSize = file()->size() + lmsg.formattedMessage().toLocal8Bit().size();
 
     if (m_maxFileSize > 0 && file()->size() != 0 && newFileSize > m_maxFileSize) {
         rotate();
     }
 
-    FileSink::send(logMsg);
+    FileSink::send(lmsg);
 }
 
 QTLOGGER_DECL_SPEC

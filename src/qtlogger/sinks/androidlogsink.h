@@ -15,7 +15,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT AndroidLogSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 };
 
 using AndroidLogSinkPtr = QSharedPointer<AndroidLogSink>;

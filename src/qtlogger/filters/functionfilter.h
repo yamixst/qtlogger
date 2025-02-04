@@ -19,7 +19,7 @@ public:
 
     FunctionFilter(const Function &function) : m_function(function) { }
 
-    bool filter(const LogMessage &logMsg) override { return m_function(logMsg); }
+    bool filter(const LogMessage &lmsg) override { return m_function(lmsg); }
 
 private:
     Function m_function;

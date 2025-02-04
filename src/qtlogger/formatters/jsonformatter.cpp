@@ -10,13 +10,13 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QString JsonFormatter::format(const LogMessage &logMsg)
+QString JsonFormatter::format(const LogMessage &lmsg)
 {
     QJsonObject obj;
 
-    obj[QStringLiteral("message")] = logMsg.message();
+    obj[QStringLiteral("message")] = lmsg.message();
 
-    auto attrs = logMsg.allAttributes();
+    auto attrs = lmsg.allAttributes();
     for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
         obj.insert(it.key(), QJsonValue::fromVariant(it.value()));
     }

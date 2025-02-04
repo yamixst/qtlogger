@@ -13,7 +13,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
     virtual bool flush() override;
 };
 

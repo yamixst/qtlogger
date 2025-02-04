@@ -12,13 +12,13 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void OslogSink::send(const LogMessage &logMsg)
+void OslogSink::send(const LogMessage &lmsg)
 {
     auto customLog = os_log_create(qPrintable(QCoreApplication::applicationName()),
-                                   qPrintable(logMsg.category()));
+                                   qPrintable(lmsg.category()));
 
     auto type = OS_LOG_TYPE_DEBUG;
-    switch (logMsg.type()) {
+    switch (lmsg.type()) {
     case QtDebugMsg:
         type = OS_LOG_TYPE_DEBUG;
         break;
@@ -36,7 +36,7 @@ void OslogSink::send(const LogMessage &logMsg)
         break;
     };
 
-    os_log_with_type(customLog, type, "%s", qPrintable(logMsg.message()));
+    os_log_with_type(customLog, type, "%s", qPrintable(lmsg.message()));
 }
 
 } // namespace QtLogger

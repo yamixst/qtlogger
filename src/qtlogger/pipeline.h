@@ -28,7 +28,7 @@ public:
 
     Pipeline &operator<<(const HandlerPtr &handler);
 
-    bool process(LogMessage &logMsg) override;
+    bool process(LogMessage &lmsg) override;
 
 protected:
     QList<HandlerPtr> &handlers() { return m_handlers; }

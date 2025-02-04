@@ -15,9 +15,9 @@ public:
 
     HandlerType type() const override { return HandlerType::AttrHandler; }
 
-    bool process(LogMessage &logMsg) override
+    bool process(LogMessage &lmsg) override
     {
-        logMsg.attributes().insert(attributes());
+        lmsg.attributes().insert(attributes());
         return true;
     }
 };

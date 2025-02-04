@@ -8,9 +8,9 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void StdOutSink::send(const LogMessage &logMsg)
+void StdOutSink::send(const LogMessage &lmsg)
 {
-    std::cout << qPrintable(logMsg.formattedMessage()) << std::endl;
+    std::cout << qPrintable(lmsg.formattedMessage()) << std::endl;
 }
 
 bool StdOutSink::flush()

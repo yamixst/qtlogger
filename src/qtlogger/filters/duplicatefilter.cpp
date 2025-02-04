@@ -3,13 +3,13 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-bool DuplicateFilter::filter(const LogMessage &logMsg)
+bool DuplicateFilter::filter(const LogMessage &lmsg)
 {
-    if (logMsg.message() == m_lastMessage) {
+    if (lmsg.message() == m_lastMessage) {
         return false;
     }
 
-    m_lastMessage = logMsg.message();
+    m_lastMessage = lmsg.message();
     return true;
 }
 

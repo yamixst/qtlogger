@@ -17,10 +17,10 @@ class QTLOGGER_EXPORT SignalSink : public QObject, Sink
 public:
     explicit SignalSink(QObject *parent = nullptr);
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 
 Q_SIGNALS:
-    void message(const QtLogger::LogMessage &logMsg);
+    void message(const QtLogger::LogMessage &lmsg);
 };
 
 using SignalSinkPtr = QSharedPointer<SignalSink>;
