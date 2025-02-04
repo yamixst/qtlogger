@@ -32,8 +32,8 @@
 #    include "sinks/syslogsink.h"
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-#    include "sinks/journalsink.h"
+#ifdef QTLOGGER_SDJOURNAL
+#    include "sinks/sdjournalsink.h"
 #endif
 
 #ifdef QTLOGGER_OSLOG
@@ -165,9 +165,9 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
     }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-    if (types.testFlag(SinkType::Journal)) {
-        appendSink(JournalSinkPtr::create());
+#ifdef QTLOGGER_SDJOURNAL
+    if (types.testFlag(SinkType::SdJournal)) {
+        appendSink(SdJournalSinkPtr::create());
     }
 #endif
 
@@ -261,12 +261,12 @@ void Logger::configure(const QSettings &settings, const QString &group)
     }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-    if (settings.value(group + QStringLiteral("/journal"), false).toBool()) {
+#ifdef QTLOGGER_SDJOURNAL
+    if (settings.value(group + QStringLiteral("/sdjournal"), false).toBool()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "Logger::configure: journal" << std::endl;
+        std::cerr << "Logger::configure: sd-journal" << std::endl;
 #    endif
-        appendSink(JournalSinkPtr::create());
+        appendSink(SdJournalSinkPtr::create());
     }
 #endif
 

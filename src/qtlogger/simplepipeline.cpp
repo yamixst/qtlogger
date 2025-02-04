@@ -26,8 +26,8 @@
 #    include "sinks/syslogsink.h"
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-#    include "sinks/journalsink.h"
+#ifdef QTLOGGER_SDJOURNAL
+#    include "sinks/sdjournalsink.h"
 #endif
 
 namespace QtLogger {
@@ -137,11 +137,11 @@ SimplePipeline &SimplePipeline::sendToSyslog()
 }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToJournal()
+SimplePipeline &SimplePipeline::sendToSdJournal()
 {
-    append(JournalSinkPtr::create());
+    append(SdJournalSinkPtr::create());
     return *this;
 }
 #endif

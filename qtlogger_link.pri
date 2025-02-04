@@ -37,7 +37,7 @@ unix:!android {
 }
 
 qtlogger_journal {
-    DEFINES *= QTLOGGER_JOURNAL
+    DEFINES *= QTLOGGER_SDJOURNAL
 }
 
 isEmpty(QTLOGGER_TARGET) {

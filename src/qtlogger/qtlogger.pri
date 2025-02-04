@@ -49,9 +49,9 @@ unix:!android {
 }
 
 qtlogger_journal {
-    DEFINES *= QTLOGGER_JOURNAL
-    SOURCES += $$PWD/sinks/journalsink.cpp
-    HEADERS += $$PWD/sinks/journalsink.h
+    DEFINES *= QTLOGGER_SDJOURNAL
+    SOURCES += $$PWD/sinks/sdjournalsink.cpp
+    HEADERS += $$PWD/sinks/sdjournalsink.h
 }
 
 SOURCES += \

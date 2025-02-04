@@ -3,7 +3,7 @@
 
 #pragma once
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 
 #include <QSharedPointer>
 
@@ -12,14 +12,14 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT JournalSink : public Sink
+class QTLOGGER_EXPORT SdJournalSink : public Sink
 {
 public:
     void send(const LogMessage &logMsg) override;
 };
 
-using JournalSinkPtr = QSharedPointer<JournalSink>;
+using SdJournalSinkPtr = QSharedPointer<SdJournalSink>;
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_JOURNAL
+#endif // QTLOGGER_SDJOURNAL
