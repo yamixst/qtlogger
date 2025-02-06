@@ -96,28 +96,34 @@ private:
     QVariantHash m_attributes;
 };
 
-inline QString msgTypeToString(QtMsgType type)
+inline QString qtMsgTypeToString(QtMsgType type, const QString &a_default = QStringLiteral("debug"))
 {
-    switch (type) {
-    case QtDebugMsg:
-        return QStringLiteral("debug");
-    case QtInfoMsg:
-        return QStringLiteral("info");
-    case QtWarningMsg:
-        return QStringLiteral("warning");
-    case QtCriticalMsg:
-        return QStringLiteral("critical");
-    case QtFatalMsg:
-        return QStringLiteral("fatal");
-    default:
-        return QStringLiteral("unknown");
-    }
+    static const auto map = QHash<QtMsgType, QString> {
+        { QtDebugMsg, QStringLiteral("debug") },
+        { QtInfoMsg, QStringLiteral("info") },
+        { QtWarningMsg, QStringLiteral("warning") },
+        { QtCriticalMsg, QStringLiteral("critical") },
+        { QtFatalMsg, QStringLiteral("fatal") },
+    };
+    return map.value(type, a_default);
+}
+
+inline QtMsgType stringToQtMsgType(const QString &str, QtMsgType a_default= QtDebugMsg)
+{
+    static const auto map = QHash<QString, QtMsgType> {
+        { QStringLiteral("debug"), QtDebugMsg },
+        { QStringLiteral("info"), QtInfoMsg },
+        { QStringLiteral("warning"), QtWarningMsg },
+        { QStringLiteral("critical"), QtCriticalMsg },
+        { QStringLiteral("fatal"), QtFatalMsg },
+    };
+    return map.value(str, a_default);
 }
 
 inline QVariantHash LogMessage::allAttributes() const
 {
     auto attrs = QVariantHash {
-        { QStringLiteral("type"), msgTypeToString(m_type) },
+        { QStringLiteral("type"), qtMsgTypeToString(m_type) },
         { QStringLiteral("line"), m_context.line },
         { QStringLiteral("file"), m_context.file },
         { QStringLiteral("function"), m_context.function },
