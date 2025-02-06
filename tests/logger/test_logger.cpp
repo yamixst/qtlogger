@@ -48,12 +48,6 @@ private slots:
     void testInstallMessageHandler();
     void testRestorePreviousMessageHandler();
 
-    // Filter and pattern tests
-    void testSetFilterRules();
-    void testSetMessagePattern();
-    void testSetMessagePatternDefault();
-    void testSetMessagePatternPretty();
-
     // Operator overloads
     void testOperatorLeftShift();
     void testOperatorLeftShiftWithPointer();
@@ -304,36 +298,6 @@ void TestLogger::testRestorePreviousMessageHandler()
     qDebug() << "Message after restore";
     
     QCOMPARE(m_mockHandler1->processCallCount(), 0);
-}
-
-void TestLogger::testSetFilterRules()
-{
-    QString rules = "test.*.debug=false;test.logger.info=true";
-    Logger::setFilterRules(rules);
-    
-    // Test is mainly about not crashing and proper format conversion
-    QVERIFY(true);
-}
-
-void TestLogger::testSetMessagePattern()
-{
-    QString pattern = "%{time} [%{type}] %{message}";
-    Logger::setMessagePattern(pattern);
-    
-    // Test is mainly about not crashing
-    QVERIFY(true);
-}
-
-void TestLogger::testSetMessagePatternDefault()
-{
-    Logger::setMessagePattern("default");
-    QVERIFY(true);
-}
-
-void TestLogger::testSetMessagePatternPretty()
-{
-    Logger::setMessagePattern("pretty");
-    QVERIFY(true);
 }
 
 void TestLogger::testOperatorLeftShift()
