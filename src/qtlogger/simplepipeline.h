@@ -24,7 +24,7 @@ public:
 
     SimplePipeline &filter(std::function<bool(const LogMessage &)> func);
     SimplePipeline &filter(const QString &regexp);
-    SimplePipeline &filterCategory(const QString &filter);
+    SimplePipeline &filterCategory(const QString &rules);
     SimplePipeline &filterDuplicate();
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);

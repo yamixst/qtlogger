@@ -2,6 +2,7 @@
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "filter.h"
+#include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"

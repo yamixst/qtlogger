@@ -4,6 +4,7 @@
 
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/seqnumberattr.h"
+#include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
 #include "filters/regexpfilter.h"
@@ -64,9 +65,9 @@ SimplePipeline &SimplePipeline::filter(std::function<bool(const LogMessage &)> f
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterCategory(const QString &filter)
+SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
 {
-    // TODO: Implement
+    append(CategoryFilterPtr::create(rules));
     return *this;
 }
 
