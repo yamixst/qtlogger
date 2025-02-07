@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
 
 ```
 
+## No Code Changes Required
+
+You don't need to modify your existing logging code if you're using standard Qt logging functions like `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, or `qFatal()`. Simply add one line of code to your `main()` function to configure QtLogger, and all your existing log statements will automatically work with the new logging system.
+
 ## Versioning
 
 This project adheres to **Semantic Versioning 2.0.0** (SemVer). 
