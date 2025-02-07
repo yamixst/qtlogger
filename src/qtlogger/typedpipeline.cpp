@@ -11,10 +11,10 @@ TypedPipeline::~TypedPipeline()
 QTLOGGER_DECL_SPEC
 void TypedPipeline::insertBefore(HandlerType type, const HandlerPtr &handler)
 {
-    auto first = std::find_if(handlers().cbegin(), handlers().cend(),
+    auto first = std::find_if(handlers().begin(), handlers().end(),
                               [type](const HandlerPtr &x) { return x->type() == type; });
 
-    if (first == handlers().cend()) {
+    if (first == handlers().end()) {
         handlers().prepend(handler);
         return;
     }
@@ -25,15 +25,15 @@ void TypedPipeline::insertBefore(HandlerType type, const HandlerPtr &handler)
 QTLOGGER_DECL_SPEC
 void TypedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
 {
-    auto first = std::find_if(handlers().cbegin(), handlers().cend(),
+    auto first = std::find_if(handlers().begin(), handlers().end(),
                               [type](const HandlerPtr &x) { return x->type() == type; });
 
-    if (first == handlers().cend()) {
+    if (first == handlers().end()) {
         handlers().prepend(handler);
         return;
     }
 
-    auto last = std::find_if(first, handlers().cend(),
+    auto last = std::find_if(first, handlers().end(),
                              [type](const HandlerPtr &x) { return x->type() != type; });
 
     handlers().insert(last, handler);
@@ -44,16 +44,16 @@ void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
                                   const HandlerPtr &handler)
 {
     auto firstLeft =
-            std::find_if(handlers().cbegin(), handlers().cend(),
+            std::find_if(handlers().begin(), handlers().end(),
                          [leftType](const HandlerPtr &x) { return x->type() == leftType; });
 
-    if (firstLeft == handlers().cend()) {
+    if (firstLeft == handlers().end()) {
 
         auto firstRight =
-                std::find_if(handlers().cbegin(), handlers().cend(),
+                std::find_if(handlers().begin(), handlers().end(),
                              [rightType](const auto &x) { return x->type() == rightType; });
 
-        if (firstRight != handlers().cend()) {
+        if (firstRight != handlers().end()) {
             handlers().insert(firstRight, handler);
         } else {
             handlers().prepend(handler);
@@ -62,7 +62,7 @@ void TypedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
         return;
     }
 
-    auto lastLeft = std::find_if(firstLeft, handlers().cend(),
+    auto lastLeft = std::find_if(firstLeft, handlers().end(),
                                  [leftType](const HandlerPtr &x) { return x->type() != leftType; });
 
     handlers().insert(lastLeft, handler);
