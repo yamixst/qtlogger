@@ -62,18 +62,18 @@ public:
     {
     }
 
-    LogMessage(const LogMessage &logMsg) noexcept
-        : m_file(logMsg.m_context.file),
-          m_function(logMsg.m_context.function),
-          m_category(logMsg.m_context.category),
-          m_type(logMsg.m_type),
-          m_context(m_file.constData(), logMsg.m_context.line, m_function.constData(),
+    LogMessage(const LogMessage &lmsg) noexcept
+        : m_file(lmsg.m_context.file),
+          m_function(lmsg.m_context.function),
+          m_category(lmsg.m_context.category),
+          m_type(lmsg.m_type),
+          m_context(m_file.constData(), lmsg.m_context.line, m_function.constData(),
                     m_category.constData()),
-          m_message(logMsg.m_message),
-          m_time(logMsg.m_time),
-          m_threadId(logMsg.m_threadId),
-          m_formattedMessage(logMsg.m_formattedMessage),
-          m_attributes(logMsg.m_attributes)
+          m_message(lmsg.m_message),
+          m_time(lmsg.m_time),
+          m_threadId(lmsg.m_threadId),
+          m_formattedMessage(lmsg.m_formattedMessage),
+          m_attributes(lmsg.m_attributes)
     {
     }
 
@@ -135,28 +135,34 @@ private:
     QVariantHash m_attributes;
 };
 
-inline QString msgTypeToString(QtMsgType type)
+inline QString qtMsgTypeToString(QtMsgType type, const QString &a_default = QStringLiteral("debug"))
 {
-    switch (type) {
-    case QtDebugMsg:
-        return QStringLiteral("debug");
-    case QtInfoMsg:
-        return QStringLiteral("info");
-    case QtWarningMsg:
-        return QStringLiteral("warning");
-    case QtCriticalMsg:
-        return QStringLiteral("critical");
-    case QtFatalMsg:
-        return QStringLiteral("fatal");
-    default:
-        return QStringLiteral("unknown");
-    }
+    static const auto map = QHash<QtMsgType, QString> {
+        { QtDebugMsg, QStringLiteral("debug") },
+        { QtInfoMsg, QStringLiteral("info") },
+        { QtWarningMsg, QStringLiteral("warning") },
+        { QtCriticalMsg, QStringLiteral("critical") },
+        { QtFatalMsg, QStringLiteral("fatal") },
+    };
+    return map.value(type, a_default);
+}
+
+inline QtMsgType stringToQtMsgType(const QString &str, QtMsgType a_default= QtDebugMsg)
+{
+    static const auto map = QHash<QString, QtMsgType> {
+        { QStringLiteral("debug"), QtDebugMsg },
+        { QStringLiteral("info"), QtInfoMsg },
+        { QStringLiteral("warning"), QtWarningMsg },
+        { QStringLiteral("critical"), QtCriticalMsg },
+        { QStringLiteral("fatal"), QtFatalMsg },
+    };
+    return map.value(str, a_default);
 }
 
 inline QVariantHash LogMessage::allAttributes() const
 {
     auto attrs = QVariantHash {
-        { QStringLiteral("type"), msgTypeToString(m_type) },
+        { QStringLiteral("type"), qtMsgTypeToString(m_type) },
         { QStringLiteral("line"), m_context.line },
         { QStringLiteral("file"), m_context.file },
         { QStringLiteral("function"), m_context.function },
@@ -183,7 +189,7 @@ public:
 
     virtual HandlerType type() const { return HandlerType::Handler; }
 
-    virtual bool process(LogMessage &logMsg) = 0;
+    virtual bool process(LogMessage &lmsg) = 0;
 };
 
 using HandlerPtr = QSharedPointer<Handler>;
@@ -197,13 +203,13 @@ namespace QtLogger {
 class QTLOGGER_EXPORT AttrHandler : public Handler
 {
 public:
-    virtual QVariantHash attributes() const = 0;
+    virtual QVariantHash attributes() = 0;
 
     HandlerType type() const override { return HandlerType::AttrHandler; }
 
-    bool process(LogMessage &logMsg) override
+    bool process(LogMessage &lmsg) override
     {
-        logMsg.attributes().insert(attributes());
+        lmsg.attributes().insert(attributes());
         return true;
     }
 };
@@ -223,7 +229,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT AppInfoAttrs : public AttrHandler
 {
 public:
-    QVariantHash attributes() const override;
+    QVariantHash attributes() override;
 };
 
 using AppInfoAttrsPtr = QSharedPointer<AppInfoAttrs>;
@@ -241,10 +247,10 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SeqNumberAttr : public AttrHandler
 {
 public:
-    QVariantHash attributes() const override;
+    QVariantHash attributes() override;
 
 private:
-    mutable int m_count = 0;
+    int m_count = 0;
 };
 
 using SeqNumberAttrPtr = QSharedPointer<SeqNumberAttr>;
@@ -264,11 +270,11 @@ class QTLOGGER_EXPORT Filter : public Handler
 public:
     virtual ~Filter() = default;
 
-    virtual bool filter(const LogMessage &logMsg) const = 0;
+    virtual bool filter(const LogMessage &lmsg) = 0;
 
     HandlerType type() const override { return HandlerType::Filter; }
 
-    bool process(LogMessage &logMsg) override final { return filter(logMsg); }
+    bool process(LogMessage &lmsg) override final { return filter(lmsg); }
 };
 
 using FilterPtr = QSharedPointer<Filter>;
@@ -276,6 +282,50 @@ using FilterPtr = QSharedPointer<Filter>;
 } // namespace QtLogger
 
 // end filter.h
+
+// categoryfilter.h
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT CategoryFilter : public Filter
+{
+public:
+    CategoryFilter(const QString &rules);
+
+    bool filter(const LogMessage &lmsg) override;
+
+private:
+    struct Rule;
+    void parseRules(const QString &rules);
+    QList<QSharedPointer<Rule>> m_rules;
+};
+
+using CategoryFilterPtr = QSharedPointer<CategoryFilter>;
+
+} // namespace QtLogger
+
+// end categoryfilter.h
+
+// duplicatefilter.h
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT DuplicateFilter : public Filter
+{
+public:
+    bool filter(const LogMessage &lmsg) override;
+
+private:
+    QString m_lastMessage;
+};
+
+using DuplicateFilterPtr = QSharedPointer<DuplicateFilter>;
+
+} // namespace QtLogger
+
+// end duplicatefilter.h
 
 // functionfilter.h
 
@@ -290,22 +340,15 @@ class QTLOGGER_EXPORT FunctionFilter : public Filter
 public:
     using Function = std::function<bool(const LogMessage &)>;
 
-    FunctionFilter(const Function &function);
+    FunctionFilter(const Function &function) : m_function(function) { }
 
-    bool filter(const LogMessage &logMsg) const override;
+    bool filter(const LogMessage &lmsg) override { return m_function(lmsg); }
 
 private:
     Function m_function;
 };
 
 using FunctionFilterPtr = QSharedPointer<FunctionFilter>;
-
-inline FunctionFilter::FunctionFilter(const Function &function) : m_function(function) { }
-
-inline bool FunctionFilter::filter(const LogMessage &logMsg) const
-{
-    return m_function(logMsg);
-}
 
 } // namespace QtLogger
 
@@ -324,7 +367,7 @@ public:
     explicit RegExpFilter(const QRegularExpression &regExp);
     explicit RegExpFilter(const QString &regExp);
 
-    bool filter(const LogMessage &logMsg) const override;
+    bool filter(const LogMessage &lmsg) override;
 
 private:
     QRegularExpression m_regExp;
@@ -347,13 +390,13 @@ class QTLOGGER_EXPORT Formatter : public Handler
 public:
     virtual ~Formatter() = default;
 
-    virtual QString format(const LogMessage &logMsg) const = 0;
+    virtual QString format(const LogMessage &lmsg) = 0;
 
     HandlerType type() const override { return HandlerType::Formatter; }
 
-    bool process(LogMessage &logMsg) override final
+    bool process(LogMessage &lmsg) override final
     {
-        logMsg.setFormattedMessage(format(logMsg));
+        lmsg.setFormattedMessage(format(lmsg));
         return true;
     }
 };
@@ -379,7 +422,7 @@ public:
 
     FunctionFormatter(const Function &func) : m_func(func) { }
 
-    QString format(const LogMessage &logMsg) const override { return m_func(logMsg); }
+    QString format(const LogMessage &lmsg) override { return m_func(lmsg); }
 
 private:
     Function m_func;
@@ -408,7 +451,7 @@ public:
         return s_instance;
     }
 
-    QString format(const LogMessage &logMsg) const override;
+    QString format(const LogMessage &lmsg) override;
 };
 
 } // namespace QtLogger
@@ -428,7 +471,7 @@ class QTLOGGER_EXPORT PatternFormatter : public Formatter
 public:
     explicit PatternFormatter(const QString &pattern);
 
-    QString format(const LogMessage &logMsg) const override;
+    QString format(const LogMessage &lmsg) override;
 
 private:
     QString m_pattern;
@@ -458,7 +501,7 @@ public:
 
     explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
 
-    QString format(const LogMessage &logMsg) const override;
+    QString format(const LogMessage &lmsg) override;
 
     inline bool showThreadId() const { return m_showThreadId; }
     inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }
@@ -471,11 +514,11 @@ public:
 
 private:
     bool m_showThreadId = true;
-    mutable QMap<int, int> m_threads;
-    mutable int m_threadsIndex = 0;
+    QMap<int, int> m_threads;
+    int m_threadsIndex = 0;
 
     int m_maxCategoryWidth = 15;
-    mutable int m_categoryWidth = 0;
+    int m_categoryWidth = 0;
 };
 
 } // namespace QtLogger
@@ -499,9 +542,9 @@ public:
         return s_instance;
     }
 
-    QString format(const LogMessage &logMsg) const override
+    QString format(const LogMessage &lmsg) override
     {
-        return qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
+        return qFormatLogMessage(lmsg.type(), lmsg.context(), lmsg.message());
     }
 
 private:
@@ -530,6 +573,9 @@ private:
 
 // simplepipeline.h
 
+#include <QList>
+#include <QSharedPointer>
+
 // typedpipeline.h
 
 // pipeline.h
@@ -544,7 +590,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
-    Pipeline() = default;
+    explicit Pipeline(bool scoped = false) : m_scoped(scoped) {};
     Pipeline(std::initializer_list<HandlerPtr> handlers);
 
     HandlerType type() const override { return HandlerType::Pipeline; }
@@ -556,13 +602,14 @@ public:
 
     Pipeline &operator<<(const HandlerPtr &handler);
 
-    bool process(LogMessage &logMsg) override;
+    bool process(LogMessage &lmsg) override;
 
 protected:
     QList<HandlerPtr> &handlers() { return m_handlers; }
 
 private:
     QList<HandlerPtr> m_handlers;
+    bool m_scoped = false;
 };
 
 using PipelinePtr = QSharedPointer<Pipeline>;
@@ -590,14 +637,14 @@ namespace QtLogger {
 class QTLOGGER_EXPORT Sink : public Handler
 {
 public:
-    virtual void send(const LogMessage &logMsg) = 0;
+    virtual void send(const LogMessage &lmsg) = 0;
     virtual bool flush() { return true; }
 
     HandlerType type() const override { return HandlerType::Sink; }
 
-    bool process(LogMessage &logMsg) override final
+    bool process(LogMessage &lmsg) override final
     {
-        send(logMsg);
+        send(lmsg);
         return true;
     }
 };
@@ -613,7 +660,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT TypedPipeline : public Pipeline
 {
 public:
-    TypedPipeline() = default;
+    explicit TypedPipeline(bool scoped = false) : Pipeline(scoped) {}
     ~TypedPipeline() override;
 
     void insertBefore(HandlerType type, const HandlerPtr &handler);
@@ -651,6 +698,11 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SimplePipeline : public TypedPipeline
 {
 public:
+    explicit SimplePipeline(bool scoped = false, SimplePipeline *parent = nullptr)
+        : TypedPipeline(scoped), m_parent(parent)
+    {
+    }
+
     SimplePipeline &addSeqNumber();
     SimplePipeline &addAppInfo();
 #ifdef QTLOGGER_NETWORK
@@ -658,11 +710,14 @@ public:
 #endif
 
     SimplePipeline &filter(std::function<bool(const LogMessage &)> func);
-    SimplePipeline &filterCategory(const QString &filter);
     SimplePipeline &filter(const QString &regexp);
+    SimplePipeline &filterCategory(const QString &rules);
+    SimplePipeline &filterDuplicate();
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);
+    SimplePipeline &formatByQt();
+    SimplePipeline &formatPretty();
     SimplePipeline &formatToJson();
 
     SimplePipeline &sendToStdOut();
@@ -670,15 +725,26 @@ public:
 #ifdef QTLOGGER_SYSLOG
     SimplePipeline &sendToSyslog();
 #endif
-#ifdef QTLOGGER_JOURNAL
-    SimplePipeline &sendToJournal();
+#ifdef QTLOGGER_SDJOURNAL
+    SimplePipeline &sendToSdJournal();
 #endif
     SimplePipeline &sendToPlatformStdLog();
     SimplePipeline &sendToFile(const QString &fileName, int maxFileSize = 0, int maxFileCount = 0);
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
 #endif
+#ifdef Q_OS_WIN
+    SimplePipeline &sendToWinDebug();
+#endif
+
+    SimplePipeline &pipeline();
+    SimplePipeline &end();
+
+private:
+    SimplePipeline *m_parent = nullptr;
 };
+
+using SimplePipelinePtr = QSharedPointer<SimplePipeline>;
 
 } // namespace QtLogger
 
@@ -701,7 +767,7 @@ public:
     bool ownThreadIsRunning() const;
     QThread *ownThread() const { return m_thread; }
 
-    bool process(LogMessage &logMsg) override;
+    bool process(LogMessage &lmsg) override;
 
 private:
     QPointer<OwnThreadPipelineWorker> m_worker;
@@ -739,9 +805,8 @@ public:
         StdOut = 0x01,
         StdErr = 0x02,
         Syslog = 0x04,
-        Journal = 0x8,
-        PlatformStdLog = 0x10, // For Android and iOS
-        NTEventLog = 0x20,
+        SdJournal = 0x8,
+        PlatformStdLog = 0x10,
         File = 0x40,
         RotatingFile = 0x80
     };
@@ -754,12 +819,16 @@ public:
     ~Logger() override;
 
     /*
+        Set global filter rules
+
         Format:  "[<category>|*].[debug|info|warning|critical]=true|false;..."
         Example: "app.*.debug=false;app.logger.debug=true"
     */
     static void setFilterRules(const QString &rules);
 
     /*
+       Set global message pattern
+
        Following placeholders are supported:
        %{appname} %{category} %{file} %{function} %{line} %{message} %{pid} %{threadid}
        %{qthreadptr} %{type} %{time process} %{time boot} %{time [format]} %{backtrace [depth=N]
@@ -770,8 +839,10 @@ public:
     Logger &operator<<(const HandlerPtr &handler);
 
     void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
+
     void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
                    int maxFileSize = 0, int maxFileCount = 0, bool async = false);
+
     void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
                    bool async = false);
 
@@ -783,7 +854,7 @@ public:
        logger/stderr = true|false
        logger/platform_std_log = true|false
        logger/syslog_ident = <string>
-       logger/journal = true|false
+       logger/sdjournal = true|false
        logger/path = <string>
        logger/max_file_size = <int>
        logger/max_file_count = <int>
@@ -883,7 +954,7 @@ class QTLOGGER_EXPORT IODeviceSink : public Sink
 public:
     explicit IODeviceSink(const QIODevicePtr &device);
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 
 protected:
     const QIODevicePtr &device() const;
@@ -933,14 +1004,12 @@ using FileSinkPtr = QSharedPointer<FileSink>;
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
-
 namespace QtLogger {
 
 class QTLOGGER_EXPORT AndroidLogSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 };
 
 using AndroidLogSinkPtr = QSharedPointer<AndroidLogSink>;
@@ -951,31 +1020,29 @@ using AndroidLogSinkPtr = QSharedPointer<AndroidLogSink>;
 
 // end androidlogsink.h
 
-#elif defined(QTLOGGER_IOSLOG)
+#elif defined(QTLOGGER_OSLOG)
 
-// ioslogsink.h
+// oslogsink.h
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
-
 namespace QtLogger {
 
-class QTLOGGER_EXPORT IosLogSink : public Sink
+class QTLOGGER_EXPORT OslogSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg);
+    void send(const LogMessage &lmsg);
 };
 
-using IosLogSinkPtr = QSharedPointer<IosLogSink>;
+using OslogSinkPtr = QSharedPointer<OslogSink>;
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_IOSLOG
+#endif // QTLOGGER_OSLOG
 
-// end ioslogsink.h
+// end oslogsink.h
 
 #else
 
@@ -988,7 +1055,8 @@ namespace QtLogger {
 class QTLOGGER_EXPORT StdErrSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
+    virtual bool flush() override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;
@@ -1003,8 +1071,8 @@ namespace QtLogger {
 
 #if defined(QTLOGGER_ANDROIDLOG)
 using PlatformStdSink = AndroidLogSink;
-#elif defined(QTLOGGER_IOSLOG)
-using PlatformStdSink = IosLogSink;
+#elif defined(QTLOGGER_OSLOG)
+using PlatformStdSink = OslogSink;
 #else
 using PlatformStdSink = StdErrSink;
 #endif
@@ -1031,7 +1099,7 @@ public:
     explicit RotatingFileSink(const QString &path, int maxFileSize = RotatingFileDefaultMaxFileSize,
                               int maxFileCount = RotatingFileDefaultMaxFileCount);
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 
 private:
     void rotate();
@@ -1060,10 +1128,10 @@ class QTLOGGER_EXPORT SignalSink : public QObject, Sink
 public:
     explicit SignalSink(QObject *parent = nullptr);
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 
 Q_SIGNALS:
-    void message(const QtLogger::LogMessage &logMsg);
+    void message(const QtLogger::LogMessage &lmsg);
 };
 
 using SignalSinkPtr = QSharedPointer<SignalSink>;
@@ -1081,7 +1149,8 @@ namespace QtLogger {
 class QTLOGGER_EXPORT StdOutSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
+    virtual bool flush() override;
 };
 
 using StdOutSinkPtr = QSharedPointer<StdOutSink>;
@@ -1109,7 +1178,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT HostInfoAttrs : public AttrHandler
 {
 public:
-    QVariantHash attributes() const override;
+    QVariantHash attributes() override;
 };
 
 using HostInfoAttrsPtr = QSharedPointer<HostInfoAttrs>;
@@ -1139,7 +1208,7 @@ public:
     explicit HttpSink(const QUrl &url);
     ~HttpSink();
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     void setRequest(const QNetworkRequest &request);
@@ -1157,6 +1226,32 @@ using HttpSinkPtr = QSharedPointer<HttpSink>;
 #endif // QTLOGGER_NETWORK
 
 // end httpsink.h
+
+#endif
+
+#ifdef Q_OS_WIN
+
+// windebugsink.h
+
+#ifdef Q_OS_WIN
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT WinDebugSink : public Sink
+{
+public:
+    void send(const LogMessage &lmsg) override;
+};
+
+using WinDebugSinkPtr = QSharedPointer<WinDebugSink>;
+
+} // namespace QtLogger
+
+#endif
+
+// end windebugsink.h
 
 #endif
 
@@ -1190,7 +1285,7 @@ public:
                         int facility = QTLOGGER_SYSLOG_LOG_USER);
     ~SyslogSink();
 
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 };
 
 using SyslogSinkPtr = QSharedPointer<SyslogSink>;
@@ -1203,31 +1298,29 @@ using SyslogSinkPtr = QSharedPointer<SyslogSink>;
 
 #endif
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 
-// journalsink.h
+// sdjournalsink.h
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 
 #include <QSharedPointer>
 
-#include "../abstractmessagesink.h"
-
 namespace QtLogger {
 
-class QTLOGGER_EXPORT JournalSink : public Sink
+class QTLOGGER_EXPORT SdJournalSink : public Sink
 {
 public:
-    void send(const LogMessage &logMsg) override;
+    void send(const LogMessage &lmsg) override;
 };
 
-using JournalSinkPtr = QSharedPointer<JournalSink>;
+using SdJournalSinkPtr = QSharedPointer<SdJournalSink>;
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_JOURNAL
+#endif // QTLOGGER_SDJOURNAL
 
-// end journalsink.h
+// end sdjournalsink.h
 
 #endif
 
@@ -1238,7 +1331,7 @@ using JournalSinkPtr = QSharedPointer<JournalSink>;
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash AppInfoAttrs::attributes() const
+QVariantHash AppInfoAttrs::attributes()
 {
     return QVariantHash {
         { QStringLiteral("app_name"), QCoreApplication::applicationName() },
@@ -1260,7 +1353,7 @@ QVariantHash AppInfoAttrs::attributes() const
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash HostInfoAttrs::attributes() const
+QVariantHash HostInfoAttrs::attributes()
 {
     return QVariantHash {
         { QStringLiteral("host_name"), QHostInfo::localHostName() },
@@ -1276,9 +1369,95 @@ QVariantHash HostInfoAttrs::attributes() const
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash SeqNumberAttr::attributes() const
+QVariantHash SeqNumberAttr::attributes()
 {
     return { { "seq_number", m_count++ } };
+}
+
+} // namespace QtLogger
+
+// categoryfilter.cpp
+
+#include <QRegularExpression>
+#include <qlogging.h>
+
+namespace QtLogger {
+
+struct CategoryFilter::Rule
+{
+    QRegularExpression category;
+    QtMsgType type;
+    bool typeMatch;
+    bool enabled;
+
+    bool matches(const QString &category, QtMsgType messageType) const;
+};
+
+CategoryFilter::CategoryFilter(const QString &a_rules)
+{
+    auto rules = a_rules;
+    rules.replace(";", "\n");
+    parseRules(rules);
+}
+
+void CategoryFilter::parseRules(const QString &rules)
+{
+    const auto lines = rules.split('\n', Qt::SkipEmptyParts);
+    for (const auto &line : lines) {
+        const auto ruleRegex = QRegularExpression(
+                R"(^\s*(\S+?)(?:\.(debug|info|warning|critical))?\s*=\s*(true|false)\s*$)");
+
+        const auto match = ruleRegex.match(line);
+
+        if (!match.hasMatch())
+            continue;
+
+        auto rule = QSharedPointer<Rule>::create();
+
+        auto category = match.captured(1);
+        category = QRegularExpression::escape(category);
+        category.replace("\\*", ".*");
+
+        rule->category = QRegularExpression("^" + category + "$");
+        rule->type = stringToQtMsgType(match.captured(2));
+        rule->typeMatch = !match.captured(2).isEmpty();
+        rule->enabled = match.captured(3) == "true";
+
+        m_rules.append(rule);
+    }
+}
+
+bool CategoryFilter::Rule::matches(const QString &category, QtMsgType messageType) const
+{
+    return this->category.match(category).hasMatch() && (!typeMatch || type == messageType);
+}
+
+bool CategoryFilter::filter(const LogMessage &lmsg)
+{
+    bool enabled = true;
+    for (const auto &rule : m_rules) {
+        if (rule->matches(lmsg.category(), lmsg.type())) {
+            enabled = rule->enabled;
+        }
+    }
+    return enabled;
+}
+
+} // namespace QtLogger
+
+// duplicatefilter.cpp
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+bool DuplicateFilter::filter(const LogMessage &lmsg)
+{
+    if (lmsg.message() == m_lastMessage) {
+        return false;
+    }
+
+    m_lastMessage = lmsg.message();
+    return true;
 }
 
 } // namespace QtLogger
@@ -1298,9 +1477,9 @@ QtLogger::RegExpFilter::RegExpFilter(const QString &regExp) : m_regExp(QRegularE
 }
 
 QTLOGGER_DECL_SPEC
-bool RegExpFilter::filter(const LogMessage &logMsg) const
+bool RegExpFilter::filter(const LogMessage &lmsg)
 {
-    return m_regExp.match(logMsg.message()).hasMatch();
+    return m_regExp.match(lmsg.message()).hasMatch();
 }
 
 } // namespace QtLogger
@@ -1314,13 +1493,13 @@ bool RegExpFilter::filter(const LogMessage &logMsg) const
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QString JsonFormatter::format(const LogMessage &logMsg) const
+QString JsonFormatter::format(const LogMessage &lmsg)
 {
     QJsonObject obj;
 
-    obj[QStringLiteral("message")] = logMsg.message();
+    obj[QStringLiteral("message")] = lmsg.message();
 
-    auto attrs = logMsg.allAttributes();
+    auto attrs = lmsg.allAttributes();
     for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
         obj.insert(it.key(), QJsonValue::fromVariant(it.value()));
     }
@@ -1338,13 +1517,13 @@ QTLOGGER_DECL_SPEC
 PatternFormatter::PatternFormatter(const QString &pattern) : m_pattern(pattern) { }
 
 QTLOGGER_DECL_SPEC
-QString PatternFormatter::format(const LogMessage &logMsg) const
+QString PatternFormatter::format(const LogMessage &lmsg)
 {
     // TODO: write own implementation
 
     QtLogger::setMessagePattern(m_pattern);
 
-    auto result = qFormatLogMessage(logMsg.type(), logMsg.context(), logMsg.message());
+    auto result = qFormatLogMessage(lmsg.type(), lmsg.context(), lmsg.message());
 
     QtLogger::restorePreviousMessagePattern();
 
@@ -1364,7 +1543,7 @@ PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth)
 }
 
 QTLOGGER_DECL_SPEC
-QString PrettyFormatter::format(const LogMessage &logMsg) const
+QString PrettyFormatter::format(const LogMessage &lmsg)
 {
     static const QString msg_f { QStringLiteral("%1 %2 %3%4%5%6") };
     static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss.zzz") };
@@ -1377,11 +1556,11 @@ QString PrettyFormatter::format(const LogMessage &logMsg) const
 
     QString thread;
     if (m_showThreadId) {
-        if (!m_threads.contains(logMsg.threadId())) {
-            m_threads[logMsg.threadId()] = m_threadsIndex++;
+        if (!m_threads.contains(lmsg.threadId())) {
+            m_threads[lmsg.threadId()] = m_threadsIndex++;
         }
         if (m_threads.count() > 1) {
-            const auto index = m_threads.value(logMsg.threadId());
+            const auto index = m_threads.value(lmsg.threadId());
             thread = thread_f.arg(index);
             if (index == 0) {
                 thread.fill(QChar::fromLatin1(' '));
@@ -1390,8 +1569,8 @@ QString PrettyFormatter::format(const LogMessage &logMsg) const
     }
 
     QString category;
-    if (qstrcmp(logMsg.category(), "default") != 0) {
-        category = category_f.arg(QString::fromUtf8(logMsg.category()));
+    if (qstrcmp(lmsg.category(), "default") != 0) {
+        category = category_f.arg(QString::fromUtf8(lmsg.category()));
     }
 
     QString space;
@@ -1403,8 +1582,8 @@ QString PrettyFormatter::format(const LogMessage &logMsg) const
         space.fill(QChar::fromLatin1(' '), qMax(m_categoryWidth - categoryLength, 0));
     }
 
-    auto result = msg_f.arg(logMsg.time().toString(time_f), type_l.at(logMsg.type()), thread,
-                            category, space, logMsg.message());
+    auto result = msg_f.arg(lmsg.time().toString(time_f), type_l.at(lmsg.type()), thread,
+                            category, space, lmsg.message());
 
     return result;
 }
@@ -1433,11 +1612,11 @@ QString PrettyFormatter::format(const LogMessage &logMsg) const
 
 #endif
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 
 #endif
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
 #endif
 
@@ -1499,7 +1678,7 @@ void Logger::setMessagePattern(const QString &pattern)
         return;
     }
 
-    if (pattern.toLower() == QStringLiteral("default")) {
+    if (pattern.toLower() == QStringLiteral("pretty")) {
         QtLogger::setMessagePattern(QString::fromUtf8(PrettyMessagePattern));
         return;
     }
@@ -1566,9 +1745,9 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
     }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-    if (types.testFlag(SinkType::Journal)) {
-        appendSink(JournalSinkPtr::create());
+#ifdef QTLOGGER_SDJOURNAL
+    if (types.testFlag(SinkType::SdJournal)) {
+        appendSink(SdJournalSinkPtr::create());
     }
 #endif
 
@@ -1662,12 +1841,12 @@ void Logger::configure(const QSettings &settings, const QString &group)
     }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
-    if (settings.value(group + QStringLiteral("/journal"), false).toBool()) {
+#ifdef QTLOGGER_SDJOURNAL
+    if (settings.value(group + QStringLiteral("/sdjournal"), false).toBool()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "Logger::configure: journal" << std::endl;
+        std::cerr << "Logger::configure: sd-journal" << std::endl;
 #    endif
-        appendSink(JournalSinkPtr::create());
+        appendSink(SdJournalSinkPtr::create());
     }
 #endif
 
@@ -1743,9 +1922,9 @@ QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
-    LogMessage logMsg(type, context, message);
+    LogMessage lmsg(type, context, message);
 
-    process(logMsg);
+    process(lmsg);
 }
 
 QTLOGGER_DECL_SPEC
@@ -1815,9 +1994,9 @@ static QEvent::Type __processLogMessageEventType = static_cast<QEvent::Type>(QEv
 
 struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
 {
-    LogMessage logMsg;
-    ProcessLogMessageEvent(const LogMessage &logMsg)
-        : QEvent(__processLogMessageEventType), logMsg(logMsg)
+    LogMessage lmsg;
+    ProcessLogMessageEvent(const LogMessage &lmsg)
+        : QEvent(__processLogMessageEventType), lmsg(lmsg)
     {
     }
 };
@@ -1837,7 +2016,7 @@ public:
         if (event->type() == __processLogMessageEventType) {
             auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
             if (_event) {
-                m_handler->SimplePipeline::process(_event->logMsg);
+                m_handler->SimplePipeline::process(_event->lmsg);
             }
         }
     }
@@ -1913,12 +2092,12 @@ bool OwnThreadPipeline::ownThreadIsRunning() const
 }
 
 QTLOGGER_DECL_SPEC
-bool OwnThreadPipeline::process(LogMessage &logMsg)
+bool OwnThreadPipeline::process(LogMessage &lmsg)
 {
     if (!ownThreadIsRunning()) {
-        SimplePipeline::process(logMsg);
+        SimplePipeline::process(lmsg);
     } else {
-        QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(logMsg));
+        QCoreApplication::postEvent(m_worker, new ProcessLogMessageEvent(lmsg));
     }
     return true;
 }
@@ -1970,13 +2149,28 @@ Pipeline &Pipeline::operator<<(const HandlerPtr &handler)
 }
 
 QTLOGGER_DECL_SPEC
-bool Pipeline::process(LogMessage &logMsg)
+bool Pipeline::process(LogMessage &lmsg)
 {
+    QString fmsg;
+    QVariantHash attrs;
+
+    if (m_scoped) {
+        if (lmsg.isFormatted()) {
+            fmsg = lmsg.formattedMessage();
+        }
+        attrs = lmsg.attributes();
+    }
+
     for (auto &handler : m_handlers) {
         if (!handler)
             continue;
-        if (!handler->process(logMsg))
+        if (!handler->process(lmsg))
             break;
+    }
+
+    if (m_scoped) {
+        lmsg.setFormattedMessage(fmsg);
+        lmsg.attributes() = attrs;
     }
 
     return true;
@@ -2042,7 +2236,11 @@ QString restorePreviousMessagePattern()
 
 #endif
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
+
+#endif
+
+#ifdef Q_OS_WIN
 
 #endif
 
@@ -2079,9 +2277,15 @@ SimplePipeline &SimplePipeline::filter(std::function<bool(const LogMessage &)> f
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterCategory(const QString &filter)
+SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
 {
-    // TODO: Implement
+    append(CategoryFilterPtr::create(rules));
+    return *this;
+}
+
+SimplePipeline &SimplePipeline::filterDuplicate()
+{
+    append(DuplicateFilterPtr::create());
     return *this;
 }
 
@@ -2104,10 +2308,24 @@ SimplePipeline &SimplePipeline::format(const QString &pattern)
 {
     if (pattern == "default")
         append(PatternFormatterPtr::create(DefaultMessagePattern));
+    else if (pattern == "qt")
+        append(QtLogMessageFormatter::instance());
     else if (pattern == "pretty")
         append(PrettyFormatterPtr::create());
     else
         append(PatternFormatterPtr::create(pattern));
+    return *this;
+}
+
+SimplePipeline &SimplePipeline::formatByQt()
+{
+    append(QtLogMessageFormatter::instance());
+    return *this;
+}
+
+SimplePipeline &SimplePipeline::formatPretty()
+{
+    append(PrettyFormatterPtr::create());
     return *this;
 }
 
@@ -2141,11 +2359,11 @@ SimplePipeline &SimplePipeline::sendToSyslog()
 }
 #endif
 
-#ifdef QTLOGGER_JOURNAL
+#ifdef QTLOGGER_SDJOURNAL
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToJournal()
+SimplePipeline &SimplePipeline::sendToSdJournal()
 {
-    append(JournalSinkPtr::create());
+    append(SdJournalSinkPtr::create());
     return *this;
 }
 #endif
@@ -2177,6 +2395,29 @@ SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 }
 #endif
 
+#ifdef Q_OS_WIN
+SimplePipeline &SimplePipeline::sendToWinDebug()
+{
+    append(WinDebugSinkPtr::create());
+    return *this;
+}
+#endif
+
+SimplePipeline &SimplePipeline::pipeline()
+{
+    auto pipeline = SimplePipelinePtr::create(true, this);
+    append(pipeline);
+    return *pipeline.data();
+}
+
+SimplePipeline &SimplePipeline::end()
+{
+    if (m_parent)
+        return *m_parent;
+    else
+        return *this;
+}
+
 } // namespace QtLogger
 
 // androidlogsink.cpp
@@ -2188,11 +2429,11 @@ SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void AndroidLogSink::send(const LogMessage &logMsg)
+void AndroidLogSink::send(const LogMessage &lmsg)
 {
-    android_LogPriority priority = ANDROID_LOG_DEBUG;
+    auto priority = ANDROID_LOG_DEBUG;
 
-    switch (logMsg.type()) {
+    switch (lmsg.type()) {
     case QtDebugMsg:
         priority = ANDROID_LOG_DEBUG;
         break;
@@ -2210,7 +2451,9 @@ void AndroidLogSink::send(const LogMessage &logMsg)
         break;
     };
 
-    __android_log_print(priority, logMsg.category(), "%s\n", qPrintable(logMsg.message()));
+    __android_log_print(priority, lmsg.category(), "%s", qPrintable(lmsg.message()));
+
+    // TODO: use __android_log_write_log_message for API level 30 and above
 }
 
 } // namespace QtLogger
@@ -2329,7 +2572,7 @@ HttpSink::~HttpSink()
 }
 
 QTLOGGER_DECL_SPEC
-void HttpSink::send(const LogMessage &logMsg)
+void HttpSink::send(const LogMessage &lmsg)
 {
     if (!Logger::instance()->ownThreadIsRunning()) {
         if (!m_manager.isNull() && !m_manager->property("activeReply").isValid())
@@ -2337,16 +2580,16 @@ void HttpSink::send(const LogMessage &logMsg)
         m_manager = new QNetworkAccessManager;
     }
 
-    if (logMsg.hasAttribute("mime_type")) {
+    if (lmsg.hasAttribute("mime_type")) {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("%1; charset=utf-8")
-                                    .arg(logMsg.attribute("mime_type").toByteArray()));
+                                    .arg(lmsg.attribute("mime_type").toByteArray()));
     } else {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("text/plain; charset=utf-8"));
     }
 
-    auto reply = m_manager->post(m_request, logMsg.formattedMessage().toUtf8());
+    auto reply = m_manager->post(m_request, lmsg.formattedMessage().toUtf8());
 
     QObject::connect(reply, &QNetworkReply::finished, reply, &QObject::deleteLater);
 
@@ -2383,13 +2626,13 @@ QTLOGGER_DECL_SPEC
 IODeviceSink::IODeviceSink(const QIODevicePtr &device) : m_device(device) { }
 
 QTLOGGER_DECL_SPEC
-void IODeviceSink::send(const LogMessage &logMsg)
+void IODeviceSink::send(const LogMessage &lmsg)
 {
     if (m_device.isNull()) {
         return;
     }
 
-    m_device->write(logMsg.formattedMessage().toLocal8Bit().append("\n"));
+    m_device->write(lmsg.formattedMessage().toLocal8Bit().append("\n"));
 }
 
 QTLOGGER_DECL_SPEC
@@ -2406,27 +2649,24 @@ void IODeviceSink::setDevice(const QIODevicePtr &device)
 
 } // namespace QtLogger
 
-// ioslogsink.cpp
+// oslogsink.cpp
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
 #include <os/log.h>
+
+#include <QCoreApplication>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void IosLogSink::send(const LogMessage &logMsg)
+void OslogSink::send(const LogMessage &lmsg)
 {
-    QString formattedMessage;
+    auto customLog = os_log_create(qPrintable(QCoreApplication::applicationName()),
+                                   qPrintable(lmsg.category()));
 
-    if (qstrcmp(logMsg.category(), "default") == 0) {
-        formattedMessage = logMsg.message();
-    } else {
-        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
-    }
-
-    os_log_type_t type = OS_LOG_TYPE_DEBUG;
-    switch (logMsg.type()) {
+    auto type = OS_LOG_TYPE_DEBUG;
+    switch (lmsg.type()) {
     case QtDebugMsg:
         type = OS_LOG_TYPE_DEBUG;
         break;
@@ -2444,60 +2684,12 @@ void IosLogSink::send(const LogMessage &logMsg)
         break;
     };
 
-    os_log_with_type(OS_LOG_DEFAULT, type, "%s\n", qPrintable(logMsg.message()));
+    os_log_with_type(customLog, type, "%s", qPrintable(lmsg.message()));
 }
 
 } // namespace QtLogger
 
-#endif // QTLOGGER_IOSLOG
-
-// journalsink.cpp
-
-#ifdef QTLOGGER_JOURNAL
-
-#include <systemd/sd-journal.h>
-
-namespace QtLogger {
-
-QTLOGGER_DECL_SPEC
-void JournalSink::send(const LogMessage &logMsg)
-{
-    int priority = LOG_DEBUG;
-
-    switch (logMsg.type()) {
-    case QtDebugMsg:
-        priority = LOG_DEBUG;
-        break;
-    case QtWarningMsg:
-        priority = LOG_WARNING;
-        break;
-    case QtCriticalMsg:
-        priority = LOG_ERR;
-        break;
-    case QtFatalMsg:
-        priority = LOG_EMERG;
-        break;
-    case QtInfoMsg:
-        priority = LOG_INFO;
-        break;
-    default:
-        return;
-    }
-
-    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(logMsg.file());
-    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(logMsg.line());
-
-    sd_journal_print_with_location(priority, file.constData(), line.constData(), logMsg.function(),
-                                   "%s", qPrintable(logMsg.formattedMessage()));
-
-    sd_journal_send_with_location(file.constData(), line.constData(), logMsg.function(), "%s",
-                                  qPrintable(logMsg.formattedMessage()), "PRIORITY=%i", priority,
-                                  "CATEGORY=%s", logMsg.category(), NULL);
-}
-
-} // namespace QtLogger
-
-#endif // QTLOGGER_JOURNAL
+#endif // QTLOGGER_OSLOG
 
 // rotatingfilesink.cpp
 
@@ -2517,15 +2709,15 @@ RotatingFileSink::RotatingFileSink(const QString &path, int maxFileSize, int max
 }
 
 QTLOGGER_DECL_SPEC
-void RotatingFileSink::send(const LogMessage &logMsg)
+void RotatingFileSink::send(const LogMessage &lmsg)
 {
-    const auto newFileSize = file()->size() + logMsg.formattedMessage().toLocal8Bit().size();
+    const auto newFileSize = file()->size() + lmsg.formattedMessage().toLocal8Bit().size();
 
     if (m_maxFileSize > 0 && file()->size() != 0 && newFileSize > m_maxFileSize) {
         rotate();
     }
 
-    FileSink::send(logMsg);
+    FileSink::send(lmsg);
 }
 
 QTLOGGER_DECL_SPEC
@@ -2571,6 +2763,54 @@ void RotatingFileSink::rotate()
 
 } // namespace QtLogger
 
+// sdjournalsink.cpp
+
+#ifdef QTLOGGER_SDJOURNAL
+
+#include <systemd/sd-journal.h>
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+void SdJournalSink::send(const LogMessage &lmsg)
+{
+    auto priority = LOG_DEBUG;
+
+    switch (lmsg.type()) {
+    case QtDebugMsg:
+        priority = LOG_DEBUG;
+        break;
+    case QtWarningMsg:
+        priority = LOG_WARNING;
+        break;
+    case QtCriticalMsg:
+        priority = LOG_ERR;
+        break;
+    case QtFatalMsg:
+        priority = LOG_EMERG;
+        break;
+    case QtInfoMsg:
+        priority = LOG_INFO;
+        break;
+    default:
+        return;
+    }
+
+    const auto &file = QByteArrayLiteral("CODE_FILE=") + QByteArray(lmsg.file());
+    const auto &line = QByteArrayLiteral("CODE_LINE=") + QByteArray::number(lmsg.line());
+
+    sd_journal_print_with_location(priority, file.constData(), line.constData(), lmsg.function(),
+                                   "%s", qPrintable(lmsg.formattedMessage()));
+
+    sd_journal_send_with_location(file.constData(), line.constData(), lmsg.function(), "%s",
+                                  qPrintable(lmsg.formattedMessage()), "PRIORITY=%i", priority,
+                                  "CATEGORY=%s", lmsg.category(), NULL);
+}
+
+} // namespace QtLogger
+
+#endif // QTLOGGER_SDJOURNAL
+
 // signalsink.cpp
 
 namespace QtLogger {
@@ -2579,9 +2819,9 @@ QTLOGGER_DECL_SPEC
 SignalSink::SignalSink(QObject *parent) : QObject(parent) { }
 
 QTLOGGER_DECL_SPEC
-void SignalSink::send(const LogMessage &logMsg)
+void SignalSink::send(const LogMessage &lmsg)
 {
-    Q_EMIT message(logMsg);
+    Q_EMIT message(lmsg);
 }
 
 } // namespace QtLogger
@@ -2593,9 +2833,15 @@ void SignalSink::send(const LogMessage &logMsg)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void StdErrSink::send(const LogMessage &logMsg)
+void StdErrSink::send(const LogMessage &lmsg)
 {
-    std::cerr << qPrintable(logMsg.formattedMessage()) << std::endl;
+    std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
+}
+
+bool StdErrSink::flush()
+{
+    std::flush(std::cerr);
+    return true;
 }
 
 } // namespace QtLogger
@@ -2607,9 +2853,15 @@ void StdErrSink::send(const LogMessage &logMsg)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void StdOutSink::send(const LogMessage &logMsg)
+void StdOutSink::send(const LogMessage &lmsg)
 {
-    std::cout << qPrintable(logMsg.formattedMessage()) << std::endl;
+    std::cout << qPrintable(lmsg.formattedMessage()) << std::endl;
+}
+
+bool StdOutSink::flush()
+{
+    std::flush(std::cout);
+    return true;
 }
 
 } // namespace QtLogger
@@ -2635,19 +2887,11 @@ SyslogSink::~SyslogSink()
 }
 
 QTLOGGER_DECL_SPEC
-void SyslogSink::send(const LogMessage &logMsg)
+void SyslogSink::send(const LogMessage &lmsg)
 {
-    QString formattedMessage;
+    auto priority = LOG_DEBUG;
 
-    if (qstrcmp(logMsg.category(), "default") == 0) {
-        formattedMessage = logMsg.message();
-    } else {
-        formattedMessage = QStringLiteral("%1: %2").arg(logMsg.category(), logMsg.message());
-    }
-
-    int priority = LOG_DEBUG;
-
-    switch (logMsg.type()) {
+    switch (lmsg.type()) {
     case QtDebugMsg:
         priority = LOG_DEBUG;
         break;
@@ -2667,12 +2911,37 @@ void SyslogSink::send(const LogMessage &logMsg)
         return;
     }
 
+    QString formattedMessage;
+    if (qstrcmp(lmsg.category(), "default") == 0) {
+        formattedMessage = lmsg.message();
+    } else {
+        formattedMessage = QStringLiteral("%1: %2").arg(lmsg.category(), lmsg.message());
+    }
+
     syslog(priority, "%s", qPrintable(formattedMessage));
 }
 
 } // namespace QtLogger
 
 #endif // QTLOGGER_SYSLOG
+
+// windebugsink.cpp
+
+#ifdef Q_OS_WIN
+
+#include <qt_windows.h>
+
+namespace QtLogger {
+
+void WinDebugSink::send(const LogMessage &lmsg)
+{
+    auto formattedMessage = lmsg.formattedMessage() + u'\n';
+    OutputDebugString(reinterpret_cast<const wchar_t *>(formattedMessage.utf16()));
+}
+
+} // namespace QtLogger
+
+#endif
 
 // typedpipeline.cpp
 
