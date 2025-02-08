@@ -32,6 +32,10 @@
 #    include "sinks/sdjournalsink.h"
 #endif
 
+#ifdef Q_OS_WIN
+#    include "sinks/windebugsink.h"
+#endif
+
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
@@ -179,6 +183,14 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 {
     append(HttpSinkPtr::create(url));
+    return *this;
+}
+#endif
+
+#ifdef Q_OS_WIN
+SimplePipeline &SimplePipeline::sendToWinDebug()
+{
+    append(WinDebugSinkPtr::create());
     return *this;
 }
 #endif

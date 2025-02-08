@@ -35,6 +35,10 @@
 #    include "sinks/httpsink.h"
 #endif
 
+#ifdef Q_OS_WIN
+#    include "sinks/windebugsink.h"
+#endif
+
 #ifdef QTLOGGER_IOSLOG
 #    include "sinks/oslogsink.h"
 #endif
