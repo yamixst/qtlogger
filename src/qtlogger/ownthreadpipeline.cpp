@@ -8,13 +8,17 @@ namespace QtLogger {
 
 namespace {
 
-static QEvent::Type __processLogMessageEventType = static_cast<QEvent::Type>(QEvent::User + 2000);
+static QEvent::Type getProcessLogMessageEventType()
+{
+    static QEvent::Type type = static_cast<QEvent::Type>(QEvent::registerEventType());
+    return type;
+}
 
 struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
 {
     LogMessage lmsg;
     ProcessLogMessageEvent(const LogMessage &lmsg)
-        : QEvent(__processLogMessageEventType), lmsg(lmsg)
+        : QEvent(getProcessLogMessageEventType()), lmsg(lmsg)
     {
     }
 };
@@ -31,7 +35,7 @@ public:
 
     void customEvent(QEvent *event) override
     {
-        if (event->type() == __processLogMessageEventType) {
+        if (event->type() == getProcessLogMessageEventType()) {
             auto ev = dynamic_cast<ProcessLogMessageEvent *>(event);
             if (ev) {
                 m_handler->SimplePipeline::process(ev->lmsg);
@@ -46,7 +50,8 @@ private:
 QTLOGGER_DECL_SPEC
 OwnThreadPipeline::OwnThreadPipeline()
 {
-    qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
+    static auto __once = qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
+    Q_UNUSED(__once)
 }
 
 QTLOGGER_DECL_SPEC
