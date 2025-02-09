@@ -64,7 +64,7 @@ Logger *Logger::instance()
     static QScopedPointer<Logger> s_instance;
 
     if (!s_instance) {
-        s_instance.reset(new Logger);
+        s_instance.reset(new Logger());
         s_instance->installMessageHandler();
     }
 
