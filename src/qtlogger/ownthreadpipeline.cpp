@@ -21,10 +21,10 @@ struct QTLOGGER_EXPORT ProcessLogMessageEvent : public QEvent
 
 }
 
-class QTLOGGER_EXPORT OwnThreadPipelineWorker : public QObject
+class QTLOGGER_EXPORT OwnThreadPipeline::Worker : public QObject
 {
 public:
-    explicit OwnThreadPipelineWorker(OwnThreadPipeline *handler, QObject *parent = nullptr)
+    explicit Worker(OwnThreadPipeline *handler, QObject *parent = nullptr)
         : QObject(parent), m_handler(handler)
     {
     }
@@ -32,9 +32,9 @@ public:
     void customEvent(QEvent *event) override
     {
         if (event->type() == __processLogMessageEventType) {
-            auto _event = dynamic_cast<ProcessLogMessageEvent *>(event);
-            if (_event) {
-                m_handler->SimplePipeline::process(_event->lmsg);
+            auto ev = dynamic_cast<ProcessLogMessageEvent *>(event);
+            if (ev) {
+                m_handler->SimplePipeline::process(ev->lmsg);
             }
         }
     }
@@ -70,15 +70,16 @@ QTLOGGER_DECL_SPEC
 OwnThreadPipeline &OwnThreadPipeline::moveToOwnThread()
 {
     if (!m_worker) {
-        m_worker = new OwnThreadPipelineWorker(this);
+        m_worker = new Worker(this);
     }
 
     if (!m_thread) {
-        m_thread = new QThread;
+        m_thread = new QThread();
 
         if (qApp) {
-            if (qApp->thread() != m_thread->thread())
+            if (qApp->thread() != m_thread->thread()) {
                 m_thread->moveToThread(qApp->thread());
+            }
             QObject::connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
         }
 

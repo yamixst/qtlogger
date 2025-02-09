@@ -9,8 +9,6 @@ QT_FORWARD_DECLARE_CLASS(QThread)
 
 namespace QtLogger {
 
-class OwnThreadPipelineWorker;
-
 class QTLOGGER_EXPORT OwnThreadPipeline : public SimplePipeline
 {
 public:
@@ -25,7 +23,8 @@ public:
     bool process(LogMessage &lmsg) override;
 
 private:
-    QPointer<OwnThreadPipelineWorker> m_worker;
+    class Worker;
+    QPointer<Worker> m_worker;
     QPointer<QThread> m_thread;
 };
 
