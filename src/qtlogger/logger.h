@@ -3,7 +3,9 @@
 
 #pragma once
 
+#include <QFlags>
 #include <QSettings>
+#include <QtCore/QtGlobal>
 
 #ifndef QTLOGGER_NO_THREAD
 #    include <QEvent>
