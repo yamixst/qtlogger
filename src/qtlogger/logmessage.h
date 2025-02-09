@@ -5,6 +5,7 @@
 
 #include <QDateTime>
 #include <QThread>
+#include <QVariant>
 #include <qlogging.h>
 
 #include "logger_global.h"
