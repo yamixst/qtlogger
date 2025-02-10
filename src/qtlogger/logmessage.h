@@ -132,7 +132,13 @@ inline QVariantHash LogMessage::allAttributes() const
         { QStringLiteral("time"), m_time },
         { QStringLiteral("threadId"), m_threadId },
     };
-    attrs.insert(m_attributes);
+
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        attrs.insert(m_attributes);
+    #else
+        attrs.unite(m_attributes);
+    #endif
+
     return attrs;
 }
 
