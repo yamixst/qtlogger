@@ -119,11 +119,7 @@ void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
     QMutexLocker locker(mutex());
 #endif
 
-    clear();
-
-    for (const auto &handler : handlers) {
-        append(handler);
-    }
+    append(handlers);
 
 #ifndef QTLOGGER_NO_THREAD
     if (async) {
@@ -143,8 +139,6 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
 #ifndef QTLOGGER_NO_THREAD
     QMutexLocker locker(mutex());
 #endif
-
-    clear();
 
     setFormatter(PrettyFormatter::instance());
 
@@ -204,8 +198,6 @@ void Logger::configure(const QSettings &settings, const QString &group)
 #ifndef QTLOGGER_NO_THREAD
     QMutexLocker locker(mutex());
 #endif
-
-    clear();
 
     setFormatter(PrettyFormatter::instance());
 
