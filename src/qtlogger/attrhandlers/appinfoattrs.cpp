@@ -5,15 +5,20 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash AppInfoAttrs::attributes()
+AppInfoAttrs::AppInfoAttrs()
 {
-    return QVariantHash {
+    m_attrs = QVariantHash {
         { QStringLiteral("app_name"), QCoreApplication::applicationName() },
         { QStringLiteral("app_version"), QCoreApplication::applicationVersion() },
         { QStringLiteral("app_dir"), QCoreApplication::applicationDirPath() },
         { QStringLiteral("app_path"), QCoreApplication::applicationFilePath() },
         { QStringLiteral("pid"), QCoreApplication::applicationPid() },
     };
+}
+
+QVariantHash AppInfoAttrs::attributes()
+{
+    return m_attrs;
 }
 
 } // namespace QtLogger
