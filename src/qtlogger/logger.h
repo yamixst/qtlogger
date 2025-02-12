@@ -73,8 +73,6 @@ public:
      */
     static void setMessagePattern(const QString &pattern);
 
-    Logger &operator<<(const HandlerPtr &handler);
-
     void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
 
     void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
@@ -101,12 +99,7 @@ public:
     void configure(const QSettings &settings, const QString &group = QStringLiteral("logger"));
     void configure(const QString &path, const QString &group = QStringLiteral("logger"));
 
-#ifndef QTLOGGER_NO_THREAD
-public:
-    void lock() const;
-    void unlock() const;
-    inline QRMUTEX *mutex() const { return &m_mutex; }
-#endif
+    Logger &operator<<(const HandlerPtr &handler);
 
 public:
     void installMessageHandler();
@@ -117,8 +110,12 @@ public:
     static void messageHandler(QtMsgType type, const QMessageLogContext &context,
                                const QString &message);
 
-private:
 #ifndef QTLOGGER_NO_THREAD
+public:
+    void lock() const;
+    void unlock() const;
+    inline QRMUTEX *mutex() const { return &m_mutex; }
+private:
 #    if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     mutable QRecursiveMutex m_mutex;
 #    else

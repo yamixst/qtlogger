@@ -106,13 +106,6 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-Logger &Logger::operator<<(const HandlerPtr &handler)
-{
-    append(handler);
-    return *this;
-}
-
-QTLOGGER_DECL_SPEC
 void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
@@ -313,21 +306,12 @@ void Logger::configure(const QString &path, const QString &group)
     configure(QSettings(path, QSettings::IniFormat), group);
 }
 
-#ifndef QTLOGGER_NO_THREAD
-
 QTLOGGER_DECL_SPEC
-void Logger::lock() const
+    Logger &Logger::operator<<(const HandlerPtr &handler)
 {
-    mutex()->lock();
+    append(handler);
+    return *this;
 }
-
-QTLOGGER_DECL_SPEC
-void Logger::unlock() const
-{
-    mutex()->unlock();
-}
-
-#endif
 
 QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
@@ -387,5 +371,21 @@ void Logger::restorePreviousMessageHandler()
 
     g_previousMessageHandler = nullptr;
 }
+
+#ifndef QTLOGGER_NO_THREAD
+
+QTLOGGER_DECL_SPEC
+    void Logger::lock() const
+{
+    mutex()->lock();
+}
+
+QTLOGGER_DECL_SPEC
+    void Logger::unlock() const
+{
+    mutex()->unlock();
+}
+
+#endif
 
 } // namespace QtLogger
