@@ -139,12 +139,12 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
     }
 #endif
 
-    if (types.testFlag(SinkType::File) && !path.isEmpty()) {
-        appendSink(FileSinkPtr::create(path));
-    }
-
-    if (types.testFlag(SinkType::RotatingFile) && !path.isEmpty()) {
-        appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
+    if (!path.isEmpty()) {
+        if (maxFileSize == 0) {
+            appendSink(FileSinkPtr::create(path));
+        } else {
+            appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
+        }
     }
 
 #ifndef QTLOGGER_NO_THREAD
