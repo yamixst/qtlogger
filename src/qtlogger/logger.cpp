@@ -106,26 +106,6 @@ void Logger::setMessagePattern(const QString &pattern)
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
-{
-#ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(mutex());
-#endif
-
-    append(handlers);
-
-#ifndef QTLOGGER_NO_THREAD
-    if (async) {
-        moveToOwnThread();
-    }
-#else
-    Q_UNUSED(async)
-#endif
-
-    installMessageHandler();
-}
-
-QTLOGGER_DECL_SPEC
 void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
