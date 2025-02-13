@@ -25,13 +25,9 @@ public:
     void clearType(HandlerType type);
 
     void appendFilter(const FilterPtr &filter);
-    FunctionFilterPtr appendFilter(const std::function<bool(const LogMessage &)> &function);
-    RegExpFilterPtr appendFilter(const QRegularExpression &regExp);
     void clearFilters();
 
     void setFormatter(const FormatterPtr &formatter);
-    FunctionFormatterPtr setFormatter(const std::function<QString(const LogMessage &)> &function);
-    PatternFormatterPtr setFormatter(const QString &pattern);
     void clearFormatters();
 
     void appendSink(const SinkPtr &sink);

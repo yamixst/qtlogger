@@ -90,27 +90,6 @@ void TypedPipeline::appendFilter(const FilterPtr &filter)
 }
 
 QTLOGGER_DECL_SPEC
-FunctionFilterPtr
-TypedPipeline::appendFilter(const std::function<bool(const LogMessage &)> &function)
-{
-    const auto f = FunctionFilterPtr::create(function);
-
-    appendFilter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-RegExpFilterPtr TypedPipeline::appendFilter(const QRegularExpression &regExp)
-{
-    const auto f = RegExpFilterPtr::create(regExp);
-
-    appendFilter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
 void TypedPipeline::clearFilters()
 {
     clearType(HandlerType::Filter);
@@ -125,26 +104,6 @@ void TypedPipeline::setFormatter(const FormatterPtr &formatter)
     clearFormatters();
 
     insertAfter(HandlerType::Filter, formatter);
-}
-
-QTLOGGER_DECL_SPEC
-FunctionFormatterPtr TypedPipeline::setFormatter(const FunctionFormatter::Function &function)
-{
-    const auto f = FunctionFormatterPtr::create(function);
-
-    setFormatter(f);
-
-    return f;
-}
-
-QTLOGGER_DECL_SPEC
-PatternFormatterPtr TypedPipeline::setFormatter(const QString &pattern)
-{
-    const auto f = PatternFormatterPtr::create(pattern);
-
-    setFormatter(f);
-
-    return f;
 }
 
 QTLOGGER_DECL_SPEC
