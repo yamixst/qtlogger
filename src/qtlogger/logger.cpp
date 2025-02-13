@@ -109,10 +109,6 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
-#ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(mutex());
-#endif
-
     setFormatter(PrettyFormatter::instance());
 
     if (types.testFlag(SinkType::StdOut)) {
@@ -168,10 +164,6 @@ void Logger::configure(int types, const QString &path, int maxFileSize, int maxF
 QTLOGGER_DECL_SPEC
 void Logger::configure(const QSettings &settings, const QString &group)
 {
-#ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(mutex());
-#endif
-
     setFormatter(PrettyFormatter::instance());
 
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
