@@ -17,7 +17,7 @@ public:
 
     virtual QString format(const LogMessage &lmsg) = 0;
 
-    HandlerType type() const override { return HandlerType::Formatter; }
+    HandlerType type() const override final { return HandlerType::Formatter; }
 
     bool process(LogMessage &lmsg) override final
     {
