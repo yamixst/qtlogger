@@ -17,7 +17,6 @@ class QTLOGGER_EXPORT TypedPipeline : public Pipeline
 {
 public:
     explicit TypedPipeline(bool scoped = false) : Pipeline(scoped) {}
-    ~TypedPipeline() override;
 
     void insertBefore(HandlerType type, const HandlerPtr &handler);
     void insertAfter(HandlerType type, const HandlerPtr &handler);
@@ -35,8 +34,6 @@ public:
 
     void appendPipeline(const PipelinePtr &pipeline);
     void clearPipelines();
-
-    void flush();
 };
 
 using TypedPipelinePtr = QSharedPointer<TypedPipeline>;
