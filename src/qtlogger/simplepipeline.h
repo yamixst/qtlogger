@@ -4,15 +4,15 @@
 #include <QSharedPointer>
 
 #include "logger_global.h"
-#include "typedpipeline.h"
+#include "sortedpipeline.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SimplePipeline : public TypedPipeline
+class QTLOGGER_EXPORT SimplePipeline : public SortedPipeline
 {
 public:
     explicit SimplePipeline(bool scoped = false, SimplePipeline *parent = nullptr)
-        : TypedPipeline(scoped), m_parent(parent)
+        : SortedPipeline(scoped), m_parent(parent)
     {
     }
 

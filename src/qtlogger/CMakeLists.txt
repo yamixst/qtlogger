@@ -40,7 +40,7 @@ set(QTLOGGER_SOURCES
     sinks/signalsink.cpp
     sinks/stderrsink.cpp
     sinks/stdoutsink.cpp
-    typedpipeline.cpp
+    sortedpipeline.cpp
 )
 
 set(QTLOGGER_HEADERS
@@ -74,7 +74,7 @@ set(QTLOGGER_HEADERS
     sinks/signalsink.h
     sinks/stderrsink.h
     sinks/stdoutsink.h
-    typedpipeline.h
+    sortedpipeline.h
     version.h
     qtlogger.h
     qtlogger.pri

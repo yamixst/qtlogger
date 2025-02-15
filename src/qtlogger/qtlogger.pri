@@ -78,7 +78,7 @@ SOURCES += \
     $$PWD/sinks/signalsink.cpp \
     $$PWD/sinks/stderrsink.cpp \
     $$PWD/sinks/stdoutsink.cpp \
-    $$PWD/typedpipeline.cpp
+    $$PWD/sortedpipeline.cpp
 
 HEADERS += \
     $$PWD/attrhandler.h \
@@ -111,6 +111,6 @@ HEADERS += \
     $$PWD/sinks/signalsink.h \
     $$PWD/sinks/stderrsink.h \
     $$PWD/sinks/stdoutsink.h \
-    $$PWD/typedpipeline.h \
+    $$PWD/sortedpipeline.h \
     $$PWD/version.h
 
