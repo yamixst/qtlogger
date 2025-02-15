@@ -80,6 +80,9 @@ private slots:
     void testMultipleFiltersAndFormatters();
     void testFluentInterface();
     void testScopedPipelineBehavior();
+    
+    // Flush tests
+    void testFlush();
 
 private:
     SimplePipeline *m_pipeline;
@@ -584,6 +587,94 @@ void TestSimplePipeline::testScopedPipelineBehavior()
     // For scoped pipeline, attributes might be restored only if they were modified
     // Just verify the sink received the processed message
     QCOMPARE(m_mockSink->lastMessage(), QString("SCOPED: scoped test"));
+}
+
+void TestSimplePipeline::testFlush()
+{
+    // Test 1: Basic flush with single sink
+    m_pipeline->append(m_mockSink);
+    
+    // Initially no flush calls
+    QCOMPARE(m_mockSink->flushCallCount(), 0);
+    
+    // Call flush
+    m_pipeline->flush();
+    
+    // Verify flush was called once
+    QCOMPARE(m_mockSink->flushCallCount(), 1);
+    
+    // Test 2: Flush with multiple sinks
+    auto mockSink2 = MockSinkPtr::create();
+    auto mockSink3 = MockSinkPtr::create();
+    
+    m_pipeline->append(mockSink2);
+    m_pipeline->append(mockSink3);
+    
+    // Reset counters
+    m_mockSink->reset();
+    
+    // Call flush again
+    m_pipeline->flush();
+    
+    // All sinks should be flushed
+    QCOMPARE(m_mockSink->flushCallCount(), 1);
+    QCOMPARE(mockSink2->flushCallCount(), 1);
+    QCOMPARE(mockSink3->flushCallCount(), 1);
+    
+    // Test 3: Flush with nested pipelines (recursive flush)
+    SimplePipeline parentPipeline;
+    auto parentMockSink = MockSinkPtr::create();
+    parentPipeline.append(parentMockSink);
+    
+    // Create nested pipeline
+    auto &nestedPipeline = parentPipeline.pipeline();
+    auto nestedMockSink = MockSinkPtr::create();
+    nestedPipeline.append(nestedMockSink);
+    
+    // Create deeply nested pipeline
+    auto &deepNestedPipeline = nestedPipeline.pipeline();
+    auto deepNestedMockSink = MockSinkPtr::create();
+    deepNestedPipeline.append(deepNestedMockSink);
+    
+    // Initially no flush calls
+    QCOMPARE(parentMockSink->flushCallCount(), 0);
+    QCOMPARE(nestedMockSink->flushCallCount(), 0);
+    QCOMPARE(deepNestedMockSink->flushCallCount(), 0);
+    
+    // Call flush on parent - should recursively flush all nested pipelines
+    parentPipeline.flush();
+    
+    // All sinks should be flushed
+    QCOMPARE(parentMockSink->flushCallCount(), 1);
+    QCOMPARE(nestedMockSink->flushCallCount(), 1);
+    QCOMPARE(deepNestedMockSink->flushCallCount(), 1);
+    
+    // Test 4: Flush with mixed handlers (filters, formatters, sinks)
+    SimplePipeline mixedPipeline;
+    mixedPipeline.append(m_mockFilter);     // Filter - should not be flushed
+    mixedPipeline.append(m_mockFormatter);  // Formatter - should not be flushed
+    
+    auto mixedMockSink = MockSinkPtr::create();
+    mixedPipeline.append(mixedMockSink);    // Sink - should be flushed
+    
+    // Call flush
+    mixedPipeline.flush();
+    
+    // Only the sink should be flushed
+    QCOMPARE(mixedMockSink->flushCallCount(), 1);
+    
+    // Test 5: Multiple flush calls increment counter
+    mixedMockSink->reset();
+    QCOMPARE(mixedMockSink->flushCallCount(), 0);
+    
+    mixedPipeline.flush();
+    QCOMPARE(mixedMockSink->flushCallCount(), 1);
+    
+    mixedPipeline.flush();
+    QCOMPARE(mixedMockSink->flushCallCount(), 2);
+    
+    mixedPipeline.flush();
+    QCOMPARE(mixedMockSink->flushCallCount(), 3);
 }
 
 QTEST_MAIN(TestSimplePipeline)
