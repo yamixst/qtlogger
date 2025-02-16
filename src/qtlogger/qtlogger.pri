@@ -15,7 +15,8 @@ qtlogger_no_thread {
     DEFINES *= QTLOGGER_NO_THREAD
 }
 else {
-    HEADERS += $$PWD/ownthreadpipeline.h
+    HEADERS += \
+    $$PWD/ownthreadhandler.h
 }
 
 qtlogger_network {

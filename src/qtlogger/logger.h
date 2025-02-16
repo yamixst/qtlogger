@@ -18,7 +18,7 @@
 #include "simplepipeline.h"
 
 #ifndef QTLOGGER_NO_THREAD
-#    include "ownthreadpipeline.h"
+#    include "ownthreadhandler.h"
 #endif
 
 #define gQtLogger QtLogger::Logger::instance()
@@ -33,7 +33,7 @@ namespace QtLogger {
 
 class QTLOGGER_EXPORT Logger :
 #ifndef QTLOGGER_NO_THREAD
-    public OwnThreadPipeline<SimplePipeline>
+    public OwnThreadHandler<SimplePipeline>
 #else
     public SimplePipeline
 #endif
