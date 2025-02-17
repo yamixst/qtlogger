@@ -458,7 +458,7 @@ void TestSortedPipeline::testClearType()
     m_pipeline->appendFilter(filter);
     m_pipeline->appendSink(sink);
 
-    m_pipeline->clearType(Handler::HandlerType::Filter);
+    m_pipeline->clear(Handler::HandlerType::Filter);
 
     auto message = createTestMessage();
     m_pipeline->process(message);

@@ -63,7 +63,7 @@ void SortedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
 }
 
 QTLOGGER_DECL_SPEC
-void SortedPipeline::clearType(HandlerType type)
+void SortedPipeline::clear(HandlerType type)
 {
     QMutableListIterator<HandlerPtr> iter(handlers());
 
@@ -72,6 +72,12 @@ void SortedPipeline::clearType(HandlerType type)
             iter.remove();
         }
     }
+}
+
+QTLOGGER_DECL_SPEC
+void SortedPipeline::clear()
+{
+    Pipeline::clear();
 }
 
 QTLOGGER_DECL_SPEC
@@ -86,7 +92,7 @@ void SortedPipeline::appendFilter(const FilterPtr &filter)
 QTLOGGER_DECL_SPEC
 void SortedPipeline::clearFilters()
 {
-    clearType(HandlerType::Filter);
+    clear(HandlerType::Filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -103,7 +109,7 @@ void SortedPipeline::setFormatter(const FormatterPtr &formatter)
 QTLOGGER_DECL_SPEC
 void SortedPipeline::clearFormatters()
 {
-    clearType(HandlerType::Formatter);
+    clear(HandlerType::Formatter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -115,7 +121,7 @@ void SortedPipeline::appendSink(const SinkPtr &sink)
 QTLOGGER_DECL_SPEC
 void SortedPipeline::clearSinks()
 {
-    clearType(HandlerType::Sink);
+    clear(HandlerType::Sink);
 }
 
 QTLOGGER_DECL_SPEC
@@ -127,7 +133,7 @@ void SortedPipeline::appendPipeline(const PipelinePtr &pipeline)
 QTLOGGER_DECL_SPEC
 void SortedPipeline::clearPipelines()
 {
-    clearType(HandlerType::Pipeline);
+    clear(HandlerType::Pipeline);
 }
 
 } // namespace QtLogger
