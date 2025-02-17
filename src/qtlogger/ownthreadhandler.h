@@ -30,24 +30,6 @@ public:
 
     ~OwnThreadHandler() override { reset(); }
 
-    void reset()
-    {
-        if (m_thread) {
-            m_thread->quit();
-            m_thread->wait(100);
-            if (m_thread && m_thread->isRunning()) {
-                m_thread->terminate();
-            }
-            if (m_thread) {
-                delete m_thread;
-            }
-        }
-
-        if (m_worker) {
-            delete m_worker;
-        }
-    }
-
     OwnThreadHandler &moveToOwnThread()
     {
         reset();
@@ -94,10 +76,28 @@ public:
 
     QThread *ownThread() const { return m_thread; }
 
+    void reset()
+    {
+        if (m_thread) {
+            m_thread->quit();
+            m_thread->wait(100);
+            if (m_thread && m_thread->isRunning()) {
+                m_thread->terminate();
+            }
+            if (m_thread) {
+                delete m_thread;
+            }
+        }
+
+        if (m_worker) {
+            delete m_worker;
+        }
+    }
+
     bool process(LogMessage &lmsg) override
     {
         if (m_worker) {
-            QCoreApplication::postEvent(m_worker, new ProcLogMsgEvent(lmsg));
+            QCoreApplication::postEvent(m_worker, new LogMsgEvent(lmsg));
         } else {
             BaseHandler::process(lmsg);
         }
@@ -105,43 +105,39 @@ public:
     }
 
 private:
-    class Worker;
-
-    QPointer<Worker> m_worker;
-    QPointer<QThread> m_thread;
-
-    struct ProcLogMsgEvent : public QEvent
-    {
-        LogMessage lmsg;
-        ProcLogMsgEvent(const LogMessage &lmsg) : QEvent(getProcLogMsgEventType()), lmsg(lmsg) { }
-    };
-
-    static QEvent::Type getProcLogMsgEventType()
+    static QEvent::Type getLogMsgEventType()
     {
         static QEvent::Type type = static_cast<QEvent::Type>(QEvent::registerEventType());
         return type;
     }
-};
 
-template<typename BaseHandler>
-class OwnThreadHandler<BaseHandler>::Worker : public QObject
-{
-public:
-    explicit Worker(OwnThreadHandler<BaseHandler> *handler) : QObject(), m_handler(handler) { }
-
-    void customEvent(QEvent *event) override
+    struct LogMsgEvent : public QEvent
     {
-        if (event->type() == OwnThreadHandler<BaseHandler>::getProcLogMsgEventType()) {
-            auto ev =
-                    dynamic_cast<typename OwnThreadHandler<BaseHandler>::ProcLogMsgEvent *>(event);
-            if (ev) {
-                m_handler->BaseHandler::process(ev->lmsg);
+        LogMessage lmsg;
+        LogMsgEvent(const LogMessage &lmsg) : QEvent(getLogMsgEventType()), lmsg(lmsg) { }
+    };
+
+    class Worker : public QObject
+    {
+    public:
+        explicit Worker(OwnThreadHandler<BaseHandler> *handler) : QObject(), m_handler(handler) { }
+
+        void customEvent(QEvent *event) override
+        {
+            if (event->type() == getLogMsgEventType()) {
+                auto lmEvent = dynamic_cast<LogMsgEvent *>(event);
+                if (lmEvent) {
+                    m_handler->BaseHandler::process(lmEvent->lmsg);
+                }
             }
         }
-    }
 
-private:
-    OwnThreadHandler<BaseHandler> *m_handler;
+    private:
+        OwnThreadHandler<BaseHandler> *m_handler;
+    };
+
+    QPointer<Worker> m_worker;
+    QPointer<QThread> m_thread;
 };
 
 } // namespace QtLogger
