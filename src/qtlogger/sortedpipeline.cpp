@@ -3,63 +3,35 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void SortedPipeline::insertBefore(HandlerType type, const HandlerPtr &handler)
+void SortedPipeline::insertBetweenNearLeft(const QSet<HandlerType> &leftType,
+                                           const QSet<HandlerType> &rightType,
+                                           const HandlerPtr &handler)
 {
-    auto first = std::find_if(handlers().begin(), handlers().end(),
-                              [type](const HandlerPtr &x) { return x->type() == type; });
-
-    if (first == handlers().end()) {
-        handlers().prepend(handler);
-        return;
-    }
-
-    handlers().insert(first, handler);
-}
-
-QTLOGGER_DECL_SPEC
-void SortedPipeline::insertAfter(HandlerType type, const HandlerPtr &handler)
-{
-    auto first = std::find_if(handlers().begin(), handlers().end(),
-                              [type](const HandlerPtr &x) { return x->type() == type; });
-
-    if (first == handlers().end()) {
-        handlers().prepend(handler);
-        return;
-    }
-
-    auto last = std::find_if(first, handlers().end(),
-                             [type](const HandlerPtr &x) { return x->type() != type; });
-
-    handlers().insert(last, handler);
-}
-
-QTLOGGER_DECL_SPEC
-void SortedPipeline::insertBetween(HandlerType leftType, HandlerType rightType,
-                                  const HandlerPtr &handler)
-{
-    auto firstLeft =
+    auto firstRight =
             std::find_if(handlers().begin(), handlers().end(),
-                         [leftType](const HandlerPtr &x) { return x->type() == leftType; });
+                         [&rightType](const auto &x) { return rightType.contains(x->type()); });
 
-    if (firstLeft == handlers().end()) {
-
-        auto firstRight =
-                std::find_if(handlers().begin(), handlers().end(),
-                             [rightType](const auto &x) { return x->type() == rightType; });
-
-        if (firstRight != handlers().end()) {
-            handlers().insert(firstRight, handler);
-        } else {
-            handlers().prepend(handler);
-        }
-
-        return;
-    }
-
-    auto lastLeft = std::find_if(firstLeft, handlers().end(),
-                                 [leftType](const HandlerPtr &x) { return x->type() != leftType; });
+    auto lastLeft = std::find_if(firstRight, handlers().begin(), [&leftType](const HandlerPtr &x) {
+        return leftType.contains(x->type());
+    });
 
     handlers().insert(lastLeft, handler);
+}
+
+QTLOGGER_DECL_SPEC
+void SortedPipeline::insertBetweenNearRight(const QSet<HandlerType> &leftType,
+                                            const QSet<HandlerType> &rightType,
+                                            const HandlerPtr &handler)
+{
+    auto lastLeft =
+            std::find_if(handlers().end(), handlers().begin(),
+                         [&leftType](const HandlerPtr &x) { return leftType.contains(x->type()); });
+
+    auto firstRight = std::find_if(lastLeft, handlers().end(), [&rightType](const auto &x) {
+        return rightType.contains(x->type());
+    });
+
+    handlers().insert(firstRight, handler);
 }
 
 QTLOGGER_DECL_SPEC
@@ -81,12 +53,30 @@ void SortedPipeline::clear()
 }
 
 QTLOGGER_DECL_SPEC
+void SortedPipeline::appendAttrHandler(const AttrHandlerPtr &attrHandler)
+{
+    if (attrHandler.isNull())
+        return;
+
+    insertBetweenNearLeft({ HandlerType::AttrHandler },
+                          { HandlerType::Filter, HandlerType::Formatter, HandlerType::Sink },
+                          attrHandler);
+}
+
+QTLOGGER_DECL_SPEC
+void SortedPipeline::clearAttrHandlers()
+{
+    clear(HandlerType::AttrHandler);
+}
+
+QTLOGGER_DECL_SPEC
 void SortedPipeline::appendFilter(const FilterPtr &filter)
 {
     if (filter.isNull())
         return;
 
-    insertAfter(HandlerType::Filter, filter);
+    insertBetweenNearLeft({ HandlerType::AttrHandler, HandlerType::Filter },
+                          { HandlerType::Formatter, HandlerType::Sink }, filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -103,7 +93,8 @@ void SortedPipeline::setFormatter(const FormatterPtr &formatter)
 
     clearFormatters();
 
-    insertAfter(HandlerType::Filter, formatter);
+    insertBetweenNearRight({ HandlerType::AttrHandler, HandlerType::Filter }, { HandlerType::Sink },
+                           formatter);
 }
 
 QTLOGGER_DECL_SPEC
