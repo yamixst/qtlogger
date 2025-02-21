@@ -13,6 +13,7 @@
 #    include <QThread>
 #endif
 
+#include "configure.h"
 #include "handler.h"
 #include "logger_global.h"
 #include "simplepipeline.h"
@@ -39,18 +40,9 @@ class QTLOGGER_EXPORT Logger :
 #endif
 {
 public:
-    enum class SinkType {
-        Unknown = 0x00,
-        StdOut = 0x01,
-        StdErr = 0x02,
-        Syslog = 0x04,
-        SdJournal = 0x8,
-        PlatformStdLog = 0x10,
-        File = 0x40,
-        RotatingFile = 0x80
-    };
-
-    Q_DECLARE_FLAGS(SinkTypeFlags, SinkType)
+    // Import SinkType and SinkTypeFlags from configure.h
+    using SinkType = QtLogger::SinkType;
+    using SinkTypeFlags = QtLogger::SinkTypeFlags;
 
     static Logger *instance();
 

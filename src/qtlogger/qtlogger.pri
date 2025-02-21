@@ -62,6 +62,7 @@ qtlogger_journal {
 SOURCES += \
     $$PWD/attrhandlers/appinfoattrs.cpp \
     $$PWD/attrhandlers/seqnumberattr.cpp \
+    $$PWD/configure.cpp \
     $$PWD/filters/categoryfilter.cpp \
     $$PWD/filters/duplicatefilter.cpp \
     $$PWD/filters/regexpfilter.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     $$PWD/attrhandler.h \
     $$PWD/attrhandlers/appinfoattrs.h \
     $$PWD/attrhandlers/seqnumberattr.h \
+    $$PWD/configure.h \
     $$PWD/filter.h \
     $$PWD/filters/categoryfilter.h \
     $$PWD/filters/duplicatefilter.h \
@@ -113,4 +115,3 @@ HEADERS += \
     $$PWD/sinks/stdoutsink.h \
     $$PWD/sortedpipeline.h \
     $$PWD/version.h
-
