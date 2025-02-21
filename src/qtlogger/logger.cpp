@@ -13,8 +13,6 @@
 #    include <QMutexLocker>
 #endif
 
-#include <iostream>
-
 #include "configure.h"
 #include "messagepatterns.h"
 #include "setmessagepattern.h"
