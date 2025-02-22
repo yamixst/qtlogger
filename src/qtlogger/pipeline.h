@@ -19,7 +19,7 @@ public:
     explicit Pipeline(bool scoped = false) : m_scoped(scoped) {};
     Pipeline(std::initializer_list<HandlerPtr> handlers);
 
-    HandlerType type() const override { return HandlerType::Pipeline; }
+    HandlerType type() const override final { return HandlerType::Pipeline; }
 
     void append(const HandlerPtr &handler);
     void append(std::initializer_list<HandlerPtr> handlers);

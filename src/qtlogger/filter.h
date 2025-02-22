@@ -17,7 +17,7 @@ public:
 
     virtual bool filter(const LogMessage &lmsg) = 0;
 
-    HandlerType type() const override { return HandlerType::Filter; }
+    HandlerType type() const override final { return HandlerType::Filter; }
 
     bool process(LogMessage &lmsg) override final { return filter(lmsg); }
 };
