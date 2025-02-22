@@ -117,7 +117,7 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(mutex());
 #endif
 
     clear();
@@ -140,7 +140,7 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
                        int maxFileCount, bool async)
 {
 #ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(mutex());
 #endif
 
     clear();
@@ -199,7 +199,7 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(const QSettings &settings, const QString &group)
 {
 #ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(mutex());
 #endif
 
     clear();
@@ -214,6 +214,14 @@ void Logger::configure(const QSettings &settings, const QString &group)
         setFilterRules(filterRules);
     }
 
+    const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
+    if (!regExpFilter.isEmpty()) {
+#ifdef QTLOGGER_DEBUG
+        std::cerr << "Logger::configure: filter: " << regExpFilter.toStdString() << std::endl;
+#endif
+        appendFilter(RegExpFilterPtr::create(regExpFilter));
+    }
+
     const auto messagePattern =
             settings.value(group + QStringLiteral("/message_pattern")).toString();
     if (!messagePattern.isEmpty()) {
@@ -222,14 +230,6 @@ void Logger::configure(const QSettings &settings, const QString &group)
                   << std::endl;
 #endif
         setFormatter(PatternFormatterPtr::create(messagePattern));
-    }
-
-    const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
-    if (!regExpFilter.isEmpty()) {
-#ifdef QTLOGGER_DEBUG
-        std::cerr << "Logger::configure: filter: " << regExpFilter.toStdString() << std::endl;
-#endif
-        appendFilter(RegExpFilterPtr::create(regExpFilter));
     }
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
@@ -321,19 +321,13 @@ void Logger::configure(const QString &path, const QString &group)
 QTLOGGER_DECL_SPEC
 void Logger::lock() const
 {
-    m_mutex.lock();
+    mutex()->lock();
 }
 
 QTLOGGER_DECL_SPEC
 void Logger::unlock() const
 {
-    m_mutex.unlock();
-}
-
-QTLOGGER_DECL_SPEC
-QRMUTEX *Logger::mutex() const
-{
-    return &m_mutex;
+    mutex()->unlock();
 }
 
 #endif
@@ -342,8 +336,11 @@ QTLOGGER_DECL_SPEC
 void Logger::processMessage(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
-    LogMessage lmsg(type, context, message);
+#ifndef QTLOGGER_NO_THREAD
+    QMutexLocker locker(mutex());
+#endif
 
+    LogMessage lmsg(type, context, message);
     process(lmsg);
 }
 
@@ -359,10 +356,6 @@ void Logger::messageHandler(QtMsgType type, const QMessageLogContext &context,
 
     if (!logger)
         return;
-
-#ifndef QTLOGGER_NO_THREAD
-    QMutexLocker locker(logger->mutex());
-#endif
 
     logger->processMessage(type, context, message);
 }
