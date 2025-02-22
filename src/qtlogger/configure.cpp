@@ -3,22 +3,22 @@
 
 #include "configure.h"
 
-#include <QtCore/QtGlobal>
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <QUrl>
+#include <QtCore/QtGlobal>
 
-#include "logger.h"
-#include "pipeline.h"
-#include "sortedpipeline.h"
 #include "filters/regexpfilter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
+#include "logger.h"
+#include "pipeline.h"
 #include "sinks/filesink.h"
 #include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
+#include "sortedpipeline.h"
 
 #ifdef QTLOGGER_NETWORK
 #    include "sinks/httpsink.h"
@@ -43,8 +43,6 @@
 #ifndef QTLOGGER_NO_THREAD
 #    include "ownthreadhandler.h"
 #endif
-
-#include <iostream>
 
 namespace QtLogger {
 
@@ -90,14 +88,24 @@ void configurePipeline(Pipeline *pipeline, const SinkTypeFlags &types, const QSt
         }
     }
 
+#ifndef QTLOGGER_NO_THREAD
+    if (async) {
+        auto *ownThreadLogger = dynamic_cast<OwnThreadHandler<SimplePipeline> *>(pipeline);
+        if (ownThreadLogger) {
+            ownThreadLogger->moveToOwnThread();
+        }
+    }
+#else
     Q_UNUSED(async)
+#endif
 }
 
 QTLOGGER_DECL_SPEC
 void configurePipeline(Pipeline *pipeline, int types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
-    configurePipeline(pipeline, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount, async);
+    configurePipeline(pipeline, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount,
+                      async);
 }
 
 QTLOGGER_DECL_SPEC
@@ -205,73 +213,24 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
         *pipeline << HttpSinkPtr::create(QUrl(httpUrl));
     }
 #endif
-}
-
-QTLOGGER_DECL_SPEC
-void configurePipeline(Pipeline *pipeline, const QString &path, const QString &group)
-{
-    configurePipeline(pipeline, QSettings(path, QSettings::IniFormat), group);
-}
-
-QTLOGGER_DECL_SPEC
-void configureLogger(Logger *logger, const SinkTypeFlags &types, const QString &path,
-                     int maxFileSize, int maxFileCount, bool async)
-{
-    if (!logger) {
-        return;
-    }
-
-    configurePipeline(logger, types, path, maxFileSize, maxFileCount, async);
-
-#ifndef QTLOGGER_NO_THREAD
-    if (async) {
-        auto *ownThreadLogger = dynamic_cast<OwnThreadHandler<SimplePipeline>*>(logger);
-        if (ownThreadLogger) {
-            ownThreadLogger->moveToOwnThread();
-        }
-    }
-#else
-    Q_UNUSED(async)
-#endif
-
-    logger->installMessageHandler();
-}
-
-QTLOGGER_DECL_SPEC
-void configureLogger(Logger *logger, int types, const QString &path, int maxFileSize,
-                     int maxFileCount, bool async)
-{
-    configureLogger(logger, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount, async);
-}
-
-QTLOGGER_DECL_SPEC
-void configureLogger(Logger *logger, const QSettings &settings, const QString &group)
-{
-    if (!logger) {
-        return;
-    }
-
-    configurePipeline(logger, settings, group);
 
 #ifndef QTLOGGER_NO_THREAD
     if (settings.value(group + QStringLiteral("/async"), false).toBool()) {
 #    ifdef QTLOGGER_DEBUG
         std::cerr << "configureLogger: async" << std::endl;
 #    endif
-        auto *ownThreadLogger = dynamic_cast<OwnThreadHandler<SimplePipeline>*>(logger);
+        auto *ownThreadLogger = dynamic_cast<OwnThreadHandler<SimplePipeline> *>(pipeline);
         if (ownThreadLogger) {
             ownThreadLogger->moveToOwnThread();
         }
     }
 #endif
-
-    logger->installMessageHandler();
 }
 
 QTLOGGER_DECL_SPEC
-void configureLogger(Logger *logger, const QString &path, const QString &group)
+void configurePipeline(Pipeline *pipeline, const QString &path, const QString &group)
 {
-    configureLogger(logger, QSettings(path, QSettings::IniFormat), group);
+    configurePipeline(pipeline, QSettings(path, QSettings::IniFormat), group);
 }
 
 } // namespace QtLogger
