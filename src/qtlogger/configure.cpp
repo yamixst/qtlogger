@@ -56,53 +56,37 @@ void configurePipeline(Pipeline *pipeline, const SinkTypeFlags &types, const QSt
         return;
     }
 
-    if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-        sortedPipeline->setFormatter(PrettyFormatter::instance());
-    }
+    *pipeline << PrettyFormatter::instance();
 
     if (types.testFlag(SinkType::StdOut)) {
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(StdOutSinkPtr::create());
-        }
+        *pipeline << StdOutSinkPtr::create();
     }
 
     if (types.testFlag(SinkType::StdErr)) {
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(StdErrSinkPtr::create());
-        }
+        *pipeline << StdErrSinkPtr::create();
     }
 
     if (types.testFlag(SinkType::PlatformStdLog)) {
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(PlatformStdSinkPtr::create());
-        }
+        *pipeline << PlatformStdSinkPtr::create();
     }
 
 #ifdef QTLOGGER_SYSLOG
     if (types.testFlag(SinkType::Syslog)) {
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(SyslogSinkPtr::create(QFileInfo(path).baseName()));
-        }
+        *pipeline << SyslogSinkPtr::create(QFileInfo(path).baseName());
     }
 #endif
 
 #ifdef QTLOGGER_SDJOURNAL
     if (types.testFlag(SinkType::SdJournal)) {
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(SdJournalSinkPtr::create());
-        }
+        *pipeline << SdJournalSinkPtr::create();
     }
 #endif
 
     if (!path.isEmpty()) {
         if (maxFileSize == 0) {
-            if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-                sortedPipeline->appendSink(FileSinkPtr::create(path));
-            }
+            *pipeline << FileSinkPtr::create(path);
         } else {
-            if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-                sortedPipeline->appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
-            }
+            *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount);
         }
     }
 
@@ -123,9 +107,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
         return;
     }
 
-    if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-        sortedPipeline->setFormatter(PrettyFormatter::instance());
-    }
+    *pipeline << PrettyFormatter::instance();
 
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
     if (!filterRules.isEmpty()) {
@@ -141,9 +123,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: filter: " << regExpFilter.toStdString() << std::endl;
 #endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendFilter(RegExpFilterPtr::create(regExpFilter));
-        }
+        *pipeline << RegExpFilterPtr::create(regExpFilter);
     }
 
     const auto messagePattern =
@@ -153,36 +133,28 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
         std::cerr << "configurePipeline: messagePattern: " << messagePattern.toStdString()
                   << std::endl;
 #endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->setFormatter(PatternFormatterPtr::create(messagePattern));
-        }
+        *pipeline << PatternFormatterPtr::create(messagePattern);
     }
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: stdout" << std::endl;
 #endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(StdOutSinkPtr::create());
-        }
+        *pipeline << StdOutSinkPtr::create();
     }
 
     if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: stderr" << std::endl;
 #endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(StdErrSinkPtr::create());
-        }
+        *pipeline << StdErrSinkPtr::create();
     }
 
     if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: platform_std_log" << std::endl;
 #endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(PlatformStdSinkPtr::create());
-        }
+        *pipeline << PlatformStdSinkPtr::create();
     }
 
 #ifdef QTLOGGER_SYSLOG
@@ -191,9 +163,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 #    ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: syslogIdent: " << syslogIdent.toStdString() << std::endl;
 #    endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(SyslogSinkPtr::create(syslogIdent));
-        }
+        *pipeline << SyslogSinkPtr::create(syslogIdent);
     }
 #endif
 
@@ -202,9 +172,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 #    ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: sd-journal" << std::endl;
 #    endif
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(SdJournalSinkPtr::create());
-        }
+        *pipeline << SdJournalSinkPtr::create();
     }
 #endif
 
@@ -224,9 +192,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
                   << std::endl;
 #endif
 
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount));
-        }
+        *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount);
     }
 
 #ifdef QTLOGGER_NETWORK
@@ -236,9 +202,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
                                                   QStringLiteral("default"))
                                            .toString();
         // TODO: add support for http_msg_format (json)
-        if (auto *sortedPipeline = dynamic_cast<SortedPipeline*>(pipeline)) {
-            sortedPipeline->appendSink(HttpSinkPtr::create(QUrl(httpUrl)));
-        }
+        *pipeline << HttpSinkPtr::create(QUrl(httpUrl));
     }
 #endif
 }
