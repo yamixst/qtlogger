@@ -17,17 +17,20 @@ namespace QtLogger {
 template<typename BaseHandler>
 class QTLOGGER_EXPORT OwnThreadPipeline : public BaseHandler
 {
-    static_assert(std::is_base_of<Handler, BaseHandler>::value, "BaseHandler must inherit from Handler");
+    static_assert(std::is_base_of<Handler, BaseHandler>::value,
+                  "BaseHandler must inherit from Handler");
 
 public:
     template<typename... Args>
-    OwnThreadPipeline(Args&&... args) : BaseHandler(std::forward<Args>(args)...)
+    OwnThreadPipeline(Args &&...args) : BaseHandler(std::forward<Args>(args)...)
     {
         static auto __once = qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
         Q_UNUSED(__once)
     }
 
-    ~OwnThreadPipeline() override
+    ~OwnThreadPipeline() override { reset(); }
+
+    void reset()
     {
         if (m_thread) {
             m_thread->quit();
@@ -47,6 +50,8 @@ public:
 
     OwnThreadPipeline &moveToOwnThread()
     {
+        reset();
+
         if (!m_worker) {
             m_worker = new Worker(this);
         }
@@ -61,8 +66,8 @@ public:
                 QObject::connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
             }
 
-            QObject::connect(m_thread, &QThread::finished, m_worker, &QThread::deleteLater);
             QObject::connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
+            QObject::connect(m_thread, &QThread::finished, m_worker, &QThread::deleteLater);
 
             m_thread->start();
         }
@@ -72,30 +77,29 @@ public:
         return *this;
     }
 
-    void moveToMainThread()
+    OwnThreadPipeline &moveToMainThread()
     {
-        if (m_worker) {
-            m_worker->moveToThread(qApp->thread());
+        reset();
+
+        if (!m_worker) {
+            m_worker = new Worker(this);
         }
 
-        if (m_thread) {
-            m_thread->quit();
-        }
+        m_worker->moveToThread(qApp->thread());
+
+        return *this;
     }
 
-    bool ownThreadIsRunning() const
-    {
-        return m_thread && m_thread->isRunning();
-    }
+    bool ownThreadIsRunning() const { return m_thread && m_thread->isRunning(); }
 
     QThread *ownThread() const { return m_thread; }
 
     bool process(LogMessage &lmsg) override
     {
-        if (!ownThreadIsRunning()) {
-            BaseHandler::process(lmsg);
-        } else {
+        if (m_worker) {
             QCoreApplication::postEvent(m_worker, new ProcLogMsgEvent(lmsg));
+        } else {
+            BaseHandler::process(lmsg);
         }
         return true;
     }
@@ -109,10 +113,7 @@ private:
     struct ProcLogMsgEvent : public QEvent
     {
         LogMessage lmsg;
-        ProcLogMsgEvent(const LogMessage &lmsg)
-            : QEvent(getProcLogMsgEventType()), lmsg(lmsg)
-        {
-        }
+        ProcLogMsgEvent(const LogMessage &lmsg) : QEvent(getProcLogMsgEventType()), lmsg(lmsg) { }
     };
 
     static QEvent::Type getProcLogMsgEventType()
@@ -126,15 +127,13 @@ template<typename BaseHandler>
 class OwnThreadPipeline<BaseHandler>::Worker : public QObject
 {
 public:
-    explicit Worker(OwnThreadPipeline<BaseHandler> *handler)
-        : QObject(), m_handler(handler)
-    {
-    }
+    explicit Worker(OwnThreadPipeline<BaseHandler> *handler) : QObject(), m_handler(handler) { }
 
     void customEvent(QEvent *event) override
     {
         if (event->type() == OwnThreadPipeline<BaseHandler>::getProcLogMsgEventType()) {
-            auto ev = dynamic_cast<typename OwnThreadPipeline<BaseHandler>::ProcLogMsgEvent *>(event);
+            auto ev =
+                    dynamic_cast<typename OwnThreadPipeline<BaseHandler>::ProcLogMsgEvent *>(event);
             if (ev) {
                 m_handler->BaseHandler::process(ev->lmsg);
             }
