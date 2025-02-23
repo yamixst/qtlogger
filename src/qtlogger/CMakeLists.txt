@@ -33,7 +33,6 @@ set(QTLOGGER_SOURCES
     formatters/prettyformatter.cpp
     logger.cpp
     pipeline.cpp
-    setmessagepattern.cpp
     simplepipeline.cpp
     sinks/filesink.cpp
     sinks/iodevicesink.cpp
@@ -42,6 +41,7 @@ set(QTLOGGER_SOURCES
     sinks/stderrsink.cpp
     sinks/stdoutsink.cpp
     sortedpipeline.cpp
+    utils.cpp
 )
 
 set(QTLOGGER_HEADERS
@@ -66,7 +66,6 @@ set(QTLOGGER_HEADERS
     logmessage.h
     messagepatterns.h
     pipeline.h
-    setmessagepattern.h
     simplepipeline.h
     sink.h
     sinks/filesink.h
@@ -77,10 +76,8 @@ set(QTLOGGER_HEADERS
     sinks/stderrsink.h
     sinks/stdoutsink.h
     sortedpipeline.h
+    utils.h
     version.h
-    qtlogger.h
-    qtlogger.pri
-    qtlogger.pro
 )
 
 if(NOT QTLOGGER_NO_THREAD)
