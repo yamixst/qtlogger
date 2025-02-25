@@ -66,6 +66,7 @@ set(QTLOGGER_HEADERS
     logmessage.h
     messagepatterns.h
     pipeline.h
+    qtlogger.h
     simplepipeline.h
     sink.h
     sinks/filesink.h
