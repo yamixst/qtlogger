@@ -1,5 +1,6 @@
 #include "attrhandler.h"
 #include "attrhandlers/appinfoattrs.h"
+#include "attrhandlers/functionattr.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "filter.h"
 #include "filters/categoryfilter.h"

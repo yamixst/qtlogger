@@ -71,7 +71,6 @@ SOURCES += \
     $$PWD/formatters/prettyformatter.cpp \
     $$PWD/logger.cpp \
     $$PWD/pipeline.cpp \
-    $$PWD/setmessagepattern.cpp \
     $$PWD/simplepipeline.cpp \
     $$PWD/sinks/filesink.cpp \
     $$PWD/sinks/iodevicesink.cpp \
@@ -79,11 +78,13 @@ SOURCES += \
     $$PWD/sinks/signalsink.cpp \
     $$PWD/sinks/stderrsink.cpp \
     $$PWD/sinks/stdoutsink.cpp \
-    $$PWD/sortedpipeline.cpp
+    $$PWD/sortedpipeline.cpp \
+    $$PWD/utils.cpp
 
 HEADERS += \
     $$PWD/attrhandler.h \
     $$PWD/attrhandlers/appinfoattrs.h \
+    $$PWD/attrhandlers/functionattr.h \
     $$PWD/attrhandlers/seqnumberattr.h \
     $$PWD/configure.h \
     $$PWD/filter.h \
@@ -103,7 +104,6 @@ HEADERS += \
     $$PWD/logmessage.h \
     $$PWD/messagepatterns.h \
     $$PWD/pipeline.h \
-    $$PWD/setmessagepattern.h \
     $$PWD/simplepipeline.h \
     $$PWD/sink.h \
     $$PWD/sinks/filesink.h \
@@ -114,4 +114,5 @@ HEADERS += \
     $$PWD/sinks/stderrsink.h \
     $$PWD/sinks/stdoutsink.h \
     $$PWD/sortedpipeline.h \
-    $$PWD/version.h
+    $$PWD/version.h \
+    $$PWD/utils.h
