@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(qtlogger LANGUAGES CXX)
 
 option(QTLOGGER_NO_EXAMPLES "Disable building examples" OFF)
+option(QTLOGGER_NO_TESTS "Disable building tests" OFF)
 option(QTLOGGER_LIBRARY "Build qtlogger as shared library" OFF)
 option(QTLOGGER_DEBUG_OUTPUT "Enable qtlogger debug output" OFF)
 option(QTLOGGER_NO_THREAD "Disable qtlogger threading support" OFF)
@@ -20,6 +21,10 @@ if(NOT QTLOGGER_NO_EXAMPLES)
     list(APPEND QT_COMPONENTS Concurrent)
 endif()
 
+if(NOT QTLOGGER_NO_TESTS)
+    list(APPEND QT_COMPONENTS Test)
+endif()
+
 if(QTLOGGER_NETWORK)
     list(APPEND QT_COMPONENTS Network)
 endif()
@@ -30,4 +35,9 @@ add_subdirectory(src/qtlogger)
 
 if(NOT QTLOGGER_NO_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if(NOT QTLOGGER_NO_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
