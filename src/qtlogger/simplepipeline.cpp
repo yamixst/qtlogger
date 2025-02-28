@@ -54,7 +54,7 @@ SimplePipeline &SimplePipeline::addAppInfo()
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash()> func)
+SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash(const LogMessage &lmsg)> func)
 {
     append(FunctionAttrHandlerPtr::create(func));
     return *this;

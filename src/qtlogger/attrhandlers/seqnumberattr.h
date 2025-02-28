@@ -10,7 +10,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SeqNumberAttr : public AttrHandler
 {
 public:
-    QVariantHash attributes() override;
+    QVariantHash attributes(const LogMessage &lmsg) override;
 
 private:
     int m_count = 0;
