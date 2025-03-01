@@ -11,6 +11,8 @@ namespace QtLogger {
 class QTLOGGER_EXPORT AttrHandler : public Handler
 {
 public:
+    virtual ~AttrHandler() = default;
+
     virtual QVariantHash attributes(const LogMessage &lmsg) = 0;
 
     HandlerType type() const override { return HandlerType::AttrHandler; }
