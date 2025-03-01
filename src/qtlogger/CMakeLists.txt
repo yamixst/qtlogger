@@ -162,6 +162,15 @@ endif()
 
 if(QTLOGGER_JOURNAL)
     target_compile_definitions(qtlogger PRIVATE QTLOGGER_SDJOURNAL)
+    # Find and link libsystemd
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(SYSTEMD libsystemd)
+        if(SYSTEMD_FOUND)
+            target_link_libraries(qtlogger PRIVATE ${SYSTEMD_LIBRARIES})
+            target_include_directories(qtlogger PRIVATE ${SYSTEMD_INCLUDE_DIRS})
+        endif()
+    endif()
 endif()
 
 target_include_directories(qtlogger
