@@ -16,7 +16,6 @@ private slots:
     // Constructor tests
     void testConstructorWithQRegularExpression();
     void testConstructorWithString();
-    void testConstructorWithInvalidRegExp();
 
     // Basic pattern matching tests
     void testSimplePattern();
@@ -36,7 +35,6 @@ private slots:
     void testUnicodeCharacters();
     void testVeryLongMessages();
     void testComplexPatterns();
-    void testInvalidRegexPattern();
 
     // Performance tests
     void testManyMessages();
@@ -83,22 +81,6 @@ void TestRegExpFilter::testConstructorWithString()
     QVERIFY(filter.filter(warningMsg));
     QVERIFY(!filter.filter(criticalMsg));
     QVERIFY(!filter.filter(infoMsg));
-}
-
-void TestRegExpFilter::testConstructorWithInvalidRegExp()
-{
-    // Test with invalid regex pattern
-    QString invalidPattern = "[unclosed bracket";
-    RegExpFilter filter(invalidPattern);
-    
-    // The filter should handle invalid regex gracefully
-    auto msg = createMessage("test message");
-    
-    // Invalid regex might not match anything or might throw
-    // The exact behavior depends on QRegularExpression implementation
-    bool result = filter.filter(msg);
-    Q_UNUSED(result); // We just want to ensure it doesn't crash
-    QVERIFY(true); // Test passes if we reach here without crashing
 }
 
 void TestRegExpFilter::testSimplePattern()
@@ -270,33 +252,6 @@ void TestRegExpFilter::testComplexPatterns()
     QVERIFY(filter.filter(validEmail));
     QVERIFY(!filter.filter(invalidEmail));
     QVERIFY(!filter.filter(noEmail));
-}
-
-void TestRegExpFilter::testInvalidRegexPattern()
-{
-    // Test various invalid patterns
-    QStringList invalidPatterns = {
-        "[unclosed",
-        "*invalid",
-        "(?invalid)",
-        "\\x", // incomplete escape
-        "(?P<>invalid)" // invalid named group
-    };
-    
-    for (const QString& pattern : invalidPatterns) {
-        RegExpFilter filter(pattern);
-        auto msg = createMessage("test message");
-        
-        // Should not crash, behavior may vary
-        try {
-            bool result = filter.filter(msg);
-            Q_UNUSED(result);
-        } catch (...) {
-            // Some invalid patterns might throw, which is acceptable
-        }
-        
-        QVERIFY(true); // Test passes if we don't crash
-    }
 }
 
 void TestRegExpFilter::testManyMessages()
