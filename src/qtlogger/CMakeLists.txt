@@ -61,6 +61,7 @@ set(QTLOGGER_HEADERS
     formatters/patternformatter.h
     formatters/prettyformatter.h
     formatters/qtlogmessageformatter.h
+    functionhandler.h
     handler.h
     logger.h
     logger_global.h

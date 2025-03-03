@@ -14,6 +14,7 @@
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
 #include "formatters/qtlogmessageformatter.h"
+#include "functionhandler.h"
 #include "messagepatterns.h"
 #include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
@@ -221,6 +222,13 @@ SimplePipeline &SimplePipeline::end()
         return *m_parent;
     else
         return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::handler(std::function<bool(LogMessage &)> func)
+{
+    append(FunctionHandlerPtr::create(std::move(func)));
+    return *this;
 }
 
 QTLOGGER_DECL_SPEC

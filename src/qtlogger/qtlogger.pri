@@ -98,6 +98,7 @@ HEADERS += \
     $$PWD/formatters/patternformatter.h \
     $$PWD/formatters/prettyformatter.h \
     $$PWD/formatters/qtlogmessageformatter.h \
+    $$PWD/functionhandler.h \
     $$PWD/handler.h \
     $$PWD/logger.h \
     $$PWD/logger_global.h \
@@ -114,5 +115,5 @@ HEADERS += \
     $$PWD/sinks/stderrsink.h \
     $$PWD/sinks/stdoutsink.h \
     $$PWD/sortedpipeline.h \
-    $$PWD/version.h \
-    $$PWD/utils.h
+    $$PWD/utils.h \
+    $$PWD/version.h
