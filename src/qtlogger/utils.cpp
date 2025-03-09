@@ -26,10 +26,12 @@ QString prevMessagePattern(const QString &messagePattern = {})
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void setFilterRules(const QString &rules)
+void setFilterRules(const QString &a_rules)
 {
-    QLoggingCategory::setFilterRules(
-            QString(rules).replace(QChar::fromLatin1(';'), QChar::fromLatin1('\n')));
+    QString rules = a_rules;
+    rules.replace(QChar::fromLatin1(';'), QChar::fromLatin1('\n'));
+    rules.replace(QChar::fromLatin1(':'), QChar::fromLatin1('\n'));
+    QLoggingCategory::setFilterRules(rules);
 }
 
 QTLOGGER_DECL_SPEC
