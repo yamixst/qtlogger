@@ -91,7 +91,7 @@ private:
     const QString m_message;
 
     const QDateTime m_time = QDateTime::currentDateTime();
-    const qintptr m_threadId = reinterpret_cast<qintptr>(QThread::currentThreadId());
+    const quintptr m_threadId = reinterpret_cast<qintptr>(QThread::currentThreadId());
 
     QString m_formattedMessage;
     QVariantHash m_attributes;
