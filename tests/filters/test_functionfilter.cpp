@@ -50,7 +50,8 @@ LogMessage TestFunctionFilter::createMessage(const QString& message, QtMsgType t
                                            const QString& category, const QString& function)
 {
     auto context = Test::MockContext::create("test.cpp", 42, function.toUtf8().constData(), category.toUtf8().constData());
-    return LogMessage(type, context, message);
+    auto lmsg = LogMessage(type, context, message);
+    return LogMessage(lmsg);
 }
 
 void TestFunctionFilter::testConstructorWithLambda()
@@ -185,8 +186,6 @@ void TestFunctionFilter::testCategoryFilter()
 
 void TestFunctionFilter::testCombinedConditions()
 {
-    QSKIP("MockContext has parameter order issues - needs fixing");
-    
     FunctionFilter filter([](const LogMessage& msg) {
         return msg.type() == QtWarningMsg && 
                msg.message().contains("network", Qt::CaseInsensitive) &&
@@ -197,6 +196,8 @@ void TestFunctionFilter::testCombinedConditions()
     auto wrongType = createMessage("Network connection failed", QtDebugMsg, "app.network");
     auto wrongContent = createMessage("Database error", QtWarningMsg, "app.network");
     auto wrongCategory = createMessage("Network connection failed", QtWarningMsg, "system.network");
+
+    filter.filter(matchingMsg);
     
     QVERIFY(filter.filter(matchingMsg));
     QVERIFY(!filter.filter(wrongType));
@@ -305,8 +306,6 @@ void TestFunctionFilter::testExceptionInFunction()
 
 void TestFunctionFilter::testComplexLogicFilter()
 {
-    QSKIP("MockContext has parameter order issues - needs fixing");
-    
     FunctionFilter filter([](const LogMessage& msg) {
         // Complex filter: allow critical/fatal messages always,
         // allow debug/info only for specific categories,
@@ -323,7 +322,7 @@ void TestFunctionFilter::testComplexLogicFilter()
         }
         
         if (msg.type() == QtWarningMsg && 
-            (msg.message().contains("important") || msg.message().contains("urgent"))) {
+            (msg.message().contains("important", Qt::CaseInsensitive) || msg.message().contains("urgent", Qt::CaseInsensitive))) {
             return true;
         }
         
