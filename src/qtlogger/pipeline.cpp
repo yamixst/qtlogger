@@ -67,7 +67,7 @@ bool Pipeline::process(LogMessage &lmsg)
 
     if (m_scoped) {
         lmsg.setFormattedMessage(fmsg);
-        lmsg.attributes() = attrs;
+        lmsg.setAttributes(attrs);
     }
 
     return true;

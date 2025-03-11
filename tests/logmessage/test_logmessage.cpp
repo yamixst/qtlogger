@@ -39,7 +39,6 @@ private slots:
     void testSetAttribute();
     void testHasAttribute();
     void testAttributes();
-    void testAttributesReference();
 
     // All attributes tests
     void testAllAttributes();
@@ -290,19 +289,6 @@ void TestLogMessage::testAttributes()
     QVERIFY(attrs.contains("attr2"));
     QCOMPARE(attrs["attr1"].toString(), QString("value1"));
     QCOMPARE(attrs["attr2"].toInt(), 42);
-}
-
-void TestLogMessage::testAttributesReference()
-{
-    auto context = Test::MockContext::create();
-    LogMessage msg(QtDebugMsg, context, "test");
-    
-    // Modify through reference
-    auto& attrs = msg.attributes();
-    attrs.insert("refKey", "refValue");
-    
-    QVERIFY(msg.hasAttribute("refKey"));
-    QCOMPARE(msg.attribute("refKey").toString(), QString("refValue"));
 }
 
 void TestLogMessage::testAllAttributes()
