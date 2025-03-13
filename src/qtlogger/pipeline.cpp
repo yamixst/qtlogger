@@ -6,7 +6,10 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers) : m_handlers(handlers) { }
+Pipeline::Pipeline(std::initializer_list<HandlerPtr> handlers, bool scoped)
+    : m_handlers(handlers), m_scoped(scoped)
+{
+}
 
 QTLOGGER_DECL_SPEC
 void Pipeline::append(const HandlerPtr &handler)

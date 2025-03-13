@@ -17,7 +17,7 @@ class QTLOGGER_EXPORT Pipeline : public Handler
 {
 public:
     explicit Pipeline(bool scoped = false) : m_scoped(scoped) {};
-    Pipeline(std::initializer_list<HandlerPtr> handlers);
+    Pipeline(std::initializer_list<HandlerPtr> handlers, bool scoped = false);
 
     HandlerType type() const override final { return HandlerType::Pipeline; }
 
