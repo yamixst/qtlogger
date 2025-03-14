@@ -40,7 +40,6 @@ class QTLOGGER_EXPORT Logger :
 #endif
 {
 public:
-    // Import SinkType and SinkTypeFlags from configure.h
     using SinkType = QtLogger::SinkType;
     using SinkTypeFlags = QtLogger::SinkTypeFlags;
 
