@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     // Logging with QtLogger
 
-    gQtLogger->configure();
+    gQtLogger.configure();
 
     qDebug() << "Hello QtLogger";
     qInfo() << "Hello QtLogger";

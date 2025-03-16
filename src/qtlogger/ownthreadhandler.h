@@ -30,7 +30,7 @@ public:
 
     ~OwnThreadHandler() override { reset(); }
 
-    OwnThreadHandler &moveToOwnThread()
+    OwnThreadHandler<BaseHandler> &moveToOwnThread()
     {
         reset();
 
@@ -59,7 +59,7 @@ public:
         return *this;
     }
 
-    OwnThreadHandler &moveToMainThread()
+    OwnThreadHandler<BaseHandler> &moveToMainThread()
     {
         reset();
 
