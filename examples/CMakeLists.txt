@@ -1,2 +1,2 @@
-add_subdirectory(simple)
+add_subdirectory(one_line_config)
 add_subdirectory(config_from_file)

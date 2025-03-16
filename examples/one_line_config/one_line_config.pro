@@ -3,7 +3,7 @@
 
 TEMPLATE = app
 
-TARGET = simple
+TARGET = one_line_config
 
 CONFIG += qt
 QT -= gui
