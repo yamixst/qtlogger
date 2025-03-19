@@ -5,6 +5,7 @@ namespace QtLogger {
 QTLOGGER_DECL_SPEC
 SeqNumberAttr::SeqNumberAttr(const QString &name) : m_name(name) { }
 
+QTLOGGER_DECL_SPEC
 QVariantHash SeqNumberAttr::attributes(const LogMessage &lmsg)
 {
     Q_UNUSED(lmsg)

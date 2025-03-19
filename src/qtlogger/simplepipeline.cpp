@@ -200,6 +200,7 @@ SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 #endif
 
 #ifdef Q_OS_WIN
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToWinDebug()
 {
     append(WinDebugSinkPtr::create());
