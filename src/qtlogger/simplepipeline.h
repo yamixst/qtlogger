@@ -16,7 +16,7 @@ public:
     {
     }
 
-    SimplePipeline &addSeqNumber();
+    SimplePipeline &addSeqNumber(const QString &name = QStringLiteral("seq_number"));
     SimplePipeline &addAppInfo();
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &addHostInfo();
