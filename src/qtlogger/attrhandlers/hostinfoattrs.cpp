@@ -1,17 +1,22 @@
 #ifdef QTLOGGER_NETWORK
 
-#include "hostinfoattrs.h"
+#    include "hostinfoattrs.h"
 
-#include <QHostInfo>
+#    include <QHostInfo>
 
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash HostInfoAttrs::attributes()
+HostInfoAttrs::HostInfoAttrs()
 {
-    return QVariantHash {
+    m_attrs = QVariantHash {
         { QStringLiteral("host_name"), QHostInfo::localHostName() },
     };
+}
+
+QVariantHash HostInfoAttrs::attributes()
+{
+    return m_attrs;
 }
 
 } // namespace QtLogger

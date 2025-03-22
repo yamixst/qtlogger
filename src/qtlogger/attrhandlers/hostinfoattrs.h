@@ -12,7 +12,12 @@ namespace QtLogger {
 class QTLOGGER_EXPORT HostInfoAttrs : public AttrHandler
 {
 public:
+    HostInfoAttrs();
+
     QVariantHash attributes() override;
+
+private:
+    QVariantHash m_attrs;
 };
 
 using HostInfoAttrsPtr = QSharedPointer<HostInfoAttrs>;
