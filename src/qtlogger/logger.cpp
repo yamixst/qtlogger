@@ -65,7 +65,6 @@ Logger *Logger::instance()
 
     if (!s_instance) {
         s_instance.reset(new Logger());
-        s_instance->installMessageHandler();
     }
 
     return s_instance.data();
@@ -133,6 +132,8 @@ void Logger::configure(std::initializer_list<HandlerPtr> handlers, bool async)
 #else
     Q_UNUSED(async)
 #endif
+
+    installMessageHandler();
 }
 
 QTLOGGER_DECL_SPEC
@@ -186,6 +187,8 @@ void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxF
 #else
     Q_UNUSED(async)
 #endif
+
+    installMessageHandler();
 }
 
 QTLOGGER_DECL_SPEC
@@ -308,6 +311,8 @@ void Logger::configure(const QSettings &settings, const QString &group)
         moveToOwnThread();
     }
 #endif
+
+    installMessageHandler();
 }
 
 QTLOGGER_DECL_SPEC
