@@ -197,7 +197,7 @@ SimplePipeline &SimplePipeline::sendToWinDebug()
 
 SimplePipeline &SimplePipeline::pipeline()
 {
-    auto pipeline = SimplePipelinePtr::create(true, this);
+    auto pipeline = SimplePipelinePtr::create(/* scoped */ true, /* parent */ this);
     append(pipeline);
     return *pipeline.data();
 }
