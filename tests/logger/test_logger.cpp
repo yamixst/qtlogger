@@ -127,16 +127,16 @@ void TestLogger::testSingleton()
 void TestLogger::testSingletonPersistence()
 {
     Logger *logger1 = Logger::instance();
-    
+
     // Configure logger
-    logger1->configure({m_mockHandler1});
-    
+    logger1->append({m_mockHandler1});
+
     Logger *logger2 = Logger::instance();
-    
+
     // Test that configuration persists
     LogMessage msg(QtDebugMsg, QMessageLogContext(), "test message");
     logger2->process(msg);
-    
+
     QCOMPARE(m_mockHandler1->processCallCount(), 1);
 }
 
@@ -151,11 +151,11 @@ void TestLogger::testDefaultConfiguration()
 
 void TestLogger::testConfigureWithHandlers()
 {
-    m_logger->configure({m_mockHandler1, m_mockHandler2});
-    
+    m_logger->append({m_mockHandler1, m_mockHandler2});
+
     LogMessage msg(QtWarningMsg, QMessageLogContext(), "warning message");
     m_logger->process(msg);
-    
+
     QCOMPARE(m_mockHandler1->processCallCount(), 1);
     QCOMPARE(m_mockHandler2->processCallCount(), 1);
     QCOMPARE(m_mockHandler1->lastMessage(), QString("warning message"));
@@ -236,7 +236,7 @@ void TestLogger::testConfigureFromFile()
 
 void TestLogger::testProcessMessage()
 {
-    m_logger->configure({m_mockHandler1});
+    m_logger->append({m_mockHandler1});
     
     QMessageLogContext context("test.cpp", 42, "testFunction", "test.category");
     
@@ -250,7 +250,7 @@ void TestLogger::testProcessMessage()
 
 void TestLogger::testMessageHandler()
 {
-    m_logger->configure({m_mockHandler1});
+    m_logger->append({m_mockHandler1});
     m_logger->installMessageHandler();
     
     QMessageLogContext context("test.cpp", 42, "testFunction", "test.category");
@@ -263,7 +263,7 @@ void TestLogger::testMessageHandler()
 
 void TestLogger::testInstallMessageHandler()
 {
-    m_logger->configure({m_mockHandler1});
+    m_logger->append({m_mockHandler1});
     m_logger->installMessageHandler();
     
     // Test that Qt logging goes through our handler
@@ -326,7 +326,7 @@ void TestLogger::testOperatorLeftShiftWithPointer()
 
 void TestLogger::testThreadSafety()
 {
-    m_logger->configure({m_mockHandler1});
+    m_logger->append({m_mockHandler1});
     
     const int numThreads = 5;
     const int messagesPerThread = 10;
@@ -355,7 +355,8 @@ void TestLogger::testThreadSafety()
 
 void TestLogger::testAsyncConfiguration()
 {
-    m_logger->configure({m_mockHandler1}, true);
+    m_logger->append({m_mockHandler1});
+    m_logger->moveToOwnThread();
     
     // Give async handler time to start
     QTest::qWait(100);
@@ -387,7 +388,7 @@ void TestLogger::testMutexLocking()
 
 void TestLogger::testRealLogging()
 {
-    m_logger->configure({m_mockSink1});
+    m_logger->append({m_mockSink1});
     m_logger->installMessageHandler();
     
     // Wait a bit for async handler setup
@@ -408,7 +409,7 @@ void TestLogger::testRealLogging()
 void TestLogger::testMultipleHandlers()
 {
     // Test basic pipeline functionality
-    m_logger->configure({m_mockHandler1});
+    m_logger->append({m_mockHandler1});
     
     LogMessage msg(QtWarningMsg, QMessageLogContext(), "handler test");
     bool result = m_logger->process(msg);

@@ -73,8 +73,6 @@ public:
      */
     static void setMessagePattern(const QString &pattern);
 
-    void configure(std::initializer_list<HandlerPtr> handlers, bool async = false);
-
     void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
                    int maxFileSize = 0, int maxFileCount = 0, bool async = false);
 
