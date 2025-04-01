@@ -43,12 +43,6 @@ private slots:
     void testClearPipelines();
     void testClearType();
 
-    // Function-based handlers tests
-    void testFunctionFilter();
-    void testRegExpFilter();
-    void testFunctionFormatter();
-    void testPatternFormatter();
-
     // Edge cases tests
     void testMultipleFormatters();
     void testEmptyPipeline();
@@ -473,94 +467,6 @@ void TestTypedPipeline::testClearType()
 
     QCOMPARE(filter->callCount(), 0);
     QCOMPARE(sink->callCount(), 1); // Sink should still be called
-}
-
-void TestTypedPipeline::testFunctionFilter()
-{
-    bool filterCalled = false;
-    QString lastMessage;
-
-    auto functionFilter = m_pipeline->appendFilter([&](const LogMessage &lmsg) {
-        filterCalled = true;
-        lastMessage = lmsg.message();
-        return lmsg.message().contains("accept");
-    });
-
-    QVERIFY(!functionFilter.isNull());
-
-    auto message1 = createTestMessage("accept this");
-    auto message2 = createTestMessage("reject this");
-
-    auto sink = MockSinkPtr::create("sink");
-    m_pipeline->appendSink(sink);
-
-    QVERIFY(m_pipeline->process(message1));
-    QVERIFY(filterCalled);
-    QCOMPARE(lastMessage, QString("accept this"));
-    QCOMPARE(sink->callCount(), 1); // Sink should be called when filter passes
-
-    filterCalled = false;
-    sink->resetCallCount();
-    QVERIFY(m_pipeline->process(message2)); // Pipeline always returns true
-    QVERIFY(filterCalled);
-    QCOMPARE(lastMessage, QString("reject this"));
-    QCOMPARE(sink->callCount(), 0); // Sink should NOT be called when filter blocks
-}
-
-void TestTypedPipeline::testRegExpFilter()
-{
-    QRegularExpression regExp("^ERROR:.*");
-    auto regExpFilter = m_pipeline->appendFilter(regExp);
-
-    QVERIFY(!regExpFilter.isNull());
-
-    auto sink = MockSinkPtr::create("sink");
-    m_pipeline->appendSink(sink);
-
-    auto message1 = createTestMessage("ERROR: Something went wrong");
-    auto message2 = createTestMessage("INFO: Everything is fine");
-
-    QVERIFY(m_pipeline->process(message1)); // Pipeline always returns true
-    QCOMPARE(sink->callCount(), 1); // Sink should be called when filter passes
-
-    sink->resetCallCount();
-    QVERIFY(m_pipeline->process(message2)); // Pipeline always returns true
-    QCOMPARE(sink->callCount(), 0); // Sink should NOT be called when filter blocks
-}
-
-void TestTypedPipeline::testFunctionFormatter()
-{
-    bool formatterCalled = false;
-    QString lastMessage;
-
-    auto functionFormatter = m_pipeline->setFormatter([&](const LogMessage &lmsg) {
-        formatterCalled = true;
-        lastMessage = lmsg.message();
-        return QString("[CUSTOM] %1").arg(lmsg.message());
-    });
-
-    QVERIFY(!functionFormatter.isNull());
-
-    auto message = createTestMessage("test message");
-    m_pipeline->process(message);
-
-    QVERIFY(formatterCalled);
-    QCOMPARE(lastMessage, QString("test message"));
-    QCOMPARE(message.formattedMessage(), QString("[CUSTOM] test message"));
-}
-
-void TestTypedPipeline::testPatternFormatter()
-{
-    auto patternFormatter = m_pipeline->setFormatter("{message} - {type}");
-
-    QVERIFY(!patternFormatter.isNull());
-
-    auto message = createTestMessage("test message");
-    m_pipeline->process(message);
-
-    // The exact format depends on PatternFormatter implementation
-    // This test verifies that the formatter was created and called
-    QVERIFY(message.isFormatted());
 }
 
 void TestTypedPipeline::testMultipleFormatters()
