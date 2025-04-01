@@ -53,7 +53,11 @@ public:
     SimplePipeline &pipeline();
     SimplePipeline &end();
 
+    void flush();
+
 private:
+    static void recursiveFlush(const Pipeline *pipeline);
+
     SimplePipeline *m_parent = nullptr;
 };
 

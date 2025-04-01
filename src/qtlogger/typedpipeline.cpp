@@ -3,12 +3,6 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-TypedPipeline::~TypedPipeline()
-{
-    flush();
-}
-
-QTLOGGER_DECL_SPEC
 void TypedPipeline::insertBefore(HandlerType type, const HandlerPtr &handler)
 {
     auto first = std::find_if(handlers().begin(), handlers().end(),
@@ -134,29 +128,6 @@ QTLOGGER_DECL_SPEC
 void TypedPipeline::clearPipelines()
 {
     clearType(HandlerType::Pipeline);
-}
-
-QTLOGGER_DECL_SPEC
-void TypedPipeline::flush()
-{
-    for (auto &handler : handlers()) {
-        switch (handler->type()) {
-        case HandlerType::Sink: {
-            auto sink = handler.dynamicCast<Sink>();
-            if (sink)
-                sink->flush();
-            break;
-        }
-        case HandlerType::Pipeline: {
-            auto pipeline = handler.dynamicCast<TypedPipeline>();
-            if (pipeline)
-                pipeline->flush();
-            break;
-        }
-        default:
-            break;
-        }
-    }
 }
 
 } // namespace QtLogger

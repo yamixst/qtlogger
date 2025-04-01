@@ -30,6 +30,8 @@ public:
 
     bool process(LogMessage &lmsg) override;
 
+    QList<HandlerPtr> const& handlers() const { return m_handlers; }
+
 protected:
     QList<HandlerPtr> &handlers() { return m_handlers; }
 

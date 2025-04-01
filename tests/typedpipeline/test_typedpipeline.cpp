@@ -47,8 +47,6 @@ private slots:
     void testMultipleFormatters();
     void testEmptyPipeline();
     void testNullHandlers();
-    void testFlush();
-    void testDestructorFlush();
 
     // Integration tests
     void testCompleteProcessingChain();
@@ -508,45 +506,6 @@ void TestTypedPipeline::testNullHandlers()
     bool result = m_pipeline->process(message);
 
     QVERIFY(result);
-}
-
-void TestTypedPipeline::testFlush()
-{
-    auto sink1 = MockSinkPtr::create("sink1");
-    auto sink2 = MockSinkPtr::create("sink2");
-    auto subPipeline = MockPipelinePtr::create("subPipeline");
-
-    m_pipeline->appendSink(sink1);
-    m_pipeline->appendSink(sink2);
-    m_pipeline->appendPipeline(subPipeline);
-
-    m_pipeline->flush();
-
-    QCOMPARE(sink1->flushCount(), 1);
-    QCOMPARE(sink2->flushCount(), 1);
-    // Note: MockPipeline doesn't implement flush tracking, but real Pipeline would
-}
-
-void TestTypedPipeline::testDestructorFlush()
-{
-    auto sink1 = MockSinkPtr::create("sink1");
-    auto sink2 = MockSinkPtr::create("sink2");
-
-    {
-        TypedPipeline pipeline;
-        pipeline.appendSink(sink1);
-        pipeline.appendSink(sink2);
-        
-        // Sinks should not be flushed yet
-        QCOMPARE(sink1->flushCount(), 0);
-        QCOMPARE(sink2->flushCount(), 0);
-        
-        // Pipeline destructor should call flush()
-    }
-    
-    // After destructor, sinks should be flushed
-    QCOMPARE(sink1->flushCount(), 1);
-    QCOMPARE(sink2->flushCount(), 1);
 }
 
 void TestTypedPipeline::testCompleteProcessingChain()

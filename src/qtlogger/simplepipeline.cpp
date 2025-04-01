@@ -75,6 +75,7 @@ SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
     return *this;
 }
 
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filterDuplicate()
 {
     append(DuplicateFilterPtr::create());
@@ -109,12 +110,14 @@ SimplePipeline &SimplePipeline::format(const QString &pattern)
     return *this;
 }
 
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::formatByQt()
 {
     append(QtLogMessageFormatter::instance());
     return *this;
 }
 
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::formatPretty()
 {
     append(PrettyFormatterPtr::create());
@@ -195,6 +198,7 @@ SimplePipeline &SimplePipeline::sendToWinDebug()
 }
 #endif
 
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::pipeline()
 {
     auto pipeline = SimplePipelinePtr::create(/* scoped */ true, /* parent */ this);
@@ -202,12 +206,33 @@ SimplePipeline &SimplePipeline::pipeline()
     return *pipeline.data();
 }
 
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::end()
 {
     if (m_parent)
         return *m_parent;
     else
         return *this;
+}
+
+QTLOGGER_DECL_SPEC
+void SimplePipeline::recursiveFlush(const Pipeline *pipeline)
+{
+    for (const auto &handler : pipeline->handlers()) {
+        if (auto sink = handler.dynamicCast<Sink>()){
+            sink->flush();
+            continue;
+        }
+        if (auto pipeline = handler.dynamicCast<Pipeline>()) {
+            recursiveFlush(pipeline.data());
+        }
+    }
+}
+
+QTLOGGER_DECL_SPEC
+void SimplePipeline::flush()
+{
+    recursiveFlush(this);
 }
 
 } // namespace QtLogger
