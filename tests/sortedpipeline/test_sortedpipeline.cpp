@@ -3,13 +3,13 @@
 #include <QSharedPointer>
 #include <QStringList>
 
-#include "qtlogger/typedpipeline.h"
+#include "qtlogger/sortedpipeline.h"
 #include "qtlogger/logmessage.h"
 #include "mocks.h"
 
 using namespace QtLogger;
 
-class TestTypedPipeline : public QObject
+class TestSortedPipeline : public QObject
 {
     Q_OBJECT
 
@@ -54,46 +54,46 @@ private slots:
     void testFormatterChaining();
 
 private:
-    TypedPipeline *m_pipeline;
+    SortedPipeline *m_pipeline;
     OrderTracker *m_tracker;
     LogMessage createTestMessage(const QString &message = "test message");
 };
 
-void TestTypedPipeline::initTestCase()
+void TestSortedPipeline::initTestCase()
 {
     // Global setup
 }
 
-void TestTypedPipeline::cleanupTestCase()
+void TestSortedPipeline::cleanupTestCase()
 {
     // Global cleanup
 }
 
-void TestTypedPipeline::init()
+void TestSortedPipeline::init()
 {
-    m_pipeline = new TypedPipeline();
+    m_pipeline = new SortedPipeline();
     m_tracker = new OrderTracker();
 }
 
-void TestTypedPipeline::cleanup()
+void TestSortedPipeline::cleanup()
 {
     delete m_pipeline;
     delete m_tracker;
 }
 
-LogMessage TestTypedPipeline::createTestMessage(const QString &message)
+LogMessage TestSortedPipeline::createTestMessage(const QString &message)
 {
     QMessageLogContext context("test.cpp", 123, "testFunction", "test.category");
     return LogMessage(QtDebugMsg, context, message);
 }
 
-void TestTypedPipeline::testConstructor()
+void TestSortedPipeline::testConstructor()
 {
     QVERIFY(m_pipeline != nullptr);
     QCOMPARE(m_pipeline->type(), Handler::HandlerType::Pipeline);
 }
 
-void TestTypedPipeline::testAppendFilter()
+void TestSortedPipeline::testAppendFilter()
 {
     auto filter1 = MockFilterPtr::create(true, "filter1");
     auto filter2 = MockFilterPtr::create(true, "filter2");
@@ -108,7 +108,7 @@ void TestTypedPipeline::testAppendFilter()
     QCOMPARE(filter2->callCount(), 1);
 }
 
-void TestTypedPipeline::testSetFormatter()
+void TestSortedPipeline::testSetFormatter()
 {
     auto formatter1 = MockFormatterPtr::create("format1", "formatter1");
     auto formatter2 = MockFormatterPtr::create("format2", "formatter2");
@@ -127,7 +127,7 @@ void TestTypedPipeline::testSetFormatter()
     QCOMPARE(message.formattedMessage(), QString("format2"));
 }
 
-void TestTypedPipeline::testAppendSink()
+void TestSortedPipeline::testAppendSink()
 {
     auto sink1 = MockSinkPtr::create("sink1");
     auto sink2 = MockSinkPtr::create("sink2");
@@ -142,7 +142,7 @@ void TestTypedPipeline::testAppendSink()
     QCOMPARE(sink2->callCount(), 1);
 }
 
-void TestTypedPipeline::testAppendPipeline()
+void TestSortedPipeline::testAppendPipeline()
 {
     auto subPipeline1 = MockPipelinePtr::create("pipeline1");
     auto subPipeline2 = MockPipelinePtr::create("pipeline2");
@@ -157,7 +157,7 @@ void TestTypedPipeline::testAppendPipeline()
     QCOMPARE(subPipeline2->callCount(), 1);
 }
 
-void TestTypedPipeline::testHandlerExecutionOrder()
+void TestSortedPipeline::testHandlerExecutionOrder()
 {
     // Create handlers with tracking
     auto attrHandler = QSharedPointer<TrackingAttrHandler>::create("attr1", "value1", "attr1", m_tracker);
@@ -166,7 +166,7 @@ void TestTypedPipeline::testHandlerExecutionOrder()
     auto sink = QSharedPointer<TrackingSink>::create("sink1", m_tracker);
     auto pipeline = QSharedPointer<TrackingPipeline>::create("pipeline1", m_tracker);
 
-    // Add in random order to test that TypedPipeline maintains correct order
+    // Add in random order to test that SortedPipeline maintains correct order
     m_pipeline->appendSink(sink);
     m_pipeline->appendFilter(filter);
     m_pipeline->appendPipeline(pipeline);
@@ -187,7 +187,7 @@ void TestTypedPipeline::testHandlerExecutionOrder()
     QCOMPARE(m_tracker->order(), expectedOrder);
 }
 
-void TestTypedPipeline::testHandlerExecutionOrderWithMultipleTypes()
+void TestSortedPipeline::testHandlerExecutionOrderWithMultipleTypes()
 {
     // Multiple AttrHandlers
     auto attr1 = QSharedPointer<TrackingAttrHandler>::create("attr1", "value1", "attr1", m_tracker);
@@ -246,7 +246,7 @@ void TestTypedPipeline::testHandlerExecutionOrderWithMultipleTypes()
     QCOMPARE(m_tracker->order(), expectedOrder);
 }
 
-void TestTypedPipeline::testHandlerExecutionOrderComplex()
+void TestSortedPipeline::testHandlerExecutionOrderComplex()
 {
     // Test the exact sequence specified in requirements:
     // 1. любое количество AttrHandler
@@ -313,7 +313,7 @@ void TestTypedPipeline::testHandlerExecutionOrderComplex()
     QCOMPARE(m_tracker->order(), expectedOrder);
 }
 
-void TestTypedPipeline::testInsertBefore()
+void TestSortedPipeline::testInsertBefore()
 {
     auto filter1 = MockFilterPtr::create(true, "filter1");
     auto filter2 = MockFilterPtr::create(true, "filter2");
@@ -332,7 +332,7 @@ void TestTypedPipeline::testInsertBefore()
     QCOMPARE(filter3->callCount(), 1);
 }
 
-void TestTypedPipeline::testInsertAfter()
+void TestSortedPipeline::testInsertAfter()
 {
     auto filter1 = MockFilterPtr::create(true, "filter1");
     auto filter2 = MockFilterPtr::create(true, "filter2");
@@ -351,7 +351,7 @@ void TestTypedPipeline::testInsertAfter()
     QCOMPARE(filter3->callCount(), 1);
 }
 
-void TestTypedPipeline::testInsertBetween()
+void TestSortedPipeline::testInsertBetween()
 {
     auto filter = MockFilterPtr::create(true, "filter");
     auto sink = MockSinkPtr::create("sink");
@@ -372,7 +372,7 @@ void TestTypedPipeline::testInsertBetween()
     QCOMPARE(message.formattedMessage(), QString("formatted"));
 }
 
-void TestTypedPipeline::testClearFilters()
+void TestSortedPipeline::testClearFilters()
 {
     auto filter1 = MockFilterPtr::create(true, "filter1");
     auto filter2 = MockFilterPtr::create(true, "filter2");
@@ -392,7 +392,7 @@ void TestTypedPipeline::testClearFilters()
     QCOMPARE(sink->callCount(), 1); // Sink should still be called
 }
 
-void TestTypedPipeline::testClearFormatters()
+void TestSortedPipeline::testClearFormatters()
 {
     auto formatter = MockFormatterPtr::create("formatted", "formatter");
     auto sink = MockSinkPtr::create("sink");
@@ -410,7 +410,7 @@ void TestTypedPipeline::testClearFormatters()
     QCOMPARE(message.formattedMessage(), QString("original")); // Should remain unformatted
 }
 
-void TestTypedPipeline::testClearSinks()
+void TestSortedPipeline::testClearSinks()
 {
     auto filter = MockFilterPtr::create(true, "filter");
     auto sink1 = MockSinkPtr::create("sink1");
@@ -430,7 +430,7 @@ void TestTypedPipeline::testClearSinks()
     QCOMPARE(sink2->callCount(), 0);
 }
 
-void TestTypedPipeline::testClearPipelines()
+void TestSortedPipeline::testClearPipelines()
 {
     auto sink = MockSinkPtr::create("sink");
     auto pipeline1 = MockPipelinePtr::create("pipeline1");
@@ -450,7 +450,7 @@ void TestTypedPipeline::testClearPipelines()
     QCOMPARE(pipeline2->callCount(), 0);
 }
 
-void TestTypedPipeline::testClearType()
+void TestSortedPipeline::testClearType()
 {
     auto filter = MockFilterPtr::create(true, "filter");
     auto sink = MockSinkPtr::create("sink");
@@ -467,7 +467,7 @@ void TestTypedPipeline::testClearType()
     QCOMPARE(sink->callCount(), 1); // Sink should still be called
 }
 
-void TestTypedPipeline::testMultipleFormatters()
+void TestSortedPipeline::testMultipleFormatters()
 {
     auto formatter1 = MockFormatterPtr::create("format1", "formatter1");
     auto formatter2 = MockFormatterPtr::create("format2", "formatter2");
@@ -482,7 +482,7 @@ void TestTypedPipeline::testMultipleFormatters()
     QCOMPARE(formatter2->callCount(), 1); // Should be called
 }
 
-void TestTypedPipeline::testEmptyPipeline()
+void TestSortedPipeline::testEmptyPipeline()
 {
     auto message = createTestMessage();
     bool result = m_pipeline->process(message);
@@ -491,7 +491,7 @@ void TestTypedPipeline::testEmptyPipeline()
     QCOMPARE(message.formattedMessage(), QString("test message")); // Should remain unchanged
 }
 
-void TestTypedPipeline::testNullHandlers()
+void TestSortedPipeline::testNullHandlers()
 {
     FilterPtr nullFilter;
     FormatterPtr nullFormatter;
@@ -508,7 +508,7 @@ void TestTypedPipeline::testNullHandlers()
     QVERIFY(result);
 }
 
-void TestTypedPipeline::testCompleteProcessingChain()
+void TestSortedPipeline::testCompleteProcessingChain()
 {
     // Set up a complete processing chain
     auto filter = QSharedPointer<TrackingFilter>::create(true, "filter", m_tracker);
@@ -540,7 +540,7 @@ void TestTypedPipeline::testCompleteProcessingChain()
     QCOMPARE(m_tracker->order(), expectedOrder);
 }
 
-void TestTypedPipeline::testFilterBlocking()
+void TestSortedPipeline::testFilterBlocking()
 {
     auto filter1 = MockFilterPtr::create(true, "filter1");
     auto filter2 = MockFilterPtr::create(false, "filter2"); // This will block
@@ -562,7 +562,7 @@ void TestTypedPipeline::testFilterBlocking()
     QCOMPARE(sink->callCount(), 0); // Should not be called due to blocking
 }
 
-void TestTypedPipeline::testFormatterChaining()
+void TestSortedPipeline::testFormatterChaining()
 {
     // Test that only one formatter is active at a time
     auto formatter1 = MockFormatterPtr::create("format1", "formatter1");
@@ -582,5 +582,5 @@ void TestTypedPipeline::testFormatterChaining()
     QCOMPARE(sink->messages().first(), QString("format2"));
 }
 
-QTEST_MAIN(TestTypedPipeline)
-#include "test_typedpipeline.moc"
+QTEST_MAIN(TestSortedPipeline)
+#include "test_sortedpipeline.moc"

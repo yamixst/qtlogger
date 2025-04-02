@@ -27,7 +27,7 @@
 #include "sinks/signalsink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
-#include "typedpipeline.h"
+#include "sortedpipeline.h"
 #include "version.h"
 
 #ifdef QTLOGGER_NETWORK

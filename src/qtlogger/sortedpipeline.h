@@ -13,10 +13,10 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT TypedPipeline : public Pipeline
+class QTLOGGER_EXPORT SortedPipeline : public Pipeline
 {
 public:
-    explicit TypedPipeline(bool scoped = false) : Pipeline(scoped) {}
+    explicit SortedPipeline(bool scoped = false) : Pipeline(scoped) {}
 
     void insertBefore(HandlerType type, const HandlerPtr &handler);
     void insertAfter(HandlerType type, const HandlerPtr &handler);
@@ -36,6 +36,6 @@ public:
     void clearPipelines();
 };
 
-using TypedPipelinePtr = QSharedPointer<TypedPipeline>;
+using SortedPipelinePtr = QSharedPointer<SortedPipeline>;
 
 } // namespace QtLogger
