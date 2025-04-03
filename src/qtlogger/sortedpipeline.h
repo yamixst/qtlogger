@@ -1,11 +1,7 @@
 #pragma once
 
 #include "filter.h"
-#include "filters/functionfilter.h"
-#include "filters/regexpfilter.h"
 #include "formatter.h"
-#include "formatters/functionformatter.h"
-#include "formatters/patternformatter.h"
 #include "handler.h"
 #include "logger_global.h"
 #include "pipeline.h"
