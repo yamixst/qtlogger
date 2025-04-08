@@ -16,9 +16,11 @@
 #include <iostream>
 
 #include "filters/regexpfilter.h"
+#include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
 #include "messagepatterns.h"
 #include "setmessagepattern.h"
+#include "sinks/filesink.h"
 #include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
