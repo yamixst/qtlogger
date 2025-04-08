@@ -53,7 +53,7 @@ public:
     SimplePipeline &pipeline();
     SimplePipeline &end();
 
-    void flush();
+    virtual void flush();
 
 private:
     static void recursiveFlush(const Pipeline *pipeline);
