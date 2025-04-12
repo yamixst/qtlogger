@@ -17,7 +17,8 @@ public:
     void insertBefore(HandlerType type, const HandlerPtr &handler);
     void insertAfter(HandlerType type, const HandlerPtr &handler);
     void insertBetween(HandlerType leftType, HandlerType rightType, const HandlerPtr &handler);
-    void clearType(HandlerType type);
+    void clear(HandlerType type);
+    void clear();
 
     void appendFilter(const FilterPtr &filter);
     void clearFilters();
