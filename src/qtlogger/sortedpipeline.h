@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QSet>
+
+#include "attrhandler.h"
 #include "filter.h"
 #include "formatter.h"
 #include "handler.h"
@@ -12,13 +15,17 @@ namespace QtLogger {
 class QTLOGGER_EXPORT SortedPipeline : public Pipeline
 {
 public:
-    explicit SortedPipeline(bool scoped = false) : Pipeline(scoped) {}
+    explicit SortedPipeline(bool scoped = false) : Pipeline(scoped) { }
 
-    void insertBefore(HandlerType type, const HandlerPtr &handler);
-    void insertAfter(HandlerType type, const HandlerPtr &handler);
-    void insertBetween(HandlerType leftType, HandlerType rightType, const HandlerPtr &handler);
+    void insertBetweenNearLeft(const QSet<HandlerType> &leftType,
+                               const QSet<HandlerType> &rightType, const HandlerPtr &handler);
+    void insertBetweenNearRight(const QSet<HandlerType> &leftType,
+                                const QSet<HandlerType> &rightType, const HandlerPtr &handler);
     void clear(HandlerType type);
     void clear();
+
+    void appendAttrHandler(const AttrHandlerPtr &attrHandler);
+    void clearAttrHandlers();
 
     void appendFilter(const FilterPtr &filter);
     void clearFilters();
