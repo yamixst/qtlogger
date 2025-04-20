@@ -73,6 +73,7 @@ Thumbs.db
 # Gradle files
 .gradle/
 build/
+build_test/
 
 # Local configuration file (sdk path, etc)
 local.properties
