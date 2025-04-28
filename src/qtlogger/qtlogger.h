@@ -17,7 +17,6 @@
 #include "logmessage.h"
 #include "messagepatterns.h"
 #include "pipeline.h"
-#include "setmessagepattern.h"
 #include "simplepipeline.h"
 #include "sink.h"
 #include "sinks/filesink.h"
@@ -28,6 +27,7 @@
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
 #include "sortedpipeline.h"
+#include "utils.h"
 #include "version.h"
 
 #ifdef QTLOGGER_NETWORK

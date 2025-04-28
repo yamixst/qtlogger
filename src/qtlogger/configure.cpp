@@ -11,14 +11,14 @@
 #include "filters/regexpfilter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
-#include "logger.h"
 #include "pipeline.h"
+#include "simplepipeline.h"
 #include "sinks/filesink.h"
 #include "sinks/platformstdsink.h"
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
-#include "sortedpipeline.h"
+#include "utils.h"
 
 #ifdef QTLOGGER_NETWORK
 #    include "sinks/httpsink.h"
@@ -122,8 +122,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configurePipeline: filterRules: " << filterRules.toStdString() << std::endl;
 #endif
-        QLoggingCategory::setFilterRules(
-                QString(filterRules).replace(QChar::fromLatin1(';'), QChar::fromLatin1('\n')));
+        QtLogger::setFilterRules(filterRules);
     }
 
     const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
