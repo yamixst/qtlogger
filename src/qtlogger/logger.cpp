@@ -15,7 +15,7 @@
 
 #include "configure.h"
 #include "messagepatterns.h"
-#include "setmessagepattern.h"
+#include "utils.h"
 
 namespace QtLogger {
 
@@ -53,29 +53,6 @@ Logger::~Logger()
         g_activeLogger = nullptr;
     }
 #endif
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::setFilterRules(const QString &rules)
-{
-    QLoggingCategory::setFilterRules(
-            QString(rules).replace(QChar::fromLatin1(';'), QChar::fromLatin1('\n')));
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::setMessagePattern(const QString &pattern)
-{
-    if (pattern.toLower() == QStringLiteral("default")) {
-        QtLogger::setMessagePattern(QString::fromUtf8(DefaultMessagePattern));
-        return;
-    }
-
-    if (pattern.toLower() == QStringLiteral("pretty")) {
-        QtLogger::setMessagePattern(QString::fromUtf8(PrettyMessagePattern));
-        return;
-    }
-
-    QtLogger::setMessagePattern(pattern);
 }
 
 QTLOGGER_DECL_SPEC

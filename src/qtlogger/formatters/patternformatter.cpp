@@ -3,7 +3,7 @@
 
 #include "patternformatter.h"
 
-#include "../setmessagepattern.h"
+#include "../utils.h"
 
 namespace QtLogger {
 
