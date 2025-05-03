@@ -21,6 +21,7 @@ public:
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &addHostInfo();
 #endif
+    SimplePipeline &attrHandler(std::function<QVariantHash()> func);
 
     SimplePipeline &filter(std::function<bool(const LogMessage &)> func);
     SimplePipeline &filter(const QString &regexp);

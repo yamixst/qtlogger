@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 
 #include "attrhandlers/appinfoattrs.h"
+#include "attrhandlers/functionattr.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
@@ -49,6 +50,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addAppInfo()
 {
     append(AppInfoAttrsPtr::create());
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash()> func)
+{
+    append(FunctionAttrHandlerPtr::create(func));
     return *this;
 }
 
@@ -219,7 +227,7 @@ QTLOGGER_DECL_SPEC
 void SimplePipeline::recursiveFlush(const Pipeline *pipeline)
 {
     for (const auto &handler : pipeline->handlers()) {
-        if (auto sink = handler.dynamicCast<Sink>()){
+        if (auto sink = handler.dynamicCast<Sink>()) {
             sink->flush();
             continue;
         }
