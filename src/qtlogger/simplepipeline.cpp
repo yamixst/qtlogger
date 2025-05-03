@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 
 #include "attrhandlers/appinfoattrs.h"
-#include "attrhandlers/functionattr.h"
+#include "attrhandlers/functionattrhandler.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"

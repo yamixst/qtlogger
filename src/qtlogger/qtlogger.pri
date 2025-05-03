@@ -84,7 +84,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/attrhandler.h \
     $$PWD/attrhandlers/appinfoattrs.h \
-    $$PWD/attrhandlers/functionattr.h \
+    $$PWD/attrhandlers/functionattrhandler.h \
     $$PWD/attrhandlers/seqnumberattr.h \
     $$PWD/configure.h \
     $$PWD/filter.h \

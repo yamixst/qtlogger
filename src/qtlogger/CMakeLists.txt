@@ -47,7 +47,7 @@ set(QTLOGGER_SOURCES
 set(QTLOGGER_HEADERS
     attrhandler.h
     attrhandlers/appinfoattrs.h
-    attrhandlers/functionattr.h
+    attrhandlers/functionattrhandler.h
     attrhandlers/seqnumberattr.h
     configure.h
     filter.h
