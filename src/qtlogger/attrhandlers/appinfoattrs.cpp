@@ -16,8 +16,9 @@ AppInfoAttrs::AppInfoAttrs()
     };
 }
 
-QVariantHash AppInfoAttrs::attributes()
+QVariantHash AppInfoAttrs::attributes(const LogMessage &lmsg)
 {
+    Q_UNUSED(lmsg)
     return m_attrs;
 }
 

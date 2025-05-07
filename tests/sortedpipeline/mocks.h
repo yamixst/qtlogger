@@ -21,8 +21,9 @@ public:
     explicit MockAttrHandler(const QString &name, const QVariant &value)
         : m_name(name), m_value(value) {}
 
-    QVariantHash attributes() override
+    QVariantHash attributes(const LogMessage &lmsg) override
     {
+        Q_UNUSED(lmsg)
         QVariantHash attrs;
         attrs[m_name] = m_value;
         return attrs;
@@ -187,10 +188,10 @@ public:
                                 const QString &id, OrderTracker *tracker)
         : m_id(id), m_tracker(tracker), m_mock(name, value) {}
 
-    QVariantHash attributes() override
+    QVariantHash attributes(const LogMessage &lmsg) override
     {
         if (m_tracker) m_tracker->record("AttrHandler", m_id);
-        return m_mock.attributes();
+        return m_mock.attributes(lmsg);
     }
 
     QString id() const { return m_id; }

@@ -3,8 +3,9 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-QVariantHash SeqNumberAttr::attributes()
+QVariantHash SeqNumberAttr::attributes(const LogMessage &lmsg)
 {
+    Q_UNUSED(lmsg)
     return { { QStringLiteral("seq_number"), m_count++ } };
 }
 

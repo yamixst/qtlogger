@@ -12,7 +12,7 @@ class QTLOGGER_EXPORT AppInfoAttrs : public AttrHandler
 public:
     AppInfoAttrs();
 
-    QVariantHash attributes() override;
+    QVariantHash attributes(const LogMessage &lmsg) override;
 
 private:
     QVariantHash m_attrs;
