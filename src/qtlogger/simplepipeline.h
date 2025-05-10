@@ -54,6 +54,8 @@ public:
     SimplePipeline &pipeline();
     SimplePipeline &end();
 
+    SimplePipeline &handler(std::function<bool(LogMessage &)> func);
+
     virtual void flush();
 
 private:

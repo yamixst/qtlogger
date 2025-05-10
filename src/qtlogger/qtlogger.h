@@ -13,6 +13,7 @@
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
 #include "formatters/qtlogmessageformatter.h"
+#include "functionhandler.h"
 #include "handler.h"
 #include "logger.h"
 #include "logmessage.h"
