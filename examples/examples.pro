@@ -3,4 +3,5 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS += simple
+SUBDIRS += simple \
+           config_from_file
