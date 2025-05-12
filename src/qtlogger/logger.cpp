@@ -59,7 +59,7 @@ QTLOGGER_DECL_SPEC
 void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
-    configurePipeline(this, types, path, maxFileSize, maxFileCount, async);
+    QtLogger::configure(this, types, path, maxFileSize, maxFileCount, async);
 
     installMessageHandler();
 }
@@ -74,7 +74,7 @@ void Logger::configure(int types, const QString &path, int maxFileSize, int maxF
 QTLOGGER_DECL_SPEC
 void Logger::configure(const QSettings &settings, const QString &group)
 {
-    configurePipeline(this, settings, group);
+    QtLogger::configure(this, settings, group);
 
     installMessageHandler();
 }

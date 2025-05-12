@@ -47,7 +47,7 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void configurePipeline(Pipeline *pipeline, const SinkTypeFlags &types, const QString &path,
+void configure(Pipeline *pipeline, const SinkTypeFlags &types, const QString &path,
                        int maxFileSize, int maxFileCount, bool async)
 {
     if (!pipeline) {
@@ -101,15 +101,15 @@ void configurePipeline(Pipeline *pipeline, const SinkTypeFlags &types, const QSt
 }
 
 QTLOGGER_DECL_SPEC
-void configurePipeline(Pipeline *pipeline, int types, const QString &path, int maxFileSize,
+void configure(Pipeline *pipeline, int types, const QString &path, int maxFileSize,
                        int maxFileCount, bool async)
 {
-    configurePipeline(pipeline, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount,
+    configure(pipeline, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount,
                       async);
 }
 
 QTLOGGER_DECL_SPEC
-void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QString &group)
+void configure(Pipeline *pipeline, const QSettings &settings, const QString &group)
 {
     if (!pipeline) {
         return;
@@ -120,7 +120,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
     if (!filterRules.isEmpty()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: filterRules: " << filterRules.toStdString() << std::endl;
+        std::cerr << "configure: filterRules: " << filterRules.toStdString() << std::endl;
 #endif
         QtLogger::setFilterRules(filterRules);
     }
@@ -128,7 +128,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
     const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
     if (!regExpFilter.isEmpty()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: filter: " << regExpFilter.toStdString() << std::endl;
+        std::cerr << "configure: filter: " << regExpFilter.toStdString() << std::endl;
 #endif
         *pipeline << RegExpFilterPtr::create(regExpFilter);
     }
@@ -137,7 +137,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
             settings.value(group + QStringLiteral("/message_pattern")).toString();
     if (!messagePattern.isEmpty()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: messagePattern: " << messagePattern.toStdString()
+        std::cerr << "configure: messagePattern: " << messagePattern.toStdString()
                   << std::endl;
 #endif
         *pipeline << PatternFormatterPtr::create(messagePattern);
@@ -145,21 +145,21 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: stdout" << std::endl;
+        std::cerr << "configure: stdout" << std::endl;
 #endif
         *pipeline << StdOutSinkPtr::create();
     }
 
     if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: stderr" << std::endl;
+        std::cerr << "configure: stderr" << std::endl;
 #endif
         *pipeline << StdErrSinkPtr::create();
     }
 
     if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: platform_std_log" << std::endl;
+        std::cerr << "configure: platform_std_log" << std::endl;
 #endif
         *pipeline << PlatformStdSinkPtr::create();
     }
@@ -168,7 +168,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
     const auto syslogIdent = settings.value(group + QStringLiteral("/syslog_ident")).toString();
     if (!syslogIdent.isEmpty()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: syslogIdent: " << syslogIdent.toStdString() << std::endl;
+        std::cerr << "configure: syslogIdent: " << syslogIdent.toStdString() << std::endl;
 #    endif
         *pipeline << SyslogSinkPtr::create(syslogIdent);
     }
@@ -177,7 +177,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 #ifdef QTLOGGER_SDJOURNAL
     if (settings.value(group + QStringLiteral("/sdjournal"), false).toBool()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: sd-journal" << std::endl;
+        std::cerr << "configure: sd-journal" << std::endl;
 #    endif
         *pipeline << SdJournalSinkPtr::create();
     }
@@ -194,7 +194,7 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
                                           .toInt();
 
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configurePipeline: path: " << path.toStdString()
+        std::cerr << "configure: path: " << path.toStdString()
                   << " maxFileSize: " << maxFileSize << " maxFileCount: " << maxFileCount
                   << std::endl;
 #endif
@@ -227,9 +227,9 @@ void configurePipeline(Pipeline *pipeline, const QSettings &settings, const QStr
 }
 
 QTLOGGER_DECL_SPEC
-void configurePipeline(Pipeline *pipeline, const QString &path, const QString &group)
+void configure(Pipeline *pipeline, const QString &path, const QString &group)
 {
-    configurePipeline(pipeline, QSettings(path, QSettings::IniFormat), group);
+    configure(pipeline, QSettings(path, QSettings::IniFormat), group);
 }
 
 } // namespace QtLogger

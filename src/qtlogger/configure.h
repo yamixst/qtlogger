@@ -28,11 +28,11 @@ enum class SinkType {
 
 Q_DECLARE_FLAGS(SinkTypeFlags, SinkType)
 
-QTLOGGER_EXPORT void configurePipeline(Pipeline *pipeline, const SinkTypeFlags &types,
+QTLOGGER_EXPORT void configure(Pipeline *pipeline, const SinkTypeFlags &types,
                                        const QString &path = {}, int maxFileSize = 0,
                                        int maxFileCount = 0, bool async = false);
 
-QTLOGGER_EXPORT void configurePipeline(Pipeline *pipeline, int types, const QString &path = {},
+QTLOGGER_EXPORT void configure(Pipeline *pipeline, int types, const QString &path = {},
                                        int maxFileSize = 0, int maxFileCount = 0,
                                        bool async = false);
 
@@ -58,10 +58,10 @@ QTLOGGER_EXPORT void configurePipeline(Pipeline *pipeline, int types, const QStr
  * @param settings QSettings object to read from
  * @param group Settings group name
  */
-QTLOGGER_EXPORT void configurePipeline(Pipeline *pipeline, const QSettings &settings,
+QTLOGGER_EXPORT void configure(Pipeline *pipeline, const QSettings &settings,
                                        const QString &group = QStringLiteral("logger"));
 
-QTLOGGER_EXPORT void configurePipeline(Pipeline *pipeline, const QString &path,
+QTLOGGER_EXPORT void configure(Pipeline *pipeline, const QString &path,
                                        const QString &group = QStringLiteral("logger"));
 } // namespace QtLogger
 
