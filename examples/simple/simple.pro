@@ -11,8 +11,6 @@ QT += core network
 
 include(../../qtlogger_link.pri)
 
-# HEADERS += $$PWD/../../qtlogger.h
-
 INCLUDEPATH += $$PWD/../../src
 
 SOURCES += $$PWD/main.cpp
