@@ -17,10 +17,12 @@ int main(int argc, char *argv[])
     // Logging without QtLogger
 
     qDebug() << "Hello world";
+    qInfo() << "Hello world";
     qWarning() << "Hello world";
     qCritical() << "Hello world";
 
     qCDebug(lc) << "Hello world";
+    qCInfo(lc) << "Hello world";
     qCWarning(lc) << "Hello world";
     qCCritical(lc) << "Hello world";
 
@@ -29,10 +31,12 @@ int main(int argc, char *argv[])
     gQtLogger->configure();
 
     qDebug() << "Hello QtLogger";
+    qInfo() << "Hello QtLogger";
     qWarning() << "Hello QtLogger";
     qCritical() << "Hello QtLogger";
 
     qCDebug(lc) << "Hello QtLogger";
+    qCInfo(lc) << "Hello QtLogger";
     qCWarning(lc) << "Hello QtLogger";
     qCCritical(lc) << "Hello QtLogger";
 
