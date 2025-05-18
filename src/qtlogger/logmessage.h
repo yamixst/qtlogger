@@ -74,9 +74,24 @@ public:
     {
         m_attributes.insert(name, value);
     }
+    inline void setAttributes(const QVariantHash &attrs)
+    {
+        m_attributes = attrs;
+    }
+    inline void updateAttributes(const QVariantHash &attrs)
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+        m_attributes.insert(attrs);
+#else
+        m_attributes.unite(attrs);
+#endif
+    }
+    inline void removeAttribute(const QString &name)
+    {
+        m_attributes.remove(name);
+    }
     inline bool hasAttribute(const QString &name) const { return m_attributes.contains(name); }
     inline QVariantHash attributes() const { return m_attributes; }
-    inline QVariantHash &attributes() { return m_attributes; }
 
     QVariantHash allAttributes() const;
 

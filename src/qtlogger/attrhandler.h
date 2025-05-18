@@ -19,11 +19,7 @@ public:
 
     bool process(LogMessage &lmsg) override
     {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-        lmsg.attributes().insert(attributes(lmsg));
-#else
-        lmsg.attributes().unite(attributes(lmsg));
-#endif
+        lmsg.updateAttributes(attributes(lmsg));
         return true;
     }
 };
