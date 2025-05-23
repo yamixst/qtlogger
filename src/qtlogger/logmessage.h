@@ -93,10 +93,12 @@ public:
     inline bool hasAttribute(const QString &name) const { return m_attributes.contains(name); }
     inline QVariantHash attributes() const { return m_attributes; }
 
+    // All message attributes including: type, line, file, function, category,
+    // time, threadId and all custom attributes
     QVariantHash allAttributes() const;
 
 private:
-    // `context` buffers
+    // m_context string buffers
     const QByteArray m_file;
     const QByteArray m_function;
     const QByteArray m_category;
