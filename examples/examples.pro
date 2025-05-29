@@ -3,5 +3,5 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS += simple \
+SUBDIRS += one_line_config \
            config_from_file
