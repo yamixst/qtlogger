@@ -16,7 +16,7 @@ QString JsonFormatter::format(const LogMessage &lmsg)
 
     obj[QStringLiteral("message")] = lmsg.message();
 
-    auto attrs = lmsg.allAttributes();
+    const auto attrs = lmsg.allAttributes();
     for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
         obj.insert(it.key(), QJsonValue::fromVariant(it.value()));
     }
