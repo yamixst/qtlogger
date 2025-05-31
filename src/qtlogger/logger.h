@@ -22,7 +22,7 @@
 #    include "ownthreadhandler.h"
 #endif
 
-#define gQtLogger QtLogger::Logger::instance()
+#define gQtLogger (*QtLogger::Logger::instance())
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 #    define QRMUTEX QRecursiveMutex
