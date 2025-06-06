@@ -16,6 +16,7 @@ AppInfoAttrs::AppInfoAttrs()
     };
 }
 
+QTLOGGER_DECL_SPEC
 QVariantHash AppInfoAttrs::attributes(const LogMessage &lmsg)
 {
     Q_UNUSED(lmsg)

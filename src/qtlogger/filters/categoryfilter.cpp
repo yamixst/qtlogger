@@ -15,6 +15,7 @@ struct CategoryFilter::Rule
     bool matches(const QString &category, QtMsgType messageType) const;
 };
 
+QTLOGGER_DECL_SPEC
 CategoryFilter::CategoryFilter(const QString &a_rules)
 {
     auto rules = a_rules;
@@ -22,6 +23,7 @@ CategoryFilter::CategoryFilter(const QString &a_rules)
     parseRules(rules);
 }
 
+QTLOGGER_DECL_SPEC
 void CategoryFilter::parseRules(const QString &rules)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -53,11 +55,13 @@ void CategoryFilter::parseRules(const QString &rules)
     }
 }
 
+QTLOGGER_DECL_SPEC
 bool CategoryFilter::Rule::matches(const QString &category, QtMsgType messageType) const
 {
     return this->category.match(category).hasMatch() && (!typeMatch || type == messageType);
 }
 
+QTLOGGER_DECL_SPEC
 bool CategoryFilter::filter(const LogMessage &lmsg)
 {
     bool enabled = true;

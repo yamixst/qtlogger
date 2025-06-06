@@ -14,6 +14,7 @@ HostInfoAttrs::HostInfoAttrs()
     };
 }
 
+QTLOGGER_DECL_SPEC
 QVariantHash HostInfoAttrs::attributes()
 {
     return m_attrs;
