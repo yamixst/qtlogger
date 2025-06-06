@@ -41,9 +41,9 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::addSeqNumber()
+SimplePipeline &SimplePipeline::addSeqNumber(const QString &name)
 {
-    append(SeqNumberAttrPtr::create());
+    append(SeqNumberAttrPtr::create(name));
     return *this;
 }
 
