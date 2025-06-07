@@ -4,9 +4,12 @@
 #pragma once
 
 #include <QDateTime>
-#include <QThread>
 #include <QVariant>
 #include <qlogging.h>
+
+#ifndef QTLOGGER_NO_THREAD
+#    include <QThread>
+#endif
 
 #include "logger_global.h"
 
@@ -53,7 +56,14 @@ public:
     // System attributes
 
     inline QDateTime time() const { return m_time; }
-    inline qintptr threadId() const { return m_threadId; }
+    inline qint64 threadId() const
+    {
+#ifndef QTLOGGER_NO_THREAD
+        return m_threadId;
+#else
+        return 0;
+#endif
+    }
 
     // Formatted message
 
@@ -108,7 +118,9 @@ private:
     const QString m_message;
 
     const QDateTime m_time = QDateTime::currentDateTime();
-    const quintptr m_threadId = reinterpret_cast<qintptr>(QThread::currentThreadId());
+#ifndef QTLOGGER_NO_THREAD
+    const qint64 m_threadId = reinterpret_cast<qint64>(QThread::currentThreadId());
+#endif
 
     QString m_formattedMessage;
     QVariantHash m_attributes;
@@ -147,14 +159,16 @@ inline QVariantHash LogMessage::allAttributes() const
         { QStringLiteral("function"), m_context.function },
         { QStringLiteral("category"), m_context.category },
         { QStringLiteral("time"), m_time },
+#ifndef QTLOGGER_NO_THREAD
         { QStringLiteral("threadId"), m_threadId },
+#endif
     };
 
-    #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-        attrs.insert(m_attributes);
-    #else
-        attrs.unite(m_attributes);
-    #endif
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    attrs.insert(m_attributes);
+#else
+    attrs.unite(m_attributes);
+#endif
 
     return attrs;
 }
