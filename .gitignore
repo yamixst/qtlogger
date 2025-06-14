@@ -75,6 +75,7 @@ CMakeLists.txt.user*
 .gradle/
 build/
 build_test/
+build-*/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -104,3 +105,5 @@ captures/
 .venv
 .local
 .clangd
+
+AGENTS.md
