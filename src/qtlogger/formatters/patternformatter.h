@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QSharedPointer>
+#include <QScopedPointer>
 
 #include "../formatter.h"
 #include "../logger_global.h"
@@ -16,11 +17,14 @@ class QTLOGGER_EXPORT PatternFormatter : public Formatter
 {
 public:
     explicit PatternFormatter(const QString &pattern);
+    ~PatternFormatter() override;
 
     QString format(const LogMessage &lmsg) override;
 
 private:
-    QString m_pattern;
+    class PatternFormatterPrivate;
+    QScopedPointer<PatternFormatterPrivate> d;
+    Q_DISABLE_COPY(PatternFormatter)
 };
 
 } // namespace QtLogger
