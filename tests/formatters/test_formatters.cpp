@@ -14,7 +14,7 @@
 #include "qtlogger/formatters/qtlogmessageformatter.h"
 #include "qtlogger/formatters/functionformatter.h"
 #include "qtlogger/formatters/jsonformatter.h"
-#include "qtlogger/formatters/patternformatter.h"
+
 #include "qtlogger/formatters/prettyformatter.h"
 
 using namespace QtLogger;
@@ -44,10 +44,7 @@ private slots:
     void testJsonFormatterNullValues();
     void testJsonFormatterValidJson();
 
-    // PatternFormatter tests
-    void testPatternFormatterBasic();
-    void testPatternFormatterCustomPattern();
-    void testPatternFormatterMultipleMessages();
+
 
     // PrettyFormatter tests
     void testPrettyFormatterBasic();
@@ -304,48 +301,7 @@ void TestFormatters::testJsonFormatterValidJson()
 
 // PatternFormatter Tests
 
-void TestFormatters::testPatternFormatterBasic()
-{
-    QString pattern = "%{time} [%{type}] %{message}";
-    PatternFormatter formatter(pattern);
-    
-    auto msg = MockLogMessage::create(QtInfoMsg, "Pattern test");
-    QString formatted = formatter.format(msg);
-    
-    QVERIFY(!formatted.isEmpty());
-    QVERIFY(formatted.contains("Pattern test"));
-    QVERIFY(formatted.contains("[info]") || formatted.contains("[Info]") || formatted.contains("info"));
-}
 
-void TestFormatters::testPatternFormatterCustomPattern()
-{
-    QString pattern = "%{file}:%{line} - %{function}() - %{message}";
-    PatternFormatter formatter(pattern);
-    
-    auto msg = MockLogMessage::createWithLocation("custom.cpp", 789, QtWarningMsg, "Custom pattern test");
-    QString formatted = formatter.format(msg);
-    
-    QVERIFY(!formatted.isEmpty());
-    QVERIFY(formatted.contains("Custom pattern test"));
-    // Note: The exact format depends on Qt's qFormatLogMessage implementation
-}
-
-void TestFormatters::testPatternFormatterMultipleMessages()
-{
-    QString pattern = "[%{type}] %{category}: %{message}";
-    PatternFormatter formatter(pattern);
-    
-    auto msg1 = MockLogMessage::createWithCategory("app.core", QtDebugMsg, "Debug message");
-    auto msg2 = MockLogMessage::createWithCategory("app.ui", QtWarningMsg, "Warning message");
-    
-    QString formatted1 = formatter.format(msg1);
-    QString formatted2 = formatter.format(msg2);
-    
-    QVERIFY(!formatted1.isEmpty());
-    QVERIFY(!formatted2.isEmpty());
-    QVERIFY(formatted1.contains("Debug message"));
-    QVERIFY(formatted2.contains("Warning message"));
-}
 
 // PrettyFormatter Tests
 
@@ -521,12 +477,7 @@ void TestFormatters::testAllFormattersWithEmptyMessage()
     QString jsonFormatted = jsonFormatter->format(emptyMsg);
     verifyValidJson(jsonFormatted);
     
-    // PatternFormatter
-    PatternFormatter patternFormatter("%{message}");
-    QString patternFormatted = patternFormatter.format(emptyMsg);
-    // PatternFormatter may return null QString for empty messages, but should not crash
-    Q_UNUSED(patternFormatted);
-    
+
     // PrettyFormatter
     auto prettyFormatter = PrettyFormatter::instance();
     QString prettyFormatted = prettyFormatter->format(emptyMsg);
@@ -552,10 +503,7 @@ void TestFormatters::testAllFormattersWithLongMessage()
     QString jsonFormatted = jsonFormatter->format(longMsg);
     verifyValidJson(jsonFormatted);
     
-    PatternFormatter patternFormatter("%{message}");
-    QString patternFormatted = patternFormatter.format(longMsg);
-    QVERIFY(!patternFormatted.isEmpty());
-    
+
     auto prettyFormatter = PrettyFormatter::instance();
     QString prettyFormatted = prettyFormatter->format(longMsg);
     QVERIFY(!prettyFormatted.isEmpty());
@@ -583,10 +531,7 @@ void TestFormatters::testAllFormattersWithSpecialCharacters()
     QJsonDocument doc = QJsonDocument::fromJson(jsonFormatted.toUtf8());
     QCOMPARE(doc.object()["message"].toString(), specialMessage);
     
-    PatternFormatter patternFormatter("%{message}");
-    QString patternFormatted = patternFormatter.format(specialMsg);
-    QVERIFY(patternFormatted.contains("Special chars"));
-    
+
     auto prettyFormatter = PrettyFormatter::instance();
     QString prettyFormatted = prettyFormatter->format(specialMsg);
     QVERIFY(prettyFormatted.contains("Special chars"));

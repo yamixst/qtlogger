@@ -20,6 +20,12 @@ add_executable(test_formatters_mocks
     mock_logmessage.h
 )
 
+# Create pattern formatter test executable
+add_executable(test_patternformatter
+    test_patternformatter.cpp
+    mock_logmessage.h
+)
+
 target_link_libraries(test_formatters
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
@@ -27,6 +33,12 @@ target_link_libraries(test_formatters
 )
 
 target_link_libraries(test_formatters_mocks
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Test
+    qtlogger
+)
+
+target_link_libraries(test_patternformatter
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
     qtlogger
@@ -40,6 +52,11 @@ target_include_directories(test_formatters_mocks PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src
 )
 
+target_include_directories(test_patternformatter PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src
+)
+
 # Add tests to CTest
 add_test(NAME FormattersTest COMMAND test_formatters)
 add_test(NAME FormattersMocksTest COMMAND test_formatters_mocks)
+add_test(NAME PatternFormatterTest COMMAND test_patternformatter)
