@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QVariant>
 #include <qlogging.h>
+#include <chrono>
 
 #ifndef QTLOGGER_NO_THREAD
 #    include <QThread>
@@ -27,7 +28,7 @@ public:
     {
     }
 
-    LogMessage(const LogMessage &lmsg) noexcept
+    inline LogMessage(const LogMessage &lmsg) noexcept
         : m_file(lmsg.m_context.file),
           m_function(lmsg.m_context.function),
           m_category(lmsg.m_context.category),
@@ -36,6 +37,7 @@ public:
                     m_category.constData()),
           m_message(lmsg.m_message),
           m_time(lmsg.m_time),
+          m_steadyTime(lmsg.m_steadyTime),
 #ifndef QTLOGGER_NO_THREAD
           m_threadId(lmsg.m_threadId),
 #endif
@@ -58,6 +60,7 @@ public:
     // System attributes
 
     inline QDateTime time() const { return m_time; }
+    inline std::chrono::steady_clock::time_point steadyTime() const { return m_steadyTime; }
     inline qint64 threadId() const
     {
 #ifndef QTLOGGER_NO_THREAD
@@ -120,6 +123,7 @@ private:
     const QString m_message;
 
     const QDateTime m_time = QDateTime::currentDateTime();
+    const std::chrono::steady_clock::time_point m_steadyTime = std::chrono::steady_clock::now();
 #ifndef QTLOGGER_NO_THREAD
     const qint64 m_threadId = reinterpret_cast<qint64>(QThread::currentThreadId());
 #endif
