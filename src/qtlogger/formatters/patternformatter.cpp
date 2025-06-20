@@ -325,7 +325,7 @@ public:
         }
 
         size_t estimatedLength = 0;
-        for (const auto &token : m_tokens) {
+        for (const auto &token : std::as_const(m_tokens)) {
             if (token->checkCondition(lmsg)) {
                 estimatedLength += token->estimatedLength();
             }
@@ -334,7 +334,7 @@ public:
         QString result;
         result.reserve(estimatedLength);
 
-        for (const auto &token : m_tokens) {
+        for (const auto &token : std::as_const(m_tokens)) {
             if (token->checkCondition(lmsg)) {
                 token->appendToString(lmsg, result);
             }
