@@ -186,6 +186,31 @@ public:
     }
 };
 
+class AttributeToken : public ConditionToken
+{
+public:
+    explicit AttributeToken(const QString &attributeName) : m_attributeName(attributeName) { }
+
+    void appendToString(const LogMessage &lmsg, QString &dest) const override
+    {
+        if (lmsg.hasAttribute(m_attributeName)) {
+            dest.append(lmsg.attribute(m_attributeName).toString());
+        } else {
+            dest.append(QStringLiteral("%{"));
+            dest.append(m_attributeName);
+            dest.append(QStringLiteral("}"));
+        }
+    }
+
+    size_t estimatedLength() const override
+    {
+        return 20; // Estimated average attribute value length
+    }
+
+private:
+    QString m_attributeName;
+};
+
 } // namespace
 
 class PatternFormatter::PatternFormatterPrivate
@@ -257,10 +282,8 @@ public:
                         pos = closingPos + 1;
                         continue;
                     } else {
-                        // Unknown placeholder, treat as literal
-                        literalText.append(m_pattern.mid(pos, closingPos - pos + 1));
-                        pos = closingPos + 1;
-                        continue;
+                        // Try to handle as custom attribute: %{attributeName}
+                        token = new AttributeToken(placeholder);
                     }
 
                     if (token) {
