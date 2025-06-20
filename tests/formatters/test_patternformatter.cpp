@@ -24,6 +24,11 @@ private slots:
     void testPatternFormatterWithEmptyMessage();
     void testPatternFormatterWithLongMessage();
     void testPatternFormatterWithSpecialCharacters();
+    
+    // Custom attributes tests
+    void testPatternFormatterWithCustomAttributes();
+    void testPatternFormatterWithMissingAttributes();
+    void testPatternFormatterWithMixedAttributes();
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -97,6 +102,56 @@ void TestPatternFormatter::testPatternFormatterWithSpecialCharacters()
     PatternFormatter patternFormatter("%{message}");
     QString patternFormatted = patternFormatter.format(specialMsg);
     QVERIFY(patternFormatted.contains("Special chars"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithCustomAttributes()
+{
+    QString pattern = "%{time} [%{type}] User: %{user} - ReqID: %{requestId} - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtInfoMsg, "Request completed");
+    msg.setAttribute("user", "john.doe");
+    msg.setAttribute("requestId", "12345");
+    
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Request completed"));
+    QVERIFY(formatted.contains("User: john.doe"));
+    QVERIFY(formatted.contains("ReqID: 12345"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithMissingAttributes()
+{
+    QString pattern = "User: %{user} - Duration: %{duration}ms - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtInfoMsg, "Test message");
+    msg.setAttribute("user", "jane.smith");
+    // Note: "duration" attribute is NOT set
+    
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Test message"));
+    QVERIFY(formatted.contains("User: jane.smith"));
+    QVERIFY(formatted.contains("%{duration}"));  // Missing attribute should appear as literal
+}
+
+void TestPatternFormatter::testPatternFormatterWithMixedAttributes()
+{
+    QString pattern = "%{type} | %{category} | %{customAttr} | %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::createWithCategory("app.test", QtWarningMsg, "Mixed test");
+    msg.setAttribute("customAttr", "customValue");
+    
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Mixed test"));
+    QVERIFY(formatted.contains("app.test"));
+    QVERIFY(formatted.contains("customValue"));
 }
 
 QTEST_MAIN(TestPatternFormatter)
