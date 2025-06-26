@@ -117,7 +117,7 @@ public:
     inline bool hasAttribute(const QString &name) const { return m_attributes.contains(name); }
     inline QVariantHash attributes() const { return m_attributes; }
 
-    // All message attributes including: type, line, file, function, category,
+    // All message attributes including: type, line, file, function, category, message,
     // time, threadId and all custom attributes
     QVariantHash allAttributes() const;
 
@@ -168,14 +168,15 @@ inline QtMsgType stringToQtMsgType(const QString &str, QtMsgType a_default= QtDe
 inline QVariantHash LogMessage::allAttributes() const
 {
     auto attrs = QVariantHash {
-        { QStringLiteral("type"), qtMsgTypeToString(m_type) },
-        { QStringLiteral("line"), m_context.line },
-        { QStringLiteral("file"), m_context.file },
-        { QStringLiteral("function"), m_context.function },
-        { QStringLiteral("category"), m_context.category },
-        { QStringLiteral("time"), m_time },
+        { QStringLiteral("type"), qtMsgTypeToString(type()) },
+        { QStringLiteral("line"), line() },
+        { QStringLiteral("file"), file() },
+        { QStringLiteral("function"), function() },
+        { QStringLiteral("category"), category() },
+        { QStringLiteral("message"), message() },
+        { QStringLiteral("time"), time() },
 #ifndef QTLOGGER_NO_THREAD
-        { QStringLiteral("threadId"), m_qthreadptr },
+        { QStringLiteral("threadId"), threadId() },
 #endif
     };
 
