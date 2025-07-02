@@ -9,6 +9,9 @@ namespace QtLogger {
 
 namespace {
 
+// Static variables for process start time
+static const auto g_processStartTime = std::chrono::steady_clock::now();
+
 class Token
 {
 public:
@@ -47,10 +50,7 @@ class LiteralToken : public ConditionToken
 public:
     explicit LiteralToken(const QString &text) : m_text(text) { }
 
-    void appendToString(const LogMessage &, QString &dest) const override
-    {
-        dest.append(m_text);
-    }
+    void appendToString(const LogMessage &, QString &dest) const override { dest.append(m_text); }
 
     size_t estimatedLength() const override { return m_text.size(); }
 
@@ -157,17 +157,39 @@ public:
 class TimeToken : public ConditionToken
 {
 public:
-    TimeToken() { }
+    explicit TimeToken(const QString &format = QString()) : m_format(format) { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(lmsg.time().toString(Qt::ISODate));
+        if (m_format == "process") {
+            // Time since process started in seconds
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    lmsg.steadyTime() - g_processStartTime);
+            double seconds = duration.count() / 1000.0;
+            dest.append(QString::number(seconds, 'f', 3));
+        } else if (m_format == "boot") {
+            // Time since system boot in seconds using steady_clock epoch
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    lmsg.steadyTime().time_since_epoch());
+            double seconds = duration.count() / 1000.0;
+            dest.append(QString::number(seconds, 'f', 3));
+        } else if (m_format.isEmpty()) {
+            dest.append(lmsg.time().toString(Qt::ISODate));
+        } else {
+            dest.append(lmsg.time().toString(m_format));
+        }
     }
 
     size_t estimatedLength() const override
     {
-        return 20; // Maximum length of "2023-01-01T00:00:00"
+        if (m_format == "process" || m_format == "boot") {
+            return 15; // Enough for "123456789.123"
+        }
+        return m_format.isEmpty() ? 20 : m_format.length() * 2; // Estimated length based on format
     }
+
+private:
+    QString m_format;
 };
 
 class ThreadIdToken : public ConditionToken
@@ -264,8 +286,12 @@ public:
                         token = new FunctionToken();
                     } else if (placeholder == "category") {
                         token = new CategoryToken();
-                    } else if (placeholder == "time") {
-                        token = new TimeToken();
+                    } else if (placeholder == "time" || placeholder.startsWith("time ")) {
+                        QString timeFormat;
+                        if (placeholder.startsWith("time ")) {
+                            timeFormat = placeholder.mid(5).trimmed();
+                        }
+                        token = new TimeToken(timeFormat);
                     } else if (placeholder == "threadid") {
                         token = new ThreadIdToken();
                     } else if (placeholder == "message") {
