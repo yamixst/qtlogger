@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
                         .arg(lmsg.attribute("seq_number").toInt())
                         .arg(lmsg.attribute("seq_number_after_filter").toInt())
                         .arg(lmsg.message())
-                        .arg(lmsg.category() == QStringLiteral("default") ? QString() : lmsg.category());
+                        .arg(lmsg.category() == QLatin1String("default") ? QString() : lmsg.category());
             })
             .sendToStdErr()
         .end()
