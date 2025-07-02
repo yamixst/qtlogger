@@ -161,13 +161,13 @@ public:
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        if (m_format == "process") {
+        if (m_format == QLatin1String("process")) {
             // Time since process started in seconds
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     lmsg.steadyTime() - g_processStartTime);
             double seconds = duration.count() / 1000.0;
             dest.append(QString::number(seconds, 'f', 3));
-        } else if (m_format == "boot") {
+        } else if (m_format == QLatin1String("boot")) {
             // Time since system boot in seconds using steady_clock epoch
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     lmsg.steadyTime().time_since_epoch());
@@ -182,7 +182,7 @@ public:
 
     size_t estimatedLength() const override
     {
-        if (m_format == "process" || m_format == "boot") {
+        if (m_format == QLatin1String("process") || m_format == QLatin1String("boot")) {
             return 15; // Enough for "123456789.123"
         }
         return m_format.isEmpty() ? 20 : m_format.length() * 2; // Estimated length based on format
@@ -276,34 +276,34 @@ public:
 
                     ConditionToken *token = nullptr;
 
-                    if (placeholder == "type") {
+                    if (placeholder == QLatin1String("type")) {
                         token = new TypeToken();
-                    } else if (placeholder == "line") {
+                    } else if (placeholder == QLatin1String("line")) {
                         token = new LineToken();
-                    } else if (placeholder == "file") {
+                    } else if (placeholder == QLatin1String("file")) {
                         token = new FileToken();
-                    } else if (placeholder == "function") {
+                    } else if (placeholder == QLatin1String("function")) {
                         token = new FunctionToken();
-                    } else if (placeholder == "category") {
+                    } else if (placeholder == QLatin1String("category")) {
                         token = new CategoryToken();
-                    } else if (placeholder == "time" || placeholder.startsWith("time ")) {
+                    } else if (placeholder == QLatin1String("time") || placeholder.startsWith(QLatin1String("time "))) {
                         QString timeFormat;
-                        if (placeholder.startsWith("time ")) {
+                        if (placeholder.startsWith(QLatin1String("time "))) {
                             timeFormat = placeholder.mid(5).trimmed();
                         }
                         token = new TimeToken(timeFormat);
-                    } else if (placeholder == "threadid") {
+                    } else if (placeholder == QLatin1String("threadid")) {
                         token = new ThreadIdToken();
-                    } else if (placeholder == "message") {
+                    } else if (placeholder == QLatin1String("message")) {
                         token = new MessageToken();
-                    } else if (placeholder.startsWith("if-")) {
+                    } else if (placeholder.startsWith(QLatin1String("if-"))) {
                         // Handle conditional: %{if-debug}, %{if-warning}, etc.
                         QString conditionType = placeholder.mid(3); // Remove "if-"
                         currentCondition = stringToQtMsgType(conditionType, QtDebugMsg);
                         hasCondition = true;
                         pos = closingPos + 1;
                         continue;
-                    } else if (placeholder == "endif") {
+                    } else if (placeholder == QLatin1String("endif")) {
                         hasCondition = false;
                         pos = closingPos + 1;
                         continue;
