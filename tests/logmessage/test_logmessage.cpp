@@ -183,7 +183,7 @@ void TestLogMessage::testThreadId()
     auto context = Test::MockContext::create();
     LogMessage msg(QtDebugMsg, context, "test");
     
-    auto currentThreadId = reinterpret_cast<qintptr>(QThread::currentThreadId());
+    auto currentThreadId = reinterpret_cast<quint64>(QThread::currentThreadId());
     QCOMPARE(msg.threadId(), currentThreadId);
 }
 
