@@ -10,6 +10,8 @@
 #include <QThread>
 #include <QSignalSpy>
 #include <QCoreApplication>
+#include <QtConcurrent>
+#include <QFuture>
 
 #include "qtlogger/logger.h"
 #include "qtlogger/logmessage.h"
@@ -330,23 +332,21 @@ void TestLogger::testThreadSafety()
     
     const int numThreads = 5;
     const int messagesPerThread = 10;
-    QList<QThread*> threads;
+    QList<QFuture<void>> futures;
     
     for (int i = 0; i < numThreads; ++i) {
-        QThread *thread = QThread::create([this, i, messagesPerThread]() {
+        QFuture<void> future = QtConcurrent::run([this, i, messagesPerThread]() {
             for (int j = 0; j < messagesPerThread; ++j) {
                 QString message = QString("Thread %1, Message %2").arg(i).arg(j);
                 m_logger->processMessage(QtDebugMsg, QMessageLogContext(), message);
             }
         });
-        threads.append(thread);
-        thread->start();
+        futures.append(future);
     }
     
     // Wait for all threads to complete
-    for (QThread *thread : threads) {
-        thread->wait();
-        delete thread;
+    for (QFuture<void> &future : futures) {
+        future.waitForFinished();
     }
     
     // Should have received all messages

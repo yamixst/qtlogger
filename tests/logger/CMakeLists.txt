@@ -6,7 +6,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test Concurrent)
 
 # Create test executable
 add_executable(test_logger
@@ -18,6 +18,7 @@ add_executable(test_logger
 target_link_libraries(test_logger
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
+    Qt${QT_VERSION_MAJOR}::Concurrent
     qtlogger
 )
 
