@@ -208,7 +208,11 @@ public:
     QStringList readLines()
     {
         QString content = readAll();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         return content.split('\n', Qt::SkipEmptyParts);
+#else
+        return content.split('\n', QString::SkipEmptyParts);
+#endif
     }
 
 private:
