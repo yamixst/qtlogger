@@ -125,19 +125,25 @@ public:
 class FunctionToken : public ConditionToken
 {
 public:
-    FunctionToken() { }
+    FunctionToken(bool cleanup = true) : m_cleanup(cleanup) { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(QString::fromLatin1(cleanup(lmsg.function())));
+        if (m_cleanup) {
+            dest.append(QString::fromLatin1(cleanup(lmsg.function())));
+        } else {
+            dest.append(QString::fromLatin1(lmsg.function()));
+        }
     }
 
     size_t estimatedLength() const override
     {
-        return 20; // Maximum length of "functionName"
+        return m_cleanup ? 20 : 40;
     }
 
 private:
+    bool m_cleanup;
+
     static QByteArray cleanup(QByteArray func)
     {
         if (func.isEmpty())
@@ -512,7 +518,9 @@ public:
                     } else if (placeholder == QLatin1String("file")) {
                         token = new FileToken();
                     } else if (placeholder == QLatin1String("function")) {
-                        token = new FunctionToken();
+                        token = new FunctionToken(false);
+                    } else if (placeholder == QLatin1String("func")) {
+                        token = new FunctionToken(true);
                     } else if (placeholder == QLatin1String("category")) {
                         token = new CategoryToken();
                     } else if (placeholder == QLatin1String("time")
