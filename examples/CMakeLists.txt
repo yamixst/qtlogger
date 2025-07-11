@@ -1,3 +1,4 @@
 add_subdirectory(one_line_config)
 add_subdirectory(simple_config)
 add_subdirectory(config_from_file)
+add_subdirectory(pattern_formatter)
