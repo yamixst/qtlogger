@@ -129,12 +129,241 @@ public:
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(lmsg.function());
+        dest.append(QString::fromLatin1(cleanup(lmsg.function())));
     }
 
     size_t estimatedLength() const override
     {
         return 20; // Maximum length of "functionName"
+    }
+
+private:
+    static QByteArray cleanup(QByteArray func)
+    {
+        if (func.isEmpty())
+            return func;
+
+        // Helper lambda: find balanced bracket in reverse
+        auto findBalancedReverse = [&func](char open, char close, int startPos) -> int {
+            int count = 1;
+            int pos = startPos - 1;
+            while (pos >= 0 && count > 0) {
+                char c = func.at(pos);
+                if (c == close)
+                    ++count;
+                else if (c == open)
+                    --count;
+                --pos;
+            }
+            return (count == 0) ? pos + 1 : -1;
+        };
+
+        // Remove compiler metadata like [with T = int]
+        if (func.endsWith(']') && !func.startsWith('+') && !func.startsWith('-')) {
+            int openBracket = findBalancedReverse('[', ']', func.size() - 1);
+            if (openBracket != -1)
+                func.truncate(openBracket);
+        }
+        while (func.endsWith(' '))
+            func.chop(1);
+
+        // Normalize operator spacing
+        func.replace("operator ", "operator");
+
+        // Try to handle function pointer return types: returntype (*name(args))(return_args)
+        bool handledFunctionPointer = false;
+        int parenOpenIdx = func.indexOf(")(");
+        if (parenOpenIdx != -1) {
+            int ptrParen = func.indexOf("(*");
+            if (ptrParen != -1 && ptrParen < parenOpenIdx) {
+                int nameStart = ptrParen + 2;
+                int parenDepth = 0;
+                int argsParen = -1;
+                for (int i = nameStart; i < parenOpenIdx; ++i) {
+                    char c = func.at(i);
+                    if (c == '(') {
+                        if (parenDepth == 0)
+                            argsParen = i;
+                        ++parenDepth;
+                    } else if (c == ')') {
+                        --parenDepth;
+                    }
+                }
+                if (argsParen != -1 && argsParen > nameStart) {
+                    func = func.mid(nameStart, argsParen - nameStart);
+                    handledFunctionPointer = true;
+                }
+            }
+        }
+
+        if (!handledFunctionPointer) {
+            // Remove function arguments
+            int end = func.lastIndexOf(')');
+            if (end != -1) {
+                int openParen = findBalancedReverse('(', ')', end);
+                if (openParen != -1) {
+                    bool isOperatorCall =
+                            (openParen >= 8 && func.mid(openParen - 8, 8) == "operator");
+                    if (!isOperatorCall)
+                        func.truncate(openParen);
+                }
+            }
+
+            // Remove trailing qualifiers
+            static const char *const qualifiers[] = { " const", " volatile", " noexcept",
+                                                      " override", " final" };
+            bool found;
+            do {
+                found = false;
+                for (const char *qual : qualifiers) {
+                    if (func.endsWith(qual)) {
+                        func.chop(static_cast<int>(qstrlen(qual)));
+                        found = true;
+                        break;
+                    }
+                }
+            } while (found);
+
+            // Extract function name (remove return type)
+            int operatorPos = func.lastIndexOf("operator");
+            if (operatorPos != -1) {
+                int scanPos = operatorPos - 1;
+                while (scanPos >= 0 && func.at(scanPos) == ' ')
+                    --scanPos;
+
+                bool extracted = false;
+                while (scanPos >= 0) {
+                    if (scanPos >= 1 && func.at(scanPos) == ':' && func.at(scanPos - 1) == ':') {
+                        scanPos -= 2;
+                        while (scanPos >= 0 && func.at(scanPos) == ' ')
+                            --scanPos;
+                        if (scanPos >= 0 && func.at(scanPos) == ')') {
+                            int op = findBalancedReverse('(', ')', scanPos + 1);
+                            if (op != -1) {
+                                scanPos = op - 1;
+                                continue;
+                            }
+                        }
+                        if (scanPos >= 0 && func.at(scanPos) == '>') {
+                            int oa = findBalancedReverse('<', '>', scanPos + 1);
+                            if (oa != -1) {
+                                scanPos = oa - 1;
+                                continue;
+                            }
+                        }
+                        while (scanPos >= 0
+                               && (QChar(func.at(scanPos)).isLetterOrNumber()
+                                   || func.at(scanPos) == '_'))
+                            --scanPos;
+                    } else if (func.at(scanPos) == ' ') {
+                        func = func.mid(scanPos + 1);
+                        extracted = true;
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+                if (!extracted) {
+                    int firstSpace = func.indexOf(' ');
+                    if (firstSpace != -1 && firstSpace < operatorPos)
+                        func = func.mid(firstSpace + 1);
+                }
+            } else {
+                int pos = func.size() - 1;
+                int parenCount = 0, angleCount = 0;
+                while (pos >= 0) {
+                    char c = func.at(pos);
+                    if (c == ')') {
+                        ++parenCount;
+                        --pos;
+                        continue;
+                    }
+                    if (c == '(' && parenCount > 0) {
+                        --parenCount;
+                        --pos;
+                        continue;
+                    }
+                    if (c == '>') {
+                        ++angleCount;
+                        --pos;
+                        continue;
+                    }
+                    if (c == '<' && angleCount > 0) {
+                        --angleCount;
+                        --pos;
+                        continue;
+                    }
+                    if (parenCount > 0 || angleCount > 0) {
+                        --pos;
+                        continue;
+                    }
+                    if (c == ' ') {
+                        func = func.mid(pos + 1);
+                        break;
+                    }
+                    --pos;
+                }
+            }
+            while (func.startsWith('*') || func.startsWith('&') || func.startsWith(' '))
+                func = func.mid(1);
+        }
+
+        // Remove empty parentheses before :: (e.g., method():: -> method::)
+        int pos = 0;
+        while ((pos = func.indexOf("()::", pos)) != -1) {
+            if (pos >= 8 && func.mid(pos - 8, 8) == "operator") {
+                pos += 4;
+                continue;
+            }
+            int angleDepth = 0;
+            bool insideTemplate = false;
+            for (int i = pos - 1; i >= 0; --i) {
+                if (func.at(i) == '>')
+                    ++angleDepth;
+                else if (func.at(i) == '<') {
+                    if (angleDepth == 0) {
+                        insideTemplate = true;
+                        break;
+                    }
+                    --angleDepth;
+                }
+            }
+            if (insideTemplate) {
+                pos += 4;
+                continue;
+            }
+            func.remove(pos, 2);
+        }
+
+        // Remove template parameters
+        while (true) {
+            int closeAngle = func.lastIndexOf('>');
+            if (closeAngle == -1)
+                break;
+            int opCheck = func.lastIndexOf("operator", closeAngle);
+            if (opCheck != -1) {
+                bool isOperatorSymbol = true;
+                for (int i = opCheck + 8; i <= closeAngle; ++i) {
+                    char ch = func.at(i);
+                    if (ch != '<' && ch != '>' && !QByteArray("=!+-*/%^&|~").contains(ch)) {
+                        isOperatorSymbol = false;
+                        break;
+                    }
+                }
+                if (isOperatorSymbol)
+                    break;
+            }
+            int openAngle = findBalancedReverse('<', '>', closeAngle);
+            if (openAngle == -1)
+                break;
+            if (openAngle >= 8 && func.mid(openAngle - 8, 8) == "operator")
+                break;
+            if (func.mid(openAngle + 1, closeAngle - openAngle - 1).startsWith("lambda"))
+                break;
+            func.remove(openAngle, closeAngle - openAngle + 1);
+        }
+
+        return func;
     }
 };
 
@@ -286,7 +515,8 @@ public:
                         token = new FunctionToken();
                     } else if (placeholder == QLatin1String("category")) {
                         token = new CategoryToken();
-                    } else if (placeholder == QLatin1String("time") || placeholder.startsWith(QLatin1String("time "))) {
+                    } else if (placeholder == QLatin1String("time")
+                               || placeholder.startsWith(QLatin1String("time "))) {
                         QString timeFormat;
                         if (placeholder.startsWith(QLatin1String("time "))) {
                             timeFormat = placeholder.mid(5).trimmed();
