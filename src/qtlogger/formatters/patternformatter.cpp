@@ -122,6 +122,49 @@ public:
     }
 };
 
+class ShortFileToken : public ConditionToken
+{
+public:
+    ShortFileToken(const QString &baseDir = QString()) : m_baseDir(baseDir) { }
+
+    void appendToString(const LogMessage &lmsg, QString &dest) const override
+    {
+        QString file = lmsg.file();
+        if (m_baseDir.isEmpty()) {
+            // No basedir specified - return only filename without directory
+            int lastSlash = file.lastIndexOf(QLatin1Char('/'));
+            if (lastSlash == -1) {
+                lastSlash = file.lastIndexOf(QLatin1Char('\\'));
+            }
+            if (lastSlash != -1) {
+                dest.append(file.mid(lastSlash + 1));
+            } else {
+                dest.append(file);
+            }
+        } else {
+            // Strip basedir prefix if present
+            if (file.startsWith(m_baseDir)) {
+                QString result = file.mid(m_baseDir.length());
+                // Remove leading slash if present
+                if (result.startsWith(QLatin1Char('/')) || result.startsWith(QLatin1Char('\\'))) {
+                    result = result.mid(1);
+                }
+                dest.append(result);
+            } else {
+                dest.append(file);
+            }
+        }
+    }
+
+    size_t estimatedLength() const override
+    {
+        return 20;
+    }
+
+private:
+    QString m_baseDir;
+};
+
 class FunctionToken : public ConditionToken
 {
 public:
@@ -517,6 +560,13 @@ public:
                         token = new LineToken();
                     } else if (placeholder == QLatin1String("file")) {
                         token = new FileToken();
+                    } else if (placeholder == QLatin1String("shortfile")
+                               || placeholder.startsWith(QLatin1String("shortfile "))) {
+                        QString baseDir;
+                        if (placeholder.startsWith(QLatin1String("shortfile "))) {
+                            baseDir = placeholder.mid(10).trimmed();
+                        }
+                        token = new ShortFileToken(baseDir);
                     } else if (placeholder == QLatin1String("function")) {
                         token = new FunctionToken(false);
                     } else if (placeholder == QLatin1String("func")) {
