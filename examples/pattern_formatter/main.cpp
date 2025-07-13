@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     // %{category}     - Logging category name
     // %{threadid}     - Thread ID
     // %{file}         - Source file name
+    // %{shortfile [basedir]} - Source file name without base directory
     // %{line}         - Line number
     // %{function}     - Function name
     // %{func}         - Short function name
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
             "#%{seq_number} "
             "%{time process}s "
             "%{time yyyy-MM-dd HH:mm:ss.zzz} "
-            "%{file}:%{line} - %{func}: "
+            "%{shortfile}:%{line} - %{func}: "
             "/%{threadid}/ "
             "[%{category}] "
             "%{if-debug}DBG%{endif}"
