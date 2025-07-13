@@ -38,7 +38,9 @@ private slots:
     void testPatternFormatterWithMissingAttributes();
     void testPatternFormatterWithMixedAttributes();
 
-
+    // Shortfile tests
+    void testPatternFormatterWithShortfile();
+    void testPatternFormatterWithShortfileBaseDir();
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -272,6 +274,47 @@ void TestPatternFormatter::testPatternFormatterWithBootTime()
 
 
 
+
+void TestPatternFormatter::testPatternFormatterWithShortfile()
+{
+    QString pattern = "%{shortfile}:%{line} - %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::createWithLocation("/home/user/project/src/module/file.cpp", 42, QtDebugMsg, "Shortfile test");
+    QString formatted = formatter.format(msg);
+
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Shortfile test"));
+    // Without basedir, should only contain the filename
+    QVERIFY(formatted.contains("file.cpp:42"));
+    QVERIFY(!formatted.contains("/home/user"));
+    QVERIFY(!formatted.contains("module/"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithShortfileBaseDir()
+{
+    QString pattern = "%{shortfile /home/user/project}:%{line} - %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::createWithLocation("/home/user/project/src/module/file.cpp", 123, QtWarningMsg, "Basedir test");
+    QString formatted = formatter.format(msg);
+
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Basedir test"));
+    // With basedir, should contain relative path from basedir
+    QVERIFY(formatted.contains("src/module/file.cpp:123"));
+    QVERIFY(!formatted.contains("/home/user/project"));
+
+    // Test when file path doesn't start with basedir
+    QString pattern2 = "%{shortfile /other/path}:%{line} - %{message}";
+    PatternFormatter formatter2(pattern2);
+
+    auto msg2 = MockLogMessage::createWithLocation("/home/user/project/src/file.cpp", 456, QtInfoMsg, "No match test");
+    QString formatted2 = formatter2.format(msg2);
+
+    // Should keep the full path if basedir doesn't match
+    QVERIFY(formatted2.contains("/home/user/project/src/file.cpp:456"));
+}
 
 QTEST_MAIN(TestPatternFormatter)
 #include "test_patternformatter.moc"
