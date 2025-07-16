@@ -41,6 +41,9 @@ private slots:
     // Shortfile tests
     void testPatternFormatterWithShortfile();
     void testPatternFormatterWithShortfileBaseDir();
+
+    // Thread tests
+    void testPatternFormatterWithQThreadPtr();
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -314,6 +317,32 @@ void TestPatternFormatter::testPatternFormatterWithShortfileBaseDir()
 
     // Should keep the full path if basedir doesn't match
     QVERIFY(formatted2.contains("/home/user/project/src/file.cpp:456"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithQThreadPtr()
+{
+    QString pattern = "Thread: %{qthreadptr} - %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtDebugMsg, "Thread pointer test");
+    QString formatted = formatter.format(msg);
+
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Thread pointer test"));
+    QVERIFY(formatted.contains("Thread: 0x"));
+
+    // Extract the thread pointer and verify it's a valid hex number
+    QRegularExpression re("Thread: (0x[0-9a-fA-F]+)");
+    QRegularExpressionMatch match = re.match(formatted);
+    QVERIFY(match.hasMatch());
+
+    QString ptrStr = match.captured(1);
+    QVERIFY(ptrStr.startsWith("0x"));
+    
+    bool ok = false;
+    quintptr ptrValue = ptrStr.mid(2).toULongLong(&ok, 16);
+    QVERIFY(ok);
+    QVERIFY(ptrValue != 0);  // Thread pointer should not be null
 }
 
 QTEST_MAIN(TestPatternFormatter)
