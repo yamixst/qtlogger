@@ -506,17 +506,19 @@ public:
 class AttributeToken : public ConditionToken
 {
 public:
-    explicit AttributeToken(const QString &attributeName) : m_attributeName(attributeName) { }
+    explicit AttributeToken(const QString &attributeName, bool optional = false)
+        : m_attributeName(attributeName), m_optional(optional) { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
         if (lmsg.hasAttribute(m_attributeName)) {
             dest.append(lmsg.attribute(m_attributeName).toString());
-        } else {
+        } else if (!m_optional) {
             dest.append(QStringLiteral("%{"));
             dest.append(m_attributeName);
             dest.append(QStringLiteral("}"));
         }
+        // If optional and attribute not found, append nothing
     }
 
     size_t estimatedLength() const override
@@ -526,6 +528,7 @@ public:
 
 private:
     QString m_attributeName;
+    bool m_optional;
 };
 
 } // namespace
@@ -615,8 +618,10 @@ public:
                         pos = closingPos + 1;
                         continue;
                     } else {
-                        // Try to handle as custom attribute: %{attributeName}
-                        token = new AttributeToken(placeholder);
+                        // Try to handle as custom attribute: %{attributeName} or %{attributeName?}
+                        bool optional = placeholder.endsWith(QLatin1Char('?'));
+                        QString attrName = optional ? placeholder.chopped(1) : placeholder;
+                        token = new AttributeToken(attrName, optional);
                     }
 
                     if (token) {
