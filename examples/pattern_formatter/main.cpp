@@ -54,19 +54,18 @@ int main(int argc, char *argv[])
 
     gQtLogger
         .addSeqNumber()
-        .format(QStringLiteral(
-            "#%{seq_number?} "
-            "::%{myattr?2:1} "
-            "%{time process}s "
-            "%{time yyyy-MM-dd HH:mm:ss.zzz} "
-            "%{shortfile}:%{line} - %{func}: "
-            "%{qthreadptr} "
-            "[%{category}] "
-            "%{if-debug}DBG%{endif}"
-            "%{if-info}INF%{endif}"
-            "%{if-warning}WRN%{endif}"
-            "%{if-critical}CRT%{endif}"
-            ": %{message}"))
+        .format("#%{seq_number?} "
+                "::%{myattr?2:1} "
+                "%{time process}s "
+                "%{time yyyy-MM-dd HH:mm:ss.zzz} "
+                "%{shortfile}:%{line} - %{func}: "
+                "%{qthreadptr} "
+                "[%{category}] "
+                "%{if-debug}DBG%{endif}"
+                "%{if-info}INF%{endif}"
+                "%{if-warning}WRN%{endif}"
+                "%{if-critical}CRT%{endif}"
+                ": %{message}")
         .sendToStdOut();
 
     gQtLogger.installMessageHandler();
