@@ -665,16 +665,16 @@ public:
                             int removeBefore = 0;
                             int removeAfter = 0;
 
-                            int colonPos = suffix.indexOf(QLatin1Char(':'));
-                            if (colonPos == -1) {
+                            int commaPos = suffix.indexOf(QLatin1Char(','));
+                            if (commaPos == -1) {
                                 // Only removeBefore: %{attr?N}
                                 removeBefore = suffix.toInt();
                             } else {
-                                // Both or only removeAfter: %{attr?N:M} or %{attr?:M}
-                                if (colonPos > 0) {
-                                    removeBefore = suffix.left(colonPos).toInt();
+                                // Both or only removeAfter: %{attr?N,M} or %{attr?,M}
+                                if (commaPos > 0) {
+                                    removeBefore = suffix.left(commaPos).toInt();
                                 }
-                                removeAfter = suffix.mid(colonPos + 1).toInt();
+                                removeAfter = suffix.mid(commaPos + 1).toInt();
                             }
                             token = new AttributeToken(attrName, true, removeBefore, removeAfter);
                         } else {

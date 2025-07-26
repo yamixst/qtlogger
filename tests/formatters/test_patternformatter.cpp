@@ -389,8 +389,8 @@ void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveBefore
 
 void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveAfter()
 {
-    // Test %{attr?:M} - if attribute not found, remove M chars after
-    QString pattern = "time //%{attrname?:1} message";
+    // Test %{attr?,M} - if attribute not found, remove M chars after
+    QString pattern = "time //%{attrname?,1} message";
     PatternFormatter formatter(pattern);
 
     // With attribute set
@@ -407,8 +407,8 @@ void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveAfter(
 
 void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveBeforeAndAfter()
 {
-    // Test %{attr?N:M} - if attribute not found, remove N chars before and M after
-    QString pattern = "time //%{attrname?2:1} message";
+    // Test %{attr?N,M} - if attribute not found, remove N chars before and M after
+    QString pattern = "time //%{attrname?2,1} message";
     PatternFormatter formatter(pattern);
 
     // With attribute set

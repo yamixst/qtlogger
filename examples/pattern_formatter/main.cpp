@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     // %{ATTR}         - Custom attribute value (e.g., %{seq_number}, %{user_id})
     // %{ATTR?}        - Optional attribute (no output if not set)
     // %{ATTR?N}       - Optional attribute, remove N characters before if not set
-    // %{ATTR?N:M}     - Optional attribute, remove N chars before and M chars after if not set
+    // %{ATTR?N,M}     - Optional attribute, remove N chars before and M chars after if not set
     //
     // Conditional blocks:
     // %{if-debug}...%{endif}    - Show content only for debug messages
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     gQtLogger
         .addSeqNumber()
         .format("#%{seq_number?} "
-                "::%{myattr?2:1} "
+                "::%{myattr?2,1} "
                 "%{time process}s "
                 "%{time yyyy-MM-dd HH:mm:ss.zzz} "
                 "%{shortfile}:%{line} - %{func}: "
