@@ -43,6 +43,36 @@ int main(int argc, char *argv[])
     // %{ATTR?N}       - Optional attribute, remove N characters before if not set
     // %{ATTR?N,M}     - Optional attribute, remove N chars before and M chars after if not set
     //
+    // Fixed-width formatting:
+    // Any placeholder can have a format spec appended after colon:
+    //   %{PLACEHOLDER:[fill][align][width][!]}
+    //
+    // Alignment characters:
+    //   <             - Left align (default for strings)
+    //   >             - Right align
+    //   ^             - Center align
+    //
+    // Fill character:
+    //   Any single character before alignment (default is space)
+    //
+    // Width:
+    //   Positive integer specifying minimum field width
+    //
+    // Truncation (!):
+    //   Add ! at the end to truncate values longer than width
+    //   Without ! values longer than width are not truncated
+    //
+    // Examples:
+    //   %{type:<10}     - Left align, width 10, pad with spaces
+    //   %{type:>10}     - Right align, width 10, pad with spaces
+    //   %{type:^10}     - Center align, width 10 (extra padding goes right)
+    //   %{type:*<10}    - Left align, width 10, pad with '*'
+    //   %{type:_^15}    - Center align, width 15, pad with '_'
+    //   %{type:<8!}     - Left align, width 8, truncate if longer
+    //   %{type:*^10!}   - Center align, width 10, pad with '*', truncate if longer
+    //   %{category:<6!} - Left align, width 6, truncate if longer
+    //   %{time process:>9} - Right align process time to width 9
+    //
     // Conditional blocks:
     // %{if-debug}...%{endif}    - Show content only for debug messages
     // %{if-info}...%{endif}     - Show content only for info messages
@@ -54,13 +84,13 @@ int main(int argc, char *argv[])
 
     gQtLogger
         .addSeqNumber()
-        .format("#%{seq_number?} "
-                "::%{myattr?2,1} "
-                "%{time process}s "
+        .format("#%{seq_number?:0>4} "
+                "::%{myattr?2,1:^20} "
+                "%{time process:>9}s "
                 "%{time yyyy-MM-dd HH:mm:ss.zzz} "
                 "%{shortfile}:%{line} - %{func}: "
                 "%{qthreadptr} "
-                "[%{category}] "
+                "[%{category:<6!}] "
                 "%{if-debug}DBG%{endif}"
                 "%{if-info}INF%{endif}"
                 "%{if-warning}WRN%{endif}"
