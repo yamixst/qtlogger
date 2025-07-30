@@ -48,7 +48,7 @@ private:
     bool m_hasCondition = false;
 };
 
-class FixedWidthToken : public ConditionToken
+class FormattedToken : public ConditionToken
 {
 public:
     void setFormatSpec(QChar fill, QChar align, int width, bool truncate = false,
@@ -147,7 +147,7 @@ private:
     bool m_truncateOnly = false;
 };
 
-class LiteralToken : public FixedWidthToken
+class LiteralToken : public FormattedToken
 {
 public:
     explicit LiteralToken(const QString &text) : m_text(text) { }
@@ -176,7 +176,7 @@ private:
     QString m_text;
 };
 
-class MessageToken : public FixedWidthToken
+class MessageToken : public FormattedToken
 {
 public:
     MessageToken() { }
@@ -192,7 +192,7 @@ public:
     }
 };
 
-class TypeToken : public FixedWidthToken
+class TypeToken : public FormattedToken
 {
 public:
     TypeToken() { }
@@ -208,7 +208,7 @@ public:
     }
 };
 
-class LineToken : public FixedWidthToken
+class LineToken : public FormattedToken
 {
 public:
     LineToken() { }
@@ -224,7 +224,7 @@ public:
     }
 };
 
-class FileToken : public FixedWidthToken
+class FileToken : public FormattedToken
 {
 public:
     FileToken() { }
@@ -240,7 +240,7 @@ public:
     }
 };
 
-class ShortFileToken : public FixedWidthToken
+class ShortFileToken : public FormattedToken
 {
 public:
     ShortFileToken(const QString &baseDir = QString()) : m_baseDir(baseDir) { }
@@ -285,7 +285,7 @@ private:
     QString m_baseDir;
 };
 
-class FunctionToken : public FixedWidthToken
+class FunctionToken : public FormattedToken
 {
 public:
     FunctionToken(bool cleanup = true) : m_cleanup(cleanup) { }
@@ -540,7 +540,7 @@ private:
     }
 };
 
-class CategoryToken : public FixedWidthToken
+class CategoryToken : public FormattedToken
 {
 public:
     CategoryToken() { }
@@ -556,7 +556,7 @@ public:
     }
 };
 
-class TimeToken : public FixedWidthToken
+class TimeToken : public FormattedToken
 {
 public:
     explicit TimeToken(const QString &format = QString()) : m_format(format) { }
@@ -598,7 +598,7 @@ private:
     QString m_format;
 };
 
-class ThreadIdToken : public FixedWidthToken
+class ThreadIdToken : public FormattedToken
 {
 public:
     ThreadIdToken() { }
@@ -614,7 +614,7 @@ public:
     }
 };
 
-class QThreadPtrToken : public FixedWidthToken
+class QThreadPtrToken : public FormattedToken
 {
 public:
     QThreadPtrToken() { }
@@ -631,7 +631,7 @@ public:
     }
 };
 
-class AttributeToken : public FixedWidthToken
+class AttributeToken : public FormattedToken
 {
 public:
     explicit AttributeToken(const QString &attributeName, bool optional = false,
@@ -828,7 +828,7 @@ public:
                         }
                     }
 
-                    FixedWidthToken *token = nullptr;
+                    FormattedToken *token = nullptr;
 
                     if (placeholder == QLatin1String("type")) {
                         token = new TypeToken();
