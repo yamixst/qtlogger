@@ -43,35 +43,43 @@ int main(int argc, char *argv[])
     // %{ATTR?N}       - Optional attribute, remove N characters before if not set
     // %{ATTR?N,M}     - Optional attribute, remove N chars before and M chars after if not set
     //
-    // Fixed-width formatting:
+    // Fixed-width formatting (Python-style):
     // Any placeholder can have a format spec appended after colon:
-    //   %{PLACEHOLDER:[fill][align][width][!]}
+    //   %{PLACEHOLDER:[fill][align][width]}     - padding only
+    //   %{PLACEHOLDER:[width!]}                 - truncation only
+    //   %{PLACEHOLDER:[align][width!]}          - truncation with direction
+    //   %{PLACEHOLDER:[fill][align][width!]}    - truncation AND padding
     //
     // Alignment characters:
-    //   <             - Left align (default for strings)
-    //   >             - Right align
-    //   ^             - Center align
+    //   <             - Left align / truncate from right (keep first N chars)
+    //   >             - Right align / truncate from left (keep last N chars)
+    //   ^             - Center align (extra padding goes right)
     //
     // Fill character:
     //   Any single character before alignment (default is space)
     //
     // Width:
-    //   Positive integer specifying minimum field width
+    //   Positive integer specifying field width
     //
-    // Truncation (!):
-    //   Add ! at the end to truncate values longer than width
-    //   Without ! values longer than width are not truncated
+    // Truncation (! suffix):
+    //   Without fill char: truncate only, NO padding for shorter values
+    //   With fill char: truncate AND pad (both apply)
     //
-    // Examples:
-    //   %{type:<10}     - Left align, width 10, pad with spaces
-    //   %{type:>10}     - Right align, width 10, pad with spaces
-    //   %{type:^10}     - Center align, width 10 (extra padding goes right)
-    //   %{type:*<10}    - Left align, width 10, pad with '*'
-    //   %{type:_^15}    - Center align, width 15, pad with '_'
-    //   %{type:<8!}     - Left align, width 8, truncate if longer
-    //   %{type:*^10!}   - Center align, width 10, pad with '*', truncate if longer
-    //   %{category:<6!} - Left align, width 6, truncate if longer
-    //   %{time process:>9} - Right align process time to width 9
+    // Examples (padding only - no !):
+    //   %{type:<10}       - Left align, width 10, pad with spaces
+    //   %{type:>10}       - Right align, width 10, pad with spaces
+    //   %{type:^10}       - Center align, width 10 (extra padding goes right)
+    //   %{type:*<10}      - Left align, width 10, pad with '*'
+    //   %{type:_^15}      - Center align, width 15, pad with '_'
+    //
+    // Examples (truncation only - ! without fill char):
+    //   %{type:10!}       - Max 10 chars, truncate from right, no padding
+    //   %{type:<10!}      - Max 10 chars, truncate from right (keep first 10)
+    //   %{type:>10!}      - Max 10 chars, truncate from left (keep last 10)
+    //
+    // Examples (truncation AND padding - ! with fill char):
+    //   %{type:*<10!}     - Truncate/pad to exactly 10, fill with '*', left align
+    //   %{type: >10!}     - Truncate/pad to exactly 10, fill with space, right align
     //
     // Conditional blocks:
     // %{if-debug}...%{endif}    - Show content only for debug messages

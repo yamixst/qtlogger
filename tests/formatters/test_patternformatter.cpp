@@ -61,8 +61,8 @@ private slots:
     void testPatternFormatterWithTimeAndFormatSpec();
 
     // Truncation tests (! suffix)
-    void testPatternFormatterWithTruncation();
-    void testPatternFormatterWithTruncationAndAlign();
+    void testPatternFormatterWithTruncationOnly();
+    void testPatternFormatterWithTruncationFromLeft();
     void testPatternFormatterWithTruncationAndFillChar();
     void testPatternFormatterWithTruncationShorterContent();
 };
@@ -548,57 +548,65 @@ void TestPatternFormatter::testPatternFormatterWithTimeAndFormatSpec()
     QVERIFY(timePart.startsWith("    "));
 }
 
-void TestPatternFormatter::testPatternFormatterWithTruncation()
+void TestPatternFormatter::testPatternFormatterWithTruncationOnly()
 {
-    // Test %{type:<5!} - left align with width 5 and truncation
-    QString pattern = "[%{type:<5!}]";
+    // Test %{type:5!} - truncate only, no padding (no fill char specified)
+    QString pattern = "[%{type:5!}]";
     PatternFormatter formatter(pattern);
 
-    // "warning" is 7 chars, should be truncated to 5
+    // "warning" is 7 chars, should be truncated to 5 (from right)
     auto msg = MockLogMessage::create(QtWarningMsg, "test");
     QString formatted = formatter.format(msg);
     QCOMPARE(formatted, QString("[warni]"));
 
-    // "info" is 4 chars, should be padded to 5
+    // "info" is 4 chars, should NOT be padded (truncate-only mode)
     auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
     QString formatted2 = formatter.format(msg2);
-    QCOMPARE(formatted2, QString("[info ]"));
+    QCOMPARE(formatted2, QString("[info]"));
+
+    // Test with <: truncate from right (same as default)
+    QString pattern2 = "[%{type:<5!}]";
+    PatternFormatter formatter2(pattern2);
+
+    auto msg3 = MockLogMessage::create(QtWarningMsg, "test");
+    QString formatted3 = formatter2.format(msg3);
+    QCOMPARE(formatted3, QString("[warni]"));
+
+    // Shorter content - no padding
+    QString formatted4 = formatter2.format(msg2);
+    QCOMPARE(formatted4, QString("[info]"));
 }
 
-void TestPatternFormatter::testPatternFormatterWithTruncationAndAlign()
+void TestPatternFormatter::testPatternFormatterWithTruncationFromLeft()
 {
-    // Test right align with truncation
+    // Test %{type:>5!} - truncate from left (keep last 5 chars), no padding
     QString pattern = "[%{type:>5!}]";
     PatternFormatter formatter(pattern);
 
-    // "warning" truncated to "warni", right-aligned (no padding needed as it fills width)
+    // "warning" is 7 chars, truncate from left -> keep last 5 -> "rning"
     auto msg = MockLogMessage::create(QtWarningMsg, "test");
     QString formatted = formatter.format(msg);
-    QCOMPARE(formatted, QString("[warni]"));
+    QCOMPARE(formatted, QString("[rning]"));
 
-    // "info" is 4 chars, right-aligned with 1 space padding
-    auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
+    // "critical" is 8 chars, truncate from left -> keep last 5 -> "tical"
+    auto msg2 = MockLogMessage::create(QtCriticalMsg, "test");
     QString formatted2 = formatter.format(msg2);
-    QCOMPARE(formatted2, QString("[ info]"));
+    QCOMPARE(formatted2, QString("[tical]"));
 
-    // Test center align with truncation
-    QString pattern2 = "[%{type:^5!}]";
-    PatternFormatter formatter2(pattern2);
+    // "info" is 4 chars, should NOT be padded (truncate-only mode)
+    auto msg3 = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted3 = formatter.format(msg3);
+    QCOMPARE(formatted3, QString("[info]"));
 
-    // "critical" truncated to "criti"
-    auto msg3 = MockLogMessage::create(QtCriticalMsg, "test");
-    QString formatted3 = formatter2.format(msg3);
-    QCOMPARE(formatted3, QString("[criti]"));
-
-    // "info" centered: 1 space left, 0 spaces right (4 chars + 1 padding)
-    // Wait, width is 5, "info" is 4, so 1 padding: 0 left, 1 right
-    QString formatted4 = formatter2.format(msg2);
-    QCOMPARE(formatted4, QString("[info ]"));
+    // "debug" is 5 chars, exact match - no truncation needed
+    auto msg4 = MockLogMessage::create(QtDebugMsg, "test");
+    QString formatted4 = formatter.format(msg4);
+    QCOMPARE(formatted4, QString("[debug]"));
 }
 
 void TestPatternFormatter::testPatternFormatterWithTruncationAndFillChar()
 {
-    // Test truncation with custom fill character
+    // Test truncation WITH explicit fill character - both truncation AND padding apply
     QString pattern = "[%{type:*^10!}]";
     PatternFormatter formatter(pattern);
 
@@ -607,7 +615,7 @@ void TestPatternFormatter::testPatternFormatterWithTruncationAndFillChar()
     QString formatted = formatter.format(msg);
     QCOMPARE(formatted, QString("[***info***]"));
 
-    // "critical" is 8 chars, truncated to 10 (no truncation needed), then padded
+    // "critical" is 8 chars, 2 padding: 1 left, 1 right with '*'
     auto msg2 = MockLogMessage::create(QtCriticalMsg, "test");
     QString formatted2 = formatter.format(msg2);
     QCOMPARE(formatted2, QString("[*critical*]"));
@@ -621,29 +629,51 @@ void TestPatternFormatter::testPatternFormatterWithTruncationAndFillChar()
     QString formatted3 = formatter3.format(msg3);
     QCOMPARE(formatted3, QString("[verylong]"));
 
-    // Shorter value gets padded
+    // Shorter value gets padded (because fill char is specified)
     auto msg4 = MockLogMessage::create(QtInfoMsg, "test");
     msg4.setAttribute("myattr", "short");
     QString formatted4 = formatter3.format(msg4);
     QCOMPARE(formatted4, QString("[short___]"));
+
+    // Test right-align with fill char: truncate from left, then pad
+    QString pattern4 = "[%{myattr:*>8!}]";
+    PatternFormatter formatter4(pattern4);
+
+    auto msg5 = MockLogMessage::create(QtInfoMsg, "test");
+    msg5.setAttribute("myattr", "verylongvalue");
+    // "verylongvalue" (13 chars) truncated from left -> "ongvalue" (last 8 chars)
+    QString formatted5 = formatter4.format(msg5);
+    QCOMPARE(formatted5, QString("[ongvalue]"));
+
+    // Shorter value gets right-padded with *
+    auto msg6 = MockLogMessage::create(QtInfoMsg, "test");
+    msg6.setAttribute("myattr", "short");
+    QString formatted6 = formatter4.format(msg6);
+    QCOMPARE(formatted6, QString("[***short]"));
 }
 
 void TestPatternFormatter::testPatternFormatterWithTruncationShorterContent()
 {
-    // When content is shorter than width, truncation flag has no effect
+    // When content is shorter than width and NO fill char - no padding
     QString pattern = "[%{type:<10!}]";
     PatternFormatter formatter(pattern);
 
-    // "info" is 4 chars, should be padded to 10 (truncation doesn't apply)
+    // "info" is 4 chars, NO padding (truncate-only mode without fill char)
     auto msg = MockLogMessage::create(QtInfoMsg, "test");
     QString formatted = formatter.format(msg);
-    QCOMPARE(formatted, QString("[info      ]"));
+    QCOMPARE(formatted, QString("[info]"));
 
     // Exact width match
     QString pattern2 = "[%{type:<4!}]";
     PatternFormatter formatter2(pattern2);
     QString formatted2 = formatter2.format(msg);
     QCOMPARE(formatted2, QString("[info]"));
+
+    // With fill char specified - padding IS applied
+    QString pattern3 = "[%{type: <10!}]";
+    PatternFormatter formatter3(pattern3);
+    QString formatted3 = formatter3.format(msg);
+    QCOMPARE(formatted3, QString("[info      ]"));
 }
 
 QTEST_MAIN(TestPatternFormatter)
