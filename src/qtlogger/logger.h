@@ -8,9 +8,7 @@
 #include <QtCore/QtGlobal>
 
 #ifndef QTLOGGER_NO_THREAD
-#    include <QEvent>
 #    include <QMutex>
-#    include <QThread>
 #endif
 
 #include "configure.h"

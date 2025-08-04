@@ -9,13 +9,10 @@
 
 #ifndef QTLOGGER_NO_THREAD
 #    include <QAtomicPointer>
-#    include <QCoreApplication>
 #    include <QMutexLocker>
 #endif
 
 #include "configure.h"
-#include "messagepatterns.h"
-#include "utils.h"
 
 namespace QtLogger {
 
@@ -86,7 +83,7 @@ void Logger::configure(const QString &path, const QString &group)
 }
 
 QTLOGGER_DECL_SPEC
-    Logger &Logger::operator<<(const HandlerPtr &handler)
+Logger &Logger::operator<<(const HandlerPtr &handler)
 {
     append(handler);
     return *this;
@@ -154,13 +151,13 @@ void Logger::restorePreviousMessageHandler()
 #ifndef QTLOGGER_NO_THREAD
 
 QTLOGGER_DECL_SPEC
-    void Logger::lock() const
+void Logger::lock() const
 {
     mutex()->lock();
 }
 
 QTLOGGER_DECL_SPEC
-    void Logger::unlock() const
+void Logger::unlock() const
 {
     mutex()->unlock();
 }
