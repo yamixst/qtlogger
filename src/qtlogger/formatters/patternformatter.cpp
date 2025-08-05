@@ -48,20 +48,24 @@ private:
     bool m_hasCondition = false;
 };
 
+enum class TruncateMode { None, Truncate, TruncateOnly };
+
 class FormattedToken : public ConditionToken
 {
 public:
-    void setFormatSpec(QChar fill, QChar align, int width, bool truncate = false,
-                       bool truncateOnly = false)
+    void setFormatSpec(QChar fill, QChar align, int width,
+                       TruncateMode truncateMode = TruncateMode::None)
     {
         m_fill = fill;
         m_align = align;
         m_width = width;
-        m_truncate = truncate;
-        m_truncateOnly = truncateOnly;
+        m_truncateMode = truncateMode;
     }
 
-    bool hasFormatSpec() const { return m_width > 0 && (!m_align.isNull() || m_truncateOnly); }
+    bool hasFormatSpec() const
+    {
+        return m_width > 0 && (!m_align.isNull() || m_truncateMode == TruncateMode::TruncateOnly);
+    }
 
     int formatWidth() const { return m_width; }
 
@@ -76,7 +80,7 @@ protected:
         // With ! but no explicit fill character:
         //   - No align or < : truncate from right (keep first N chars)
         //   - > : truncate from left (keep last N chars)
-        if (m_truncateOnly) {
+        if (m_truncateMode == TruncateMode::TruncateOnly) {
             if (value.length() <= m_width) {
                 return value;
             }
@@ -97,7 +101,7 @@ protected:
         QString val = value;
 
         // Truncate if enabled and value is longer than width
-        if (m_truncate && val.length() > m_width) {
+        if (m_truncateMode == TruncateMode::Truncate && val.length() > m_width) {
             if (m_align == QLatin1Char('>')) {
                 // Truncate from left: keep last m_width characters
                 val = val.right(m_width);
@@ -143,8 +147,7 @@ private:
     QChar m_fill = QLatin1Char(' ');
     QChar m_align = QChar();
     int m_width = 0;
-    bool m_truncate = false;
-    bool m_truncateOnly = false;
+    TruncateMode m_truncateMode = TruncateMode::None;
 };
 
 class LiteralToken : public FormattedToken
@@ -687,8 +690,8 @@ private:
 // When ! is used with explicit fill character (e.g., "*<10!"):
 //   - Both truncation and padding are applied
 // Returns true if valid format spec was found
-bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width, bool &truncate,
-                     bool &truncateOnly)
+bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
+                     TruncateMode &truncateMode)
 {
     if (spec.isEmpty())
         return false;
@@ -698,13 +701,13 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
     fill = QLatin1Char(' ');
     align = QChar();
     width = 0;
-    truncate = false;
-    truncateOnly = false;
+    truncateMode = TruncateMode::None;
     bool hasExplicitFill = false;
+    bool hasTruncateSuffix = false;
 
     // Check for truncate suffix '!'
     if (s.endsWith(QLatin1Char('!'))) {
-        truncate = true;
+        hasTruncateSuffix = true;
         s.chop(1);
         if (s.isEmpty())
             return false;
@@ -733,12 +736,12 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
     }
 
     // If no align found, check if it's just a number (only valid with !)
-    if (align.isNull() && truncate) {
+    if (align.isNull() && hasTruncateSuffix) {
         // Try to parse entire remaining string as width
         bool ok;
         width = s.toInt(&ok);
         if (ok && width > 0) {
-            truncateOnly = true;
+            truncateMode = TruncateMode::TruncateOnly;
             return true;
         }
         return false;
@@ -758,9 +761,9 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
     if (!ok || width <= 0)
         return false;
 
-    // If truncate is enabled but no explicit fill, it's truncate-only mode
-    if (truncate && !hasExplicitFill) {
-        truncateOnly = true;
+    // Determine truncate mode
+    if (hasTruncateSuffix) {
+        truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
     }
 
     return true;
@@ -813,16 +816,14 @@ public:
                     QChar fill = QLatin1Char(' ');
                     QChar align;
                     int width = 0;
-                    bool truncate = false;
-                    bool truncateOnly = false;
+                    TruncateMode truncateMode = TruncateMode::None;
                     bool hasFormatSpec = false;
 
                     // Find the last colon that might start a format spec
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        if (parseFormatSpec(possibleSpec, fill, align, width, truncate,
-                                            truncateOnly)) {
+                        if (parseFormatSpec(possibleSpec, fill, align, width, truncateMode)) {
                             hasFormatSpec = true;
                             placeholder = placeholder.left(lastColon);
                         }
@@ -904,7 +905,7 @@ public:
                             token->setCondition(currentCondition);
                         }
                         if (hasFormatSpec) {
-                            token->setFormatSpec(fill, align, width, truncate, truncateOnly);
+                            token->setFormatSpec(fill, align, width, truncateMode);
                         }
                         m_tokens.append(QSharedPointer<Token>(token));
                     }
