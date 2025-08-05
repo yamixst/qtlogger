@@ -36,7 +36,9 @@ public:
                     m_category.constData()),
           m_message(lmsg.m_message),
           m_time(lmsg.m_time),
+#ifndef QTLOGGER_NO_THREAD
           m_threadId(lmsg.m_threadId),
+#endif
           m_formattedMessage(lmsg.m_formattedMessage),
           m_attributes(lmsg.m_attributes)
     {
