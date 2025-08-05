@@ -48,20 +48,104 @@ private:
     bool m_hasCondition = false;
 };
 
-enum class TruncateMode { None, Truncate, TruncateOnly };
-
-struct FormatSpec
-{
-    QChar fill = QLatin1Char(' ');
-    QChar align = QChar();
-    int width = 0;
-    TruncateMode truncateMode = TruncateMode::None;
-};
-
 class FormattedToken : public ConditionToken
 {
 public:
+    enum class TruncateMode { None, Truncate, TruncateOnly };
+
+    struct FormatSpec
+    {
+        QChar fill = QLatin1Char(' ');
+        QChar align = QChar();
+        int width = 0;
+        TruncateMode truncateMode = TruncateMode::None;
+    };
+
     void setFormatSpec(const FormatSpec &spec) { m_formatSpec = spec; }
+
+    // Helper function to parse format spec: [fill][align][width][!] or [width!] or [align][width!]
+    // The ! suffix enables truncation when value exceeds width
+    // When ! is used without explicit fill character:
+    //   - Just width (e.g., "10!"): truncate only, no padding
+    //   - With < (e.g., "<10!"): truncate from right (keep first N chars), no padding
+    //   - With > (e.g., ">10!"): truncate from left (keep last N chars), no padding
+    // When ! is used with explicit fill character (e.g., "*<10!"):
+    //   - Both truncation and padding are applied
+    // Returns std::nullopt if invalid format spec, otherwise returns FormatSpec
+    static std::optional<FormatSpec> parseFormatSpec(const QString &spec)
+    {
+        if (spec.isEmpty())
+            return std::nullopt;
+
+        QString s = spec;
+        int pos = 0;
+        FormatSpec result;
+        bool hasExplicitFill = false;
+        bool hasTruncateSuffix = false;
+
+        // Check for truncate suffix '!'
+        if (s.endsWith(QLatin1Char('!'))) {
+            hasTruncateSuffix = true;
+            s.chop(1);
+            if (s.isEmpty())
+                return std::nullopt;
+        }
+
+        // Check if we have fill + align (fill is any char, align is <, >, ^)
+        if (s.length() >= 2) {
+            QChar possibleAlign = s.at(1);
+            if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
+                || possibleAlign == QLatin1Char('^')) {
+                result.fill = s.at(0);
+                result.align = possibleAlign;
+                hasExplicitFill = true;
+                pos = 2;
+            }
+        }
+
+        // If no fill+align found, check for just align
+        if (result.align.isNull() && !s.isEmpty()) {
+            QChar possibleAlign = s.at(0);
+            if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
+                || possibleAlign == QLatin1Char('^')) {
+                result.align = possibleAlign;
+                pos = 1;
+            }
+        }
+
+        // If no align found, check if it's just a number (only valid with !)
+        if (result.align.isNull() && hasTruncateSuffix) {
+            // Try to parse entire remaining string as width
+            bool ok;
+            result.width = s.toInt(&ok);
+            if (ok && result.width > 0) {
+                result.truncateMode = TruncateMode::TruncateOnly;
+                return result;
+            }
+            return std::nullopt;
+        }
+
+        // If no align found at all (and not truncate-only), this is not a valid format spec
+        if (result.align.isNull())
+            return std::nullopt;
+
+        // Parse width (remaining characters should be digits)
+        if (pos >= s.length())
+            return std::nullopt;
+
+        QString widthStr = s.mid(pos);
+        bool ok;
+        result.width = widthStr.toInt(&ok);
+        if (!ok || result.width <= 0)
+            return std::nullopt;
+
+        // Determine truncate mode
+        if (hasTruncateSuffix) {
+            result.truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
+        }
+
+        return result;
+    }
 
     bool hasFormatSpec() const
     {
@@ -682,89 +766,7 @@ private:
     int m_removeAfter;
 };
 
-// Helper function to parse format spec: [fill][align][width][!] or [width!] or [align][width!]
-// The ! suffix enables truncation when value exceeds width
-// When ! is used without explicit fill character:
-//   - Just width (e.g., "10!"): truncate only, no padding
-//   - With < (e.g., "<10!"): truncate from right (keep first N chars), no padding
-//   - With > (e.g., ">10!"): truncate from left (keep last N chars), no padding
-// When ! is used with explicit fill character (e.g., "*<10!"):
-//   - Both truncation and padding are applied
-// Returns std::nullopt if invalid format spec, otherwise returns FormatSpec
-std::optional<FormatSpec> parseFormatSpec(const QString &spec)
-{
-    if (spec.isEmpty())
-        return std::nullopt;
 
-    QString s = spec;
-    int pos = 0;
-    FormatSpec result;
-    bool hasExplicitFill = false;
-    bool hasTruncateSuffix = false;
-
-    // Check for truncate suffix '!'
-    if (s.endsWith(QLatin1Char('!'))) {
-        hasTruncateSuffix = true;
-        s.chop(1);
-        if (s.isEmpty())
-            return std::nullopt;
-    }
-
-    // Check if we have fill + align (fill is any char, align is <, >, ^)
-    if (s.length() >= 2) {
-        QChar possibleAlign = s.at(1);
-        if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
-            || possibleAlign == QLatin1Char('^')) {
-            result.fill = s.at(0);
-            result.align = possibleAlign;
-            hasExplicitFill = true;
-            pos = 2;
-        }
-    }
-
-    // If no fill+align found, check for just align
-    if (result.align.isNull() && !s.isEmpty()) {
-        QChar possibleAlign = s.at(0);
-        if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
-            || possibleAlign == QLatin1Char('^')) {
-            result.align = possibleAlign;
-            pos = 1;
-        }
-    }
-
-    // If no align found, check if it's just a number (only valid with !)
-    if (result.align.isNull() && hasTruncateSuffix) {
-        // Try to parse entire remaining string as width
-        bool ok;
-        result.width = s.toInt(&ok);
-        if (ok && result.width > 0) {
-            result.truncateMode = TruncateMode::TruncateOnly;
-            return result;
-        }
-        return std::nullopt;
-    }
-
-    // If no align found at all (and not truncate-only), this is not a valid format spec
-    if (result.align.isNull())
-        return std::nullopt;
-
-    // Parse width (remaining characters should be digits)
-    if (pos >= s.length())
-        return std::nullopt;
-
-    QString widthStr = s.mid(pos);
-    bool ok;
-    result.width = widthStr.toInt(&ok);
-    if (!ok || result.width <= 0)
-        return std::nullopt;
-
-    // Determine truncate mode
-    if (hasTruncateSuffix) {
-        result.truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
-    }
-
-    return result;
-}
 
 } // namespace
 
@@ -809,13 +811,13 @@ public:
 
                     // Try to extract format spec from the end of placeholder
                     // Format: name[:format_spec] where format_spec is [fill][align][width][!]
-                    std::optional<FormatSpec> formatSpec;
+                    std::optional<FormattedToken::FormatSpec> formatSpec;
 
                     // Find the last colon that might start a format spec
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        formatSpec = parseFormatSpec(possibleSpec);
+                        formatSpec = FormattedToken::parseFormatSpec(possibleSpec);
                         if (formatSpec) {
                             placeholder = placeholder.left(lastColon);
                         }
