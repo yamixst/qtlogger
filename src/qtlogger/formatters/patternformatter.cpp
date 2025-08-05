@@ -50,29 +50,32 @@ private:
 
 enum class TruncateMode { None, Truncate, TruncateOnly };
 
+struct FormatSpec
+{
+    QChar fill = QLatin1Char(' ');
+    QChar align = QChar();
+    int width = 0;
+    TruncateMode truncateMode = TruncateMode::None;
+};
+
 class FormattedToken : public ConditionToken
 {
 public:
-    void setFormatSpec(QChar fill, QChar align, int width,
-                       TruncateMode truncateMode = TruncateMode::None)
-    {
-        m_fill = fill;
-        m_align = align;
-        m_width = width;
-        m_truncateMode = truncateMode;
-    }
+    void setFormatSpec(const FormatSpec &spec) { m_formatSpec = spec; }
 
     bool hasFormatSpec() const
     {
-        return m_width > 0 && (!m_align.isNull() || m_truncateMode == TruncateMode::TruncateOnly);
+        return m_formatSpec.width > 0
+               && (!m_formatSpec.align.isNull()
+                   || m_formatSpec.truncateMode == TruncateMode::TruncateOnly);
     }
 
-    int formatWidth() const { return m_width; }
+    int formatWidth() const { return m_formatSpec.width; }
 
 protected:
     QString applyPadding(const QString &value) const
     {
-        if (m_width <= 0) {
+        if (m_formatSpec.width <= 0) {
             return value;
         }
 
@@ -80,61 +83,62 @@ protected:
         // With ! but no explicit fill character:
         //   - No align or < : truncate from right (keep first N chars)
         //   - > : truncate from left (keep last N chars)
-        if (m_truncateMode == TruncateMode::TruncateOnly) {
-            if (value.length() <= m_width) {
+        if (m_formatSpec.truncateMode == TruncateMode::TruncateOnly) {
+            if (value.length() <= m_formatSpec.width) {
                 return value;
             }
-            if (m_align == QLatin1Char('>')) {
-                // Truncate from left: keep last m_width characters
-                return value.right(m_width);
+            if (m_formatSpec.align == QLatin1Char('>')) {
+                // Truncate from left: keep last width characters
+                return value.right(m_formatSpec.width);
             } else {
-                // Truncate from right: keep first m_width characters (default, or <)
-                return value.left(m_width);
+                // Truncate from right: keep first width characters (default, or <)
+                return value.left(m_formatSpec.width);
             }
         }
 
         // Regular mode with padding
-        if (m_align.isNull()) {
+        if (m_formatSpec.align.isNull()) {
             return value;
         }
 
         QString val = value;
 
         // Truncate if enabled and value is longer than width
-        if (m_truncateMode == TruncateMode::Truncate && val.length() > m_width) {
-            if (m_align == QLatin1Char('>')) {
-                // Truncate from left: keep last m_width characters
-                val = val.right(m_width);
+        if (m_formatSpec.truncateMode == TruncateMode::Truncate
+            && val.length() > m_formatSpec.width) {
+            if (m_formatSpec.align == QLatin1Char('>')) {
+                // Truncate from left: keep last width characters
+                val = val.right(m_formatSpec.width);
             } else {
-                // Truncate from right: keep first m_width characters (default, < or ^)
-                val = val.left(m_width);
+                // Truncate from right: keep first width characters (default, < or ^)
+                val = val.left(m_formatSpec.width);
             }
         }
 
         // If value is already at or exceeds width (and not truncating), return as-is
-        if (val.length() >= m_width) {
+        if (val.length() >= m_formatSpec.width) {
             return val;
         }
 
-        int padding = m_width - val.length();
+        int padding = m_formatSpec.width - val.length();
         QString result;
-        result.reserve(m_width);
+        result.reserve(m_formatSpec.width);
 
-        if (m_align == QLatin1Char('<')) {
+        if (m_formatSpec.align == QLatin1Char('<')) {
             // Left align: content then padding
             result.append(val);
-            result.append(QString(padding, m_fill));
-        } else if (m_align == QLatin1Char('>')) {
+            result.append(QString(padding, m_formatSpec.fill));
+        } else if (m_formatSpec.align == QLatin1Char('>')) {
             // Right align: padding then content
-            result.append(QString(padding, m_fill));
+            result.append(QString(padding, m_formatSpec.fill));
             result.append(val);
-        } else if (m_align == QLatin1Char('^')) {
+        } else if (m_formatSpec.align == QLatin1Char('^')) {
             // Center align: extra padding goes to the right
             int leftPad = padding / 2;
             int rightPad = padding - leftPad;
-            result.append(QString(leftPad, m_fill));
+            result.append(QString(leftPad, m_formatSpec.fill));
             result.append(val);
-            result.append(QString(rightPad, m_fill));
+            result.append(QString(rightPad, m_formatSpec.fill));
         } else {
             // Unknown alignment, return as-is
             return val;
@@ -144,10 +148,7 @@ protected:
     }
 
 private:
-    QChar m_fill = QLatin1Char(' ');
-    QChar m_align = QChar();
-    int m_width = 0;
-    TruncateMode m_truncateMode = TruncateMode::None;
+    FormatSpec m_formatSpec;
 };
 
 class LiteralToken : public FormattedToken
@@ -689,19 +690,15 @@ private:
 //   - With > (e.g., ">10!"): truncate from left (keep last N chars), no padding
 // When ! is used with explicit fill character (e.g., "*<10!"):
 //   - Both truncation and padding are applied
-// Returns true if valid format spec was found
-bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
-                     TruncateMode &truncateMode)
+// Returns std::nullopt if invalid format spec, otherwise returns FormatSpec
+std::optional<FormatSpec> parseFormatSpec(const QString &spec)
 {
     if (spec.isEmpty())
-        return false;
+        return std::nullopt;
 
     QString s = spec;
     int pos = 0;
-    fill = QLatin1Char(' ');
-    align = QChar();
-    width = 0;
-    truncateMode = TruncateMode::None;
+    FormatSpec result;
     bool hasExplicitFill = false;
     bool hasTruncateSuffix = false;
 
@@ -710,7 +707,7 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
         hasTruncateSuffix = true;
         s.chop(1);
         if (s.isEmpty())
-            return false;
+            return std::nullopt;
     }
 
     // Check if we have fill + align (fill is any char, align is <, >, ^)
@@ -718,55 +715,55 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width,
         QChar possibleAlign = s.at(1);
         if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
             || possibleAlign == QLatin1Char('^')) {
-            fill = s.at(0);
-            align = possibleAlign;
+            result.fill = s.at(0);
+            result.align = possibleAlign;
             hasExplicitFill = true;
             pos = 2;
         }
     }
 
     // If no fill+align found, check for just align
-    if (align.isNull() && !s.isEmpty()) {
+    if (result.align.isNull() && !s.isEmpty()) {
         QChar possibleAlign = s.at(0);
         if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
             || possibleAlign == QLatin1Char('^')) {
-            align = possibleAlign;
+            result.align = possibleAlign;
             pos = 1;
         }
     }
 
     // If no align found, check if it's just a number (only valid with !)
-    if (align.isNull() && hasTruncateSuffix) {
+    if (result.align.isNull() && hasTruncateSuffix) {
         // Try to parse entire remaining string as width
         bool ok;
-        width = s.toInt(&ok);
-        if (ok && width > 0) {
-            truncateMode = TruncateMode::TruncateOnly;
-            return true;
+        result.width = s.toInt(&ok);
+        if (ok && result.width > 0) {
+            result.truncateMode = TruncateMode::TruncateOnly;
+            return result;
         }
-        return false;
+        return std::nullopt;
     }
 
     // If no align found at all (and not truncate-only), this is not a valid format spec
-    if (align.isNull())
-        return false;
+    if (result.align.isNull())
+        return std::nullopt;
 
     // Parse width (remaining characters should be digits)
     if (pos >= s.length())
-        return false;
+        return std::nullopt;
 
     QString widthStr = s.mid(pos);
     bool ok;
-    width = widthStr.toInt(&ok);
-    if (!ok || width <= 0)
-        return false;
+    result.width = widthStr.toInt(&ok);
+    if (!ok || result.width <= 0)
+        return std::nullopt;
 
     // Determine truncate mode
     if (hasTruncateSuffix) {
-        truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
+        result.truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
     }
 
-    return true;
+    return result;
 }
 
 } // namespace
@@ -812,19 +809,14 @@ public:
 
                     // Try to extract format spec from the end of placeholder
                     // Format: name[:format_spec] where format_spec is [fill][align][width][!]
-                    QString formatSpecStr;
-                    QChar fill = QLatin1Char(' ');
-                    QChar align;
-                    int width = 0;
-                    TruncateMode truncateMode = TruncateMode::None;
-                    bool hasFormatSpec = false;
+                    std::optional<FormatSpec> formatSpec;
 
                     // Find the last colon that might start a format spec
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        if (parseFormatSpec(possibleSpec, fill, align, width, truncateMode)) {
-                            hasFormatSpec = true;
+                        formatSpec = parseFormatSpec(possibleSpec);
+                        if (formatSpec) {
                             placeholder = placeholder.left(lastColon);
                         }
                     }
@@ -904,8 +896,8 @@ public:
                         if (hasCondition) {
                             token->setCondition(currentCondition);
                         }
-                        if (hasFormatSpec) {
-                            token->setFormatSpec(fill, align, width, truncateMode);
+                        if (formatSpec) {
+                            token->setFormatSpec(*formatSpec);
                         }
                         m_tokens.append(QSharedPointer<Token>(token));
                     }
