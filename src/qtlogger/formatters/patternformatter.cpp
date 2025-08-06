@@ -9,11 +9,9 @@ namespace QtLogger {
 
 namespace {
 
-// Static variables for process start time
 static const auto g_processStartTime = std::chrono::steady_clock::now();
 
-// Zero-Width Space marker used to signal character removal in subsequent tokens
-static const QChar ZWSP_MARKER = QChar(0x200B);
+static const QChar DEL_MARKER = QChar(0x200B);
 
 class Token
 {
@@ -63,15 +61,6 @@ public:
 
     void setFormatSpec(const FormatSpec &spec) { m_formatSpec = spec; }
 
-    // Helper function to parse format spec: [fill][align][width][!] or [width!] or [align][width!]
-    // The ! suffix enables truncation when value exceeds width
-    // When ! is used without explicit fill character:
-    //   - Just width (e.g., "10!"): truncate only, no padding
-    //   - With < (e.g., "<10!"): truncate from right (keep first N chars), no padding
-    //   - With > (e.g., ">10!"): truncate from left (keep last N chars), no padding
-    // When ! is used with explicit fill character (e.g., "*<10!"):
-    //   - Both truncation and padding are applied
-    // Returns std::nullopt if invalid format spec, otherwise returns FormatSpec
     static std::optional<FormatSpec> parseFormatSpec(const QString &spec)
     {
         if (spec.isEmpty())
@@ -244,7 +233,7 @@ public:
     {
         // Count and remove ZWSP markers from the end of dest
         int removeCount = 0;
-        while (!dest.isEmpty() && dest.at(dest.size() - 1) == ZWSP_MARKER) {
+        while (!dest.isEmpty() && dest.at(dest.size() - 1) == DEL_MARKER) {
             dest.chop(1);
             removeCount++;
         }
@@ -750,7 +739,7 @@ public:
         }
         // Append ZWSP markers to signal how many chars to remove from next token
         for (int i = 0; i < m_removeAfter; ++i) {
-            dest.append(ZWSP_MARKER);
+            dest.append(DEL_MARKER);
         }
     }
 
@@ -952,7 +941,7 @@ public:
         }
 
         // Remove any trailing ZWSP markers that weren't consumed
-        while (!result.isEmpty() && result.at(result.size() - 1) == ZWSP_MARKER) {
+        while (!result.isEmpty() && result.at(result.size() - 1) == DEL_MARKER) {
             result.chop(1);
         }
 
