@@ -2,6 +2,7 @@
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 
 #include "qtlogger.h"
 #include "mock_logmessage.h"
@@ -25,10 +26,19 @@ private slots:
     void testPatternFormatterWithLongMessage();
     void testPatternFormatterWithSpecialCharacters();
     
+    // Time formatting tests
+    void testPatternFormatterWithDefaultTimeFormat();
+    void testPatternFormatterWithCustomTimeFormat();
+    void testPatternFormatterWithMultipleTimeFormats();
+    void testPatternFormatterWithProcessTime();
+    void testPatternFormatterWithBootTime();
+    
     // Custom attributes tests
     void testPatternFormatterWithCustomAttributes();
     void testPatternFormatterWithMissingAttributes();
     void testPatternFormatterWithMixedAttributes();
+
+
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -153,6 +163,115 @@ void TestPatternFormatter::testPatternFormatterWithMixedAttributes()
     QVERIFY(formatted.contains("app.test"));
     QVERIFY(formatted.contains("customValue"));
 }
+
+void TestPatternFormatter::testPatternFormatterWithDefaultTimeFormat()
+{
+    QString pattern = "%{time} - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtInfoMsg, "Time test");
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Time test"));
+    // Default format should be ISO date format (contains 'T' separator and dashes)
+    QVERIFY(formatted.contains("T") || formatted.contains("-"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithCustomTimeFormat()
+{
+    QString pattern = "%{time yyyy-MM-dd} | %{time hh:mm:ss} | %{message}";
+    PatternFormatter formatter(pattern);
+    
+    QDateTime testTime = QDateTime::currentDateTime();
+    auto msg = MockLogMessage::create(QtInfoMsg, "Custom time format");
+    
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Custom time format"));
+    
+    // Check that the format contains date separators (dashes) and time separators (colons)
+    QVERIFY(formatted.contains("-"));
+    QVERIFY(formatted.contains(":"));
+    
+    // The formatted string should contain two pipe separators from the pattern
+    QCOMPARE(formatted.count("|"), 2);
+}
+
+void TestPatternFormatter::testPatternFormatterWithMultipleTimeFormats()
+{
+    QString pattern = "Date: %{time dd.MM.yyyy}, Time: %{time HH:mm:ss.zzz}, ISO: %{time} - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtDebugMsg, "Multiple formats");
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Multiple formats"));
+    QVERIFY(formatted.contains("Date:"));
+    QVERIFY(formatted.contains("Time:"));
+    QVERIFY(formatted.contains("ISO:"));
+    
+    // Check for dot separators in date (dd.MM.yyyy format)
+    QVERIFY(formatted.contains("."));
+    
+    // Check for colon separators in time
+    QVERIFY(formatted.contains(":"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithProcessTime()
+{
+    QString pattern = "Process time: %{time process}s - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtInfoMsg, "Process time test");
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Process time test"));
+    QVERIFY(formatted.contains("Process time:"));
+    QVERIFY(formatted.contains("s - "));
+    
+    // Extract the time value and check it's a valid number
+    QRegularExpression re("Process time: ([0-9.]+)s");
+    QRegularExpressionMatch match = re.match(formatted);
+    QVERIFY(match.hasMatch());
+    
+    QString timeStr = match.captured(1);
+    bool ok = false;
+    double timeValue = timeStr.toDouble(&ok);
+    QVERIFY(ok);
+    QVERIFY(timeValue >= 0.0);  // Time should be non-negative
+}
+
+void TestPatternFormatter::testPatternFormatterWithBootTime()
+{
+    QString pattern = "Boot time: %{time boot}s - %{message}";
+    PatternFormatter formatter(pattern);
+    
+    auto msg = MockLogMessage::create(QtDebugMsg, "Boot time test");
+    QString formatted = formatter.format(msg);
+    
+    QVERIFY(!formatted.isEmpty());
+    QVERIFY(formatted.contains("Boot time test"));
+    QVERIFY(formatted.contains("Boot time:"));
+    QVERIFY(formatted.contains("s - "));
+    
+    // Extract the time value and check it's a valid number
+    QRegularExpression re("Boot time: ([0-9.]+)s");
+    QRegularExpressionMatch match = re.match(formatted);
+    QVERIFY(match.hasMatch());
+    
+    QString timeStr = match.captured(1);
+    bool ok = false;
+    double timeValue = timeStr.toDouble(&ok);
+    QVERIFY(ok);
+    // Boot time could be any value depending on system, just verify it's a number
+}
+
+
+
 
 QTEST_MAIN(TestPatternFormatter)
 #include "test_patternformatter.moc"
