@@ -39,7 +39,7 @@ public:
           m_time(lmsg.m_time),
           m_steadyTime(lmsg.m_steadyTime),
 #ifndef QTLOGGER_NO_THREAD
-          m_threadId(lmsg.m_threadId),
+          m_qthreadptr(lmsg.m_qthreadptr),
 #endif
           m_formattedMessage(lmsg.m_formattedMessage),
           m_attributes(lmsg.m_attributes)
@@ -61,10 +61,19 @@ public:
 
     inline QDateTime time() const { return m_time; }
     inline std::chrono::steady_clock::time_point steadyTime() const { return m_steadyTime; }
-    inline qint64 threadId() const
+
+    inline quint64 threadId() const
     {
 #ifndef QTLOGGER_NO_THREAD
-        return m_threadId;
+        return m_qthreadptr;
+#else
+        return 0;
+#endif
+    }
+    inline quintptr qthreadptr() const
+    {
+#ifndef QTLOGGER_NO_THREAD
+        return m_qthreadptr;
 #else
         return 0;
 #endif
@@ -125,7 +134,7 @@ private:
     const QDateTime m_time = QDateTime::currentDateTime();
     const std::chrono::steady_clock::time_point m_steadyTime = std::chrono::steady_clock::now();
 #ifndef QTLOGGER_NO_THREAD
-    const qint64 m_threadId = reinterpret_cast<qint64>(QThread::currentThreadId());
+    const quintptr m_qthreadptr = reinterpret_cast<quintptr>(QThread::currentThreadId());
 #endif
 
     QString m_formattedMessage;
@@ -166,7 +175,7 @@ inline QVariantHash LogMessage::allAttributes() const
         { QStringLiteral("category"), m_context.category },
         { QStringLiteral("time"), m_time },
 #ifndef QTLOGGER_NO_THREAD
-        { QStringLiteral("threadId"), m_threadId },
+        { QStringLiteral("threadId"), m_qthreadptr },
 #endif
     };
 
