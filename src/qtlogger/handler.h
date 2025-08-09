@@ -24,4 +24,8 @@ public:
 
 using HandlerPtr = QSharedPointer<Handler>;
 
+inline uint qHash(Handler::HandlerType key, uint seed = 0) noexcept {
+    return ::qHash(static_cast<uint>(key), seed);
+}
+
 } // namespace QtLogger
