@@ -1402,7 +1402,11 @@ CategoryFilter::CategoryFilter(const QString &a_rules)
 
 void CategoryFilter::parseRules(const QString &rules)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     const auto lines = rules.split('\n', Qt::SkipEmptyParts);
+#else
+    const auto lines = rules.split('\n', QString::SkipEmptyParts);
+#endif
     for (const auto &line : lines) {
         const auto ruleRegex = QRegularExpression(
                 R"(^\s*(\S+?)(?:\.(debug|info|warning|critical))?\s*=\s*(true|false)\s*$)");
