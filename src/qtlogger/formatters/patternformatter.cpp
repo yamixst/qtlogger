@@ -486,6 +486,23 @@ public:
     }
 };
 
+class QThreadPtrToken : public ConditionToken
+{
+public:
+    QThreadPtrToken() { }
+
+    void appendToString(const LogMessage &lmsg, QString &dest) const override
+    {
+        dest.append(QStringLiteral("0x"));
+        dest.append(QString::number(lmsg.qthreadptr(), 16));
+    }
+
+    size_t estimatedLength() const override
+    {
+        return 18; // "0x" + 16 hex digits for 64-bit pointer
+    }
+};
+
 class AttributeToken : public ConditionToken
 {
 public:
@@ -582,6 +599,8 @@ public:
                         token = new TimeToken(timeFormat);
                     } else if (placeholder == QLatin1String("threadid")) {
                         token = new ThreadIdToken();
+                    } else if (placeholder == QLatin1String("qthreadptr")) {
+                        token = new QThreadPtrToken();
                     } else if (placeholder == QLatin1String("message")) {
                         token = new MessageToken();
                     } else if (placeholder.startsWith(QLatin1String("if-"))) {
