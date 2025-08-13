@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     // %{type}         - Log level (debug, info, warning, critical)
     // %{category}     - Logging category name
     // %{threadid}     - Thread ID
+    // %{qthreadptr}   - Pointer to the current thread
     // %{file}         - Source file name
     // %{shortfile [basedir]} - Source file name without base directory
     // %{line}         - Line number
@@ -44,7 +45,7 @@ int main(int argc, char *argv[])
             "%{time process}s "
             "%{time yyyy-MM-dd HH:mm:ss.zzz} "
             "%{shortfile}:%{line} - %{func}: "
-            "/%{threadid}/ "
+            "%{qthreadptr} "
             "[%{category}] "
             "%{if-debug}DBG%{endif}"
             "%{if-info}INF%{endif}"
