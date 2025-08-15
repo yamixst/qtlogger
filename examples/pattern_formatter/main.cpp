@@ -17,31 +17,46 @@ int main(int argc, char *argv[])
 
     // PatternFormatter supports the following placeholders:
     //
+    // Basic placeholders:
     // %{message}      - Log message text
     // %{type}         - Log level (debug, info, warning, critical)
     // %{category}     - Logging category name
-    // %{threadid}     - Thread ID
-    // %{qthreadptr}   - Pointer to the current thread
-    // %{file}         - Source file name
-    // %{shortfile [basedir]} - Source file name without base directory
-    // %{line}         - Line number
-    // %{function}     - Function name
-    // %{func}         - Short function name
-    // %{time}         - Timestamp in ISO format (default)
-    // %{time FORMAT}  - Custom time format (e.g., "yyyy-MM-dd HH:mm:ss.zzz")
-    // %{time process} - Seconds since process start
-    // %{time boot}    - Seconds since system boot
-    // %{ATTR}         - Custom attribute value (e.g., %{seq_number})
+    // %{threadid}     - Thread ID as string
+    // %{qthreadptr}   - Pointer to the current QThread object
+    // %{file}         - Full source file path
+    // %{shortfile}    - Source file name without base directory
+    // %{shortfile BASEDIR} - Source file name with custom base directory to strip
+    // %{line}         - Line number in source file
+    // %{function}     - Full function signature with cleanup
+    // %{func}         - Short function name without arguments
+    //
+    // Time placeholders:
+    // %{time}         - Timestamp in ISO 8601 format (yyyy-MM-ddTHH:mm:ss.zzz)
+    // %{time FORMAT}  - Custom time format using Qt date/time format specifiers
+    //                   Examples: "yyyy-MM-dd HH:mm:ss.zzz", "HH:mm:ss", "dd.MM.yyyy"
+    // %{time process} - Seconds since process start (floating point)
+    // %{time boot}    - Seconds since system boot (floating point)
+    //
+    // Custom attributes:
+    // %{ATTR}         - Custom attribute value (e.g., %{seq_number}, %{user_id})
+    // %{ATTR?}        - Optional attribute (no output if not set)
+    // %{ATTR?N}       - Optional attribute, remove N characters before if not set
+    // %{ATTR?N:M}     - Optional attribute, remove N chars before and M chars after if not set
+    //
+    // Conditional blocks:
     // %{if-debug}...%{endif}    - Show content only for debug messages
     // %{if-info}...%{endif}     - Show content only for info messages
     // %{if-warning}...%{endif}  - Show content only for warnings
     // %{if-critical}...%{endif} - Show content only for critical messages
-    // %%              - Escaped percent sign
+    //
+    // Special characters:
+    // %%              - Escaped percent sign (literal %)
 
     gQtLogger
         .addSeqNumber()
         .format(QStringLiteral(
-            "#%{seq_number} "
+            "#%{seq_number?} "
+            "::%{myattr?2:1} "
             "%{time process}s "
             "%{time yyyy-MM-dd HH:mm:ss.zzz} "
             "%{shortfile}:%{line} - %{func}: "
