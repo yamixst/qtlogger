@@ -12,6 +12,9 @@ namespace {
 // Static variables for process start time
 static const auto g_processStartTime = std::chrono::steady_clock::now();
 
+// Zero-Width Space marker used to signal character removal in subsequent tokens
+static const QChar ZWSP_MARKER = QChar(0x200B);
+
 class Token
 {
 public:
@@ -50,7 +53,23 @@ class LiteralToken : public ConditionToken
 public:
     explicit LiteralToken(const QString &text) : m_text(text) { }
 
-    void appendToString(const LogMessage &, QString &dest) const override { dest.append(m_text); }
+    void appendToString(const LogMessage &, QString &dest) const override
+    {
+        // Count and remove ZWSP markers from the end of dest
+        int removeCount = 0;
+        while (!dest.isEmpty() && dest.at(dest.size() - 1) == ZWSP_MARKER) {
+            dest.chop(1);
+            removeCount++;
+        }
+
+        // Skip removeCount characters from the beginning of m_text
+        if (removeCount > 0 && removeCount < m_text.size()) {
+            dest.append(m_text.mid(removeCount));
+        } else if (removeCount == 0) {
+            dest.append(m_text);
+        }
+        // If removeCount >= m_text.size(), append nothing
+    }
 
     size_t estimatedLength() const override { return m_text.size(); }
 
@@ -506,19 +525,37 @@ public:
 class AttributeToken : public ConditionToken
 {
 public:
-    explicit AttributeToken(const QString &attributeName, bool optional = false)
-        : m_attributeName(attributeName), m_optional(optional) { }
+    explicit AttributeToken(const QString &attributeName, bool optional = false,
+                            int removeBefore = 0, int removeAfter = 0)
+        : m_attributeName(attributeName)
+        , m_optional(optional)
+        , m_removeBefore(removeBefore)
+        , m_removeAfter(removeAfter)
+    {
+    }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
         if (lmsg.hasAttribute(m_attributeName)) {
             dest.append(lmsg.attribute(m_attributeName).toString());
-        } else if (!m_optional) {
+            return;
+        }
+
+        if (!m_optional) {
             dest.append(QStringLiteral("%{"));
             dest.append(m_attributeName);
             dest.append(QStringLiteral("}"));
+            return;
         }
-        // If optional and attribute not found, append nothing
+
+        // Optional attribute not found: remove characters before and add ZWSP markers for removeAfter
+        if (m_removeBefore > 0 && dest.size() >= m_removeBefore) {
+            dest.chop(m_removeBefore);
+        }
+        // Append ZWSP markers to signal how many chars to remove from next token
+        for (int i = 0; i < m_removeAfter; ++i) {
+            dest.append(ZWSP_MARKER);
+        }
     }
 
     size_t estimatedLength() const override
@@ -529,6 +566,8 @@ public:
 private:
     QString m_attributeName;
     bool m_optional;
+    int m_removeBefore;
+    int m_removeAfter;
 };
 
 } // namespace
@@ -618,10 +657,29 @@ public:
                         pos = closingPos + 1;
                         continue;
                     } else {
-                        // Try to handle as custom attribute: %{attributeName} or %{attributeName?}
-                        bool optional = placeholder.endsWith(QLatin1Char('?'));
-                        QString attrName = optional ? placeholder.chopped(1) : placeholder;
-                        token = new AttributeToken(attrName, optional);
+                        // Try to handle as custom attribute: %{attributeName} or %{attributeName?[N][:M]}
+                        int questionPos = placeholder.indexOf(QLatin1Char('?'));
+                        if (questionPos != -1) {
+                            QString attrName = placeholder.left(questionPos);
+                            QString suffix = placeholder.mid(questionPos + 1); // after '?'
+                            int removeBefore = 0;
+                            int removeAfter = 0;
+
+                            int colonPos = suffix.indexOf(QLatin1Char(':'));
+                            if (colonPos == -1) {
+                                // Only removeBefore: %{attr?N}
+                                removeBefore = suffix.toInt();
+                            } else {
+                                // Both or only removeAfter: %{attr?N:M} or %{attr?:M}
+                                if (colonPos > 0) {
+                                    removeBefore = suffix.left(colonPos).toInt();
+                                }
+                                removeAfter = suffix.mid(colonPos + 1).toInt();
+                            }
+                            token = new AttributeToken(attrName, true, removeBefore, removeAfter);
+                        } else {
+                            token = new AttributeToken(placeholder);
+                        }
                     }
 
                     if (token) {
@@ -676,6 +734,11 @@ public:
             if (token->checkCondition(lmsg)) {
                 token->appendToString(lmsg, result);
             }
+        }
+
+        // Remove any trailing ZWSP markers that weren't consumed
+        while (!result.isEmpty() && result.at(result.size() - 1) == ZWSP_MARKER) {
+            result.chop(1);
         }
 
         return result;

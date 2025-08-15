@@ -44,6 +44,12 @@ private slots:
 
     // Thread tests
     void testPatternFormatterWithQThreadPtr();
+
+    // Optional attribute tests
+    void testPatternFormatterWithOptionalAttribute();
+    void testPatternFormatterWithOptionalAttributeRemoveBefore();
+    void testPatternFormatterWithOptionalAttributeRemoveAfter();
+    void testPatternFormatterWithOptionalAttributeRemoveBeforeAndAfter();
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -343,6 +349,78 @@ void TestPatternFormatter::testPatternFormatterWithQThreadPtr()
     quintptr ptrValue = ptrStr.mid(2).toULongLong(&ok, 16);
     QVERIFY(ok);
     QVERIFY(ptrValue != 0);  // Thread pointer should not be null
+}
+
+void TestPatternFormatter::testPatternFormatterWithOptionalAttribute()
+{
+    // Test %{attr?} - if attribute not found, nothing is inserted
+    QString pattern = "prefix[%{myattr?}]suffix";
+    PatternFormatter formatter(pattern);
+
+    // With attribute set
+    auto msg1 = MockLogMessage::create(QtInfoMsg, "test");
+    msg1.setAttribute("myattr", "VALUE");
+    QString formatted1 = formatter.format(msg1);
+    QCOMPARE(formatted1, QString("prefix[VALUE]suffix"));
+
+    // Without attribute - should insert nothing for the attribute
+    auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted2 = formatter.format(msg2);
+    QCOMPARE(formatted2, QString("prefix[]suffix"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveBefore()
+{
+    // Test %{attr?N} - if attribute not found, remove N chars before
+    QString pattern = "time //%{attrname?2} message";
+    PatternFormatter formatter(pattern);
+
+    // With attribute set
+    auto msg1 = MockLogMessage::create(QtInfoMsg, "test");
+    msg1.setAttribute("attrname", "VALUE");
+    QString formatted1 = formatter.format(msg1);
+    QCOMPARE(formatted1, QString("time //VALUE message"));
+
+    // Without attribute - should remove 2 chars before ("//" becomes "")
+    auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted2 = formatter.format(msg2);
+    QCOMPARE(formatted2, QString("time  message"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveAfter()
+{
+    // Test %{attr?:M} - if attribute not found, remove M chars after
+    QString pattern = "time //%{attrname?:1} message";
+    PatternFormatter formatter(pattern);
+
+    // With attribute set
+    auto msg1 = MockLogMessage::create(QtInfoMsg, "test");
+    msg1.setAttribute("attrname", "VALUE");
+    QString formatted1 = formatter.format(msg1);
+    QCOMPARE(formatted1, QString("time //VALUE message"));
+
+    // Without attribute - should remove 1 char after (space after placeholder)
+    auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted2 = formatter.format(msg2);
+    QCOMPARE(formatted2, QString("time //message"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveBeforeAndAfter()
+{
+    // Test %{attr?N:M} - if attribute not found, remove N chars before and M after
+    QString pattern = "time //%{attrname?2:1} message";
+    PatternFormatter formatter(pattern);
+
+    // With attribute set
+    auto msg1 = MockLogMessage::create(QtInfoMsg, "test");
+    msg1.setAttribute("attrname", "VALUE");
+    QString formatted1 = formatter.format(msg1);
+    QCOMPARE(formatted1, QString("time //VALUE message"));
+
+    // Without attribute - should remove 2 chars before ("//") and 1 after (" ")
+    auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted2 = formatter.format(msg2);
+    QCOMPARE(formatted2, QString("time message"));
 }
 
 QTEST_MAIN(TestPatternFormatter)
