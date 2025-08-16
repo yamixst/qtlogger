@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
     gQtLogger
         .addSeqNumber()
-        .format("#%{seq_number?:0>4} "
+        .format("#%{seq_number?1,1:0>4} "
                 "::%{myattr?2,1:^20} "
                 "%{time process:>9}s "
                 "%{time yyyy-MM-dd HH:mm:ss.zzz} "
