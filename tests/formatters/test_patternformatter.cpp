@@ -50,6 +50,15 @@ private slots:
     void testPatternFormatterWithOptionalAttributeRemoveBefore();
     void testPatternFormatterWithOptionalAttributeRemoveAfter();
     void testPatternFormatterWithOptionalAttributeRemoveBeforeAndAfter();
+
+    // Fixed-width formatting tests (Python-style)
+    void testPatternFormatterWithLeftAlign();
+    void testPatternFormatterWithRightAlign();
+    void testPatternFormatterWithCenterAlign();
+    void testPatternFormatterWithCustomFillChar();
+    void testPatternFormatterWithWidthSmallerThanContent();
+    void testPatternFormatterWithMultipleFormattedTokens();
+    void testPatternFormatterWithTimeAndFormatSpec();
 };
 
 void TestPatternFormatter::testPatternFormatterBasic()
@@ -421,6 +430,116 @@ void TestPatternFormatter::testPatternFormatterWithOptionalAttributeRemoveBefore
     auto msg2 = MockLogMessage::create(QtInfoMsg, "test");
     QString formatted2 = formatter.format(msg2);
     QCOMPARE(formatted2, QString("time message"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithLeftAlign()
+{
+    // Test %{type:<10} - left align with width 10
+    QString pattern = "[%{type:<10}] %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted = formatter.format(msg);
+
+    // "info" is 4 chars, should be padded to 10 with spaces on the right
+    QCOMPARE(formatted, QString("[info      ] test"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithRightAlign()
+{
+    // Test %{type:>10} - right align with width 10
+    QString pattern = "[%{type:>10}] %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtDebugMsg, "test");
+    QString formatted = formatter.format(msg);
+
+    // "debug" is 5 chars, should be padded to 10 with spaces on the left
+    QCOMPARE(formatted, QString("[     debug] test"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithCenterAlign()
+{
+    // Test %{type:^10} - center align with width 10
+    QString pattern = "[%{type:^10}] %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted = formatter.format(msg);
+
+    // "info" is 4 chars, 6 chars padding: 3 left, 3 right (Python: extra goes right)
+    QCOMPARE(formatted, QString("[   info   ] test"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithCustomFillChar()
+{
+    // Test %{type:*<10} - left align with * fill character
+    QString pattern = "[%{type:*<10}]";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtInfoMsg, "test");
+    QString formatted = formatter.format(msg);
+
+    QCOMPARE(formatted, QString("[info******]"));
+
+    // Test with different fill chars
+    QString pattern2 = "[%{type:_>10}]";
+    PatternFormatter formatter2(pattern2);
+    QString formatted2 = formatter2.format(msg);
+    QCOMPARE(formatted2, QString("[______info]"));
+
+    // Test center with custom fill
+    QString pattern3 = "[%{type:-^10}]";
+    PatternFormatter formatter3(pattern3);
+    QString formatted3 = formatter3.format(msg);
+    QCOMPARE(formatted3, QString("[---info---]"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithWidthSmallerThanContent()
+{
+    // Python behavior: never truncate, just return full content
+    QString pattern = "[%{type:<3}]";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtWarningMsg, "test");
+    QString formatted = formatter.format(msg);
+
+    // "warning" is 7 chars, width is 3, should NOT truncate
+    QCOMPARE(formatted, QString("[warning]"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithMultipleFormattedTokens()
+{
+    // Test multiple tokens with different format specs
+    QString pattern = "[%{type:<8}] %{category:>15} | %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::createWithCategory("app.core", QtInfoMsg, "Multiple formats");
+    QString formatted = formatter.format(msg);
+
+    // type "info" padded to 8 left-aligned, category "app.core" padded to 15 right-aligned
+    QCOMPARE(formatted, QString("[info    ]        app.core | Multiple formats"));
+}
+
+void TestPatternFormatter::testPatternFormatterWithTimeAndFormatSpec()
+{
+    // Test time token with format AND width spec
+    QString pattern = "[%{time hh:mm:ss:>12}] %{message}";
+    PatternFormatter formatter(pattern);
+
+    auto msg = MockLogMessage::create(QtInfoMsg, "Time test");
+    QString formatted = formatter.format(msg);
+
+    // Extract the time part
+    QVERIFY(formatted.startsWith("["));
+    QVERIFY(formatted.contains("] Time test"));
+
+    // The time format "hh:mm:ss" produces 8 chars, should be right-padded to 12
+    int closeBracket = formatted.indexOf(']');
+    QString timePart = formatted.mid(1, closeBracket - 1);
+    QCOMPARE(timePart.length(), 12);
+    // Should have 4 spaces on the left (right-aligned)
+    QVERIFY(timePart.startsWith("    "));
 }
 
 QTEST_MAIN(TestPatternFormatter)

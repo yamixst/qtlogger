@@ -48,7 +48,61 @@ private:
     bool m_hasCondition = false;
 };
 
-class LiteralToken : public ConditionToken
+class FixedWidthToken : public ConditionToken
+{
+public:
+    void setFormatSpec(QChar fill, QChar align, int width)
+    {
+        m_fill = fill;
+        m_align = align;
+        m_width = width;
+    }
+
+    bool hasFormatSpec() const { return m_width > 0 && !m_align.isNull(); }
+
+    int formatWidth() const { return m_width; }
+
+protected:
+    QString applyPadding(const QString &value) const
+    {
+        if (m_width <= 0 || value.length() >= m_width || m_align.isNull()) {
+            return value;
+        }
+
+        int padding = m_width - value.length();
+        QString result;
+        result.reserve(m_width);
+
+        if (m_align == QLatin1Char('<')) {
+            // Left align: content then padding
+            result.append(value);
+            result.append(QString(padding, m_fill));
+        } else if (m_align == QLatin1Char('>')) {
+            // Right align: padding then content
+            result.append(QString(padding, m_fill));
+            result.append(value);
+        } else if (m_align == QLatin1Char('^')) {
+            // Center align: extra padding goes to the right (Python behavior)
+            int leftPad = padding / 2;
+            int rightPad = padding - leftPad;
+            result.append(QString(leftPad, m_fill));
+            result.append(value);
+            result.append(QString(rightPad, m_fill));
+        } else {
+            // Unknown alignment, return as-is
+            return value;
+        }
+
+        return result;
+    }
+
+private:
+    QChar m_fill = QLatin1Char(' ');
+    QChar m_align = QChar();
+    int m_width = 0;
+};
+
+class LiteralToken : public FixedWidthToken
 {
 public:
     explicit LiteralToken(const QString &text) : m_text(text) { }
@@ -77,71 +131,71 @@ private:
     QString m_text;
 };
 
-class MessageToken : public ConditionToken
+class MessageToken : public FixedWidthToken
 {
 public:
     MessageToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(lmsg.message());
+        dest.append(applyPadding(lmsg.message()));
     }
 
     size_t estimatedLength() const override
     {
-        return 50; // Estimated average message length
+        return hasFormatSpec() ? formatWidth() : 50; // Estimated average message length
     }
 };
 
-class TypeToken : public ConditionToken
+class TypeToken : public FixedWidthToken
 {
 public:
     TypeToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(qtMsgTypeToString(lmsg.type()));
+        dest.append(applyPadding(qtMsgTypeToString(lmsg.type())));
     }
 
     size_t estimatedLength() const override
     {
-        return 8; // Maximum length of "critical"
+        return hasFormatSpec() ? formatWidth() : 8; // Maximum length of "critical"
     }
 };
 
-class LineToken : public ConditionToken
+class LineToken : public FixedWidthToken
 {
 public:
     LineToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(QString::number(lmsg.line()));
+        dest.append(applyPadding(QString::number(lmsg.line())));
     }
 
     size_t estimatedLength() const override
     {
-        return 5; // Maximum length of "99999"
+        return hasFormatSpec() ? formatWidth() : 5; // Maximum length of "99999"
     }
 };
 
-class FileToken : public ConditionToken
+class FileToken : public FixedWidthToken
 {
 public:
     FileToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(lmsg.file());
+        dest.append(applyPadding(lmsg.file()));
     }
 
     size_t estimatedLength() const override
     {
-        return 20; // Maximum length of "path/to/file.cpp"
+        return hasFormatSpec() ? formatWidth() : 20; // Maximum length of "path/to/file.cpp"
     }
 };
 
-class ShortFileToken : public ConditionToken
+class ShortFileToken : public FixedWidthToken
 {
 public:
     ShortFileToken(const QString &baseDir = QString()) : m_baseDir(baseDir) { }
@@ -149,6 +203,7 @@ public:
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
         QString file = lmsg.file();
+        QString value;
         if (m_baseDir.isEmpty()) {
             // No basedir specified - return only filename without directory
             int lastSlash = file.lastIndexOf(QLatin1Char('/'));
@@ -156,9 +211,9 @@ public:
                 lastSlash = file.lastIndexOf(QLatin1Char('\\'));
             }
             if (lastSlash != -1) {
-                dest.append(file.mid(lastSlash + 1));
+                value = file.mid(lastSlash + 1);
             } else {
-                dest.append(file);
+                value = file;
             }
         } else {
             // Strip basedir prefix if present
@@ -168,38 +223,43 @@ public:
                 if (result.startsWith(QLatin1Char('/')) || result.startsWith(QLatin1Char('\\'))) {
                     result = result.mid(1);
                 }
-                dest.append(result);
+                value = result;
             } else {
-                dest.append(file);
+                value = file;
             }
         }
+        dest.append(applyPadding(value));
     }
 
     size_t estimatedLength() const override
     {
-        return 20;
+        return hasFormatSpec() ? formatWidth() : 20;
     }
 
 private:
     QString m_baseDir;
 };
 
-class FunctionToken : public ConditionToken
+class FunctionToken : public FixedWidthToken
 {
 public:
     FunctionToken(bool cleanup = true) : m_cleanup(cleanup) { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
+        QString value;
         if (m_cleanup) {
-            dest.append(QString::fromLatin1(cleanup(lmsg.function())));
+            value = QString::fromLatin1(cleanup(lmsg.function()));
         } else {
-            dest.append(QString::fromLatin1(lmsg.function()));
+            value = QString::fromLatin1(lmsg.function());
         }
+        dest.append(applyPadding(value));
     }
 
     size_t estimatedLength() const override
     {
+        if (hasFormatSpec())
+            return formatWidth();
         return m_cleanup ? 20 : 40;
     }
 
@@ -435,50 +495,54 @@ private:
     }
 };
 
-class CategoryToken : public ConditionToken
+class CategoryToken : public FixedWidthToken
 {
 public:
     CategoryToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(lmsg.category());
+        dest.append(applyPadding(lmsg.category()));
     }
 
     size_t estimatedLength() const override
     {
-        return 20; // Maximum length of "categoryName"
+        return hasFormatSpec() ? formatWidth() : 20; // Maximum length of "categoryName"
     }
 };
 
-class TimeToken : public ConditionToken
+class TimeToken : public FixedWidthToken
 {
 public:
     explicit TimeToken(const QString &format = QString()) : m_format(format) { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
+        QString value;
         if (m_format == QLatin1String("process")) {
             // Time since process started in seconds
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     lmsg.steadyTime() - g_processStartTime);
             double seconds = duration.count() / 1000.0;
-            dest.append(QString::number(seconds, 'f', 3));
+            value = QString::number(seconds, 'f', 3);
         } else if (m_format == QLatin1String("boot")) {
             // Time since system boot in seconds using steady_clock epoch
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     lmsg.steadyTime().time_since_epoch());
             double seconds = duration.count() / 1000.0;
-            dest.append(QString::number(seconds, 'f', 3));
+            value = QString::number(seconds, 'f', 3);
         } else if (m_format.isEmpty()) {
-            dest.append(lmsg.time().toString(Qt::ISODate));
+            value = lmsg.time().toString(Qt::ISODate);
         } else {
-            dest.append(lmsg.time().toString(m_format));
+            value = lmsg.time().toString(m_format);
         }
+        dest.append(applyPadding(value));
     }
 
     size_t estimatedLength() const override
     {
+        if (hasFormatSpec())
+            return formatWidth();
         if (m_format == QLatin1String("process") || m_format == QLatin1String("boot")) {
             return 15; // Enough for "123456789.123"
         }
@@ -489,40 +553,40 @@ private:
     QString m_format;
 };
 
-class ThreadIdToken : public ConditionToken
+class ThreadIdToken : public FixedWidthToken
 {
 public:
     ThreadIdToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(QString::number(lmsg.threadId()));
+        dest.append(applyPadding(QString::number(lmsg.threadId())));
     }
 
     size_t estimatedLength() const override
     {
-        return 10; // Maximum length of "9999999999"
+        return hasFormatSpec() ? formatWidth() : 10; // Maximum length of "9999999999"
     }
 };
 
-class QThreadPtrToken : public ConditionToken
+class QThreadPtrToken : public FixedWidthToken
 {
 public:
     QThreadPtrToken() { }
 
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
-        dest.append(QStringLiteral("0x"));
-        dest.append(QString::number(lmsg.qthreadptr(), 16));
+        QString value = QStringLiteral("0x") + QString::number(lmsg.qthreadptr(), 16);
+        dest.append(applyPadding(value));
     }
 
     size_t estimatedLength() const override
     {
-        return 18; // "0x" + 16 hex digits for 64-bit pointer
+        return hasFormatSpec() ? formatWidth() : 18; // "0x" + 16 hex digits for 64-bit pointer
     }
 };
 
-class AttributeToken : public ConditionToken
+class AttributeToken : public FixedWidthToken
 {
 public:
     explicit AttributeToken(const QString &attributeName, bool optional = false,
@@ -537,14 +601,13 @@ public:
     void appendToString(const LogMessage &lmsg, QString &dest) const override
     {
         if (lmsg.hasAttribute(m_attributeName)) {
-            dest.append(lmsg.attribute(m_attributeName).toString());
+            dest.append(applyPadding(lmsg.attribute(m_attributeName).toString()));
             return;
         }
 
         if (!m_optional) {
-            dest.append(QStringLiteral("%{"));
-            dest.append(m_attributeName);
-            dest.append(QStringLiteral("}"));
+            QString value = QStringLiteral("%{") + m_attributeName + QStringLiteral("}");
+            dest.append(applyPadding(value));
             return;
         }
 
@@ -560,7 +623,7 @@ public:
 
     size_t estimatedLength() const override
     {
-        return 20; // Estimated average attribute value length
+        return hasFormatSpec() ? formatWidth() : 20; // Estimated average attribute value length
     }
 
 private:
@@ -569,6 +632,56 @@ private:
     int m_removeBefore;
     int m_removeAfter;
 };
+
+// Helper function to parse Python-style format spec: [fill][align][width]
+// Returns true if valid format spec was found
+bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width)
+{
+    if (spec.isEmpty())
+        return false;
+
+    int pos = 0;
+    fill = QLatin1Char(' ');
+    align = QChar();
+    width = 0;
+
+    // Check if we have fill + align (fill is any char, align is <, >, ^)
+    if (spec.length() >= 2) {
+        QChar possibleAlign = spec.at(1);
+        if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
+            || possibleAlign == QLatin1Char('^')) {
+            fill = spec.at(0);
+            align = possibleAlign;
+            pos = 2;
+        }
+    }
+
+    // If no fill+align found, check for just align
+    if (align.isNull() && !spec.isEmpty()) {
+        QChar possibleAlign = spec.at(0);
+        if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
+            || possibleAlign == QLatin1Char('^')) {
+            align = possibleAlign;
+            pos = 1;
+        }
+    }
+
+    // If no align found at all, this is not a valid format spec
+    if (align.isNull())
+        return false;
+
+    // Parse width (remaining characters should be digits)
+    if (pos >= spec.length())
+        return false;
+
+    QString widthStr = spec.mid(pos);
+    bool ok;
+    width = widthStr.toInt(&ok);
+    if (!ok || width <= 0)
+        return false;
+
+    return true;
+}
 
 } // namespace
 
@@ -611,7 +724,25 @@ public:
 
                     QString placeholder = m_pattern.mid(pos + 2, closingPos - pos - 2);
 
-                    ConditionToken *token = nullptr;
+                    // Try to extract format spec from the end of placeholder
+                    // Format: name[:format_spec] where format_spec is [fill][align][width]
+                    QString formatSpecStr;
+                    QChar fill = QLatin1Char(' ');
+                    QChar align;
+                    int width = 0;
+                    bool hasFormatSpec = false;
+
+                    // Find the last colon that might start a format spec
+                    int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
+                    if (lastColon != -1 && lastColon < placeholder.length() - 1) {
+                        QString possibleSpec = placeholder.mid(lastColon + 1);
+                        if (parseFormatSpec(possibleSpec, fill, align, width)) {
+                            hasFormatSpec = true;
+                            placeholder = placeholder.left(lastColon);
+                        }
+                    }
+
+                    FixedWidthToken *token = nullptr;
 
                     if (placeholder == QLatin1String("type")) {
                         token = new TypeToken();
@@ -685,6 +816,9 @@ public:
                     if (token) {
                         if (hasCondition) {
                             token->setCondition(currentCondition);
+                        }
+                        if (hasFormatSpec) {
+                            token->setFormatSpec(fill, align, width);
                         }
                         m_tokens.append(QSharedPointer<Token>(token));
                     }
