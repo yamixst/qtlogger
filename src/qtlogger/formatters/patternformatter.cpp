@@ -3,6 +3,8 @@
 
 #include "patternformatter.h"
 
+#include <optional>
+
 #include <QSharedPointer>
 
 namespace QtLogger {
@@ -83,7 +85,7 @@ public:
         // Check if we have fill + align (fill is any char, align is <, >, ^)
         if (s.length() >= 2) {
             QChar possibleAlign = s.at(1);
-            if (QLatin1String("<^>").contains(possibleAlign)) {
+            if (QStringLiteral("<^>").contains(possibleAlign)) {
                 spec.fill = s.at(0);
                 spec.align = charToAlignment(possibleAlign);
                 hasExplicitFill = true;
@@ -94,7 +96,7 @@ public:
         // If no fill+align found, check for just align
         if (spec.align == Alignment::None && !s.isEmpty()) {
             QChar possibleAlign = s.at(0);
-            if (QLatin1String("<^>").contains(possibleAlign)) {
+            if (QStringLiteral("<^>").contains(possibleAlign)) {
                 spec.align = charToAlignment(possibleAlign);
                 pos = 1;
             }
