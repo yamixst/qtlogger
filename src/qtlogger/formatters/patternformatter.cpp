@@ -62,18 +62,17 @@ public:
 
     void setFormatSpec(const FormatSpec &spec) { m_spec = spec; }
 
-    static std::optional<FormatSpec> parseFormatSpec(const QString &spec)
+    static std::optional<FormatSpec> parseFormatSpec(const QString &specString)
     {
-        if (spec.isEmpty())
+        if (specString.isEmpty())
             return std::nullopt;
 
-        QString s = spec;
+        QString s = specString;
         int pos = 0;
-        FormatSpec result;
+        FormatSpec spec;
         bool hasExplicitFill = false;
         bool hasTruncateSuffix = false;
 
-        // Check for truncate suffix '!'
         if (s.endsWith(QLatin1Char('!'))) {
             hasTruncateSuffix = true;
             s.chop(1);
@@ -84,39 +83,37 @@ public:
         // Check if we have fill + align (fill is any char, align is <, >, ^)
         if (s.length() >= 2) {
             QChar possibleAlign = s.at(1);
-            if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
-                || possibleAlign == QLatin1Char('^')) {
-                result.fill = s.at(0);
-                result.align = charToAlignment(possibleAlign);
+            if (QLatin1String("<^>").contains(possibleAlign)) {
+                spec.fill = s.at(0);
+                spec.align = charToAlignment(possibleAlign);
                 hasExplicitFill = true;
                 pos = 2;
             }
         }
 
         // If no fill+align found, check for just align
-        if (result.align == Alignment::None && !s.isEmpty()) {
+        if (spec.align == Alignment::None && !s.isEmpty()) {
             QChar possibleAlign = s.at(0);
-            if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
-                || possibleAlign == QLatin1Char('^')) {
-                result.align = charToAlignment(possibleAlign);
+            if (QLatin1String("<^>").contains(possibleAlign)) {
+                spec.align = charToAlignment(possibleAlign);
                 pos = 1;
             }
         }
 
         // If no align found, check if it's just a number (only valid with !)
-        if (result.align == Alignment::None && hasTruncateSuffix) {
+        if (spec.align == Alignment::None && hasTruncateSuffix) {
             // Try to parse entire remaining string as width
             bool ok;
-            result.width = s.toInt(&ok);
-            if (ok && result.width > 0) {
-                result.truncateMode = TruncateMode::TruncateOnly;
-                return result;
+            spec.width = s.toInt(&ok);
+            if (ok && spec.width > 0) {
+                spec.truncateMode = TruncateMode::TruncateOnly;
+                return spec;
             }
             return std::nullopt;
         }
 
         // If no align found at all (and not truncate-only), this is not a valid format spec
-        if (result.align == Alignment::None)
+        if (spec.align == Alignment::None)
             return std::nullopt;
 
         // Parse width (remaining characters should be digits)
@@ -125,16 +122,16 @@ public:
 
         QString widthStr = s.mid(pos);
         bool ok;
-        result.width = widthStr.toInt(&ok);
-        if (!ok || result.width <= 0)
+        spec.width = widthStr.toInt(&ok);
+        if (!ok || spec.width <= 0)
             return std::nullopt;
 
         // Determine truncate mode
         if (hasTruncateSuffix) {
-            result.truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
+            spec.truncateMode = hasExplicitFill ? TruncateMode::Truncate : TruncateMode::TruncateOnly;
         }
 
-        return result;
+        return spec;
     }
 
     bool hasFormatSpec() const
@@ -146,13 +143,16 @@ public:
 
     static Alignment charToAlignment(QChar ch)
     {
-        if (ch == QLatin1Char('<'))
+        switch (ch.unicode()) {
+        case '<':
             return Alignment::Left;
-        if (ch == QLatin1Char('>'))
+        case '>':
             return Alignment::Right;
-        if (ch == QLatin1Char('^'))
+        case '^':
             return Alignment::Center;
-        return Alignment::None;
+        default:
+            return Alignment::None;
+        }
     }
 
     int formatWidth() const { return m_spec.width; }
@@ -164,43 +164,32 @@ protected:
             return value;
         }
 
-        // Truncate-only mode: no padding, just truncate if needed
-        // With ! but no explicit fill character:
-        //   - No align or < : truncate from right (keep first N chars)
-        //   - > : truncate from left (keep last N chars)
         if (m_spec.truncateMode == TruncateMode::TruncateOnly) {
             if (value.length() <= m_spec.width) {
                 return value;
             }
             if (m_spec.align == Alignment::Right) {
-                // Truncate from left: keep last width characters
                 return value.right(m_spec.width);
             } else {
-                // Truncate from right: keep first width characters (default, or <)
                 return value.left(m_spec.width);
             }
         }
 
-        // Regular mode with padding
         if (m_spec.align == Alignment::None) {
             return value;
         }
 
         QString val = value;
 
-        // Truncate if enabled and value is longer than width
         if (m_spec.truncateMode == TruncateMode::Truncate
             && val.length() > m_spec.width) {
             if (m_spec.align == Alignment::Right) {
-                // Truncate from left: keep last width characters
                 val = val.right(m_spec.width);
             } else {
-                // Truncate from right: keep first width characters (default, < or ^)
                 val = val.left(m_spec.width);
             }
         }
 
-        // If value is already at or exceeds width (and not truncating), return as-is
         if (val.length() >= m_spec.width) {
             return val;
         }
@@ -211,17 +200,14 @@ protected:
 
         switch (m_spec.align) {
         case Alignment::Left:
-            // Left align: content then padding
             result.append(val);
             result.append(QString(padding, m_spec.fill));
             break;
         case Alignment::Right:
-            // Right align: padding then content
             result.append(QString(padding, m_spec.fill));
             result.append(val);
             break;
         case Alignment::Center: {
-            // Center align: extra padding goes to the right
             int leftPad = padding / 2;
             int rightPad = padding - leftPad;
             result.append(QString(leftPad, m_spec.fill));
@@ -230,7 +216,6 @@ protected:
             break;
         }
         case Alignment::None:
-            // Unknown alignment, return as-is
             return val;
         }
 
@@ -248,19 +233,18 @@ public:
 
     void appendToString(const LogMessage &, QString &dest) const override
     {
-        // Count and remove ZWSP markers from the end of dest
         int removeCount = 0;
         while (!dest.isEmpty() && dest.at(dest.size() - 1) == DEL_MARKER) {
             dest.chop(1);
             removeCount++;
         }
 
-        // Skip removeCount characters from the beginning of m_text
         if (removeCount > 0 && removeCount < m_text.size()) {
             dest.append(m_text.mid(removeCount));
         } else if (removeCount == 0) {
             dest.append(m_text);
         }
+
         // If removeCount >= m_text.size(), append nothing
     }
 
@@ -813,11 +797,8 @@ public:
 
                     QString placeholder = m_pattern.mid(pos + 2, closingPos - pos - 2);
 
-                    // Try to extract format spec from the end of placeholder
-                    // Format: name[:format_spec] where format_spec is [fill][align][width][!]
                     std::optional<FormattedToken::FormatSpec> formatSpec;
 
-                    // Find the last colon that might start a format spec
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
@@ -873,7 +854,7 @@ public:
                         pos = closingPos + 1;
                         continue;
                     } else {
-                        // Try to handle as custom attribute: %{attributeName} or %{attributeName?[N][:M]}
+                        // Try to handle as custom attribute: %{attr} or %{attr?[N][,M]}
                         int questionPos = placeholder.indexOf(QLatin1Char('?'));
                         if (questionPos != -1) {
                             QString attrName = placeholder.left(questionPos);
@@ -953,11 +934,6 @@ public:
             if (token->checkCondition(lmsg)) {
                 token->appendToString(lmsg, result);
             }
-        }
-
-        // Remove any trailing ZWSP markers that weren't consumed
-        while (!result.isEmpty() && result.at(result.size() - 1) == DEL_MARKER) {
-            result.chop(1);
         }
 
         return result;
