@@ -51,7 +51,7 @@ private slots:
     void testPatternFormatterWithOptionalAttributeRemoveAfter();
     void testPatternFormatterWithOptionalAttributeRemoveBeforeAndAfter();
 
-    // Fixed-width formatting tests (Python-style)
+    // Fixed-width formatting tests
     void testPatternFormatterWithLeftAlign();
     void testPatternFormatterWithRightAlign();
     void testPatternFormatterWithCenterAlign();
@@ -473,7 +473,7 @@ void TestPatternFormatter::testPatternFormatterWithCenterAlign()
     auto msg = MockLogMessage::create(QtInfoMsg, "test");
     QString formatted = formatter.format(msg);
 
-    // "info" is 4 chars, 6 chars padding: 3 left, 3 right (Python: extra goes right)
+    // "info" is 4 chars, 6 chars padding: 3 left, 3 right
     QCOMPARE(formatted, QString("[   info   ] test"));
 }
 
@@ -503,7 +503,7 @@ void TestPatternFormatter::testPatternFormatterWithCustomFillChar()
 
 void TestPatternFormatter::testPatternFormatterWithWidthSmallerThanContent()
 {
-    // Python behavior: never truncate, just return full content
+    // never truncate, just return full content
     QString pattern = "[%{type:<3}]";
     PatternFormatter formatter(pattern);
 

@@ -95,7 +95,7 @@ protected:
             result.append(QString(padding, m_fill));
             result.append(val);
         } else if (m_align == QLatin1Char('^')) {
-            // Center align: extra padding goes to the right (Python behavior)
+            // Center align: extra padding goes to the right
             int leftPad = padding / 2;
             int rightPad = padding - leftPad;
             result.append(QString(leftPad, m_fill));
@@ -647,7 +647,7 @@ private:
     int m_removeAfter;
 };
 
-// Helper function to parse Python-style format spec: [fill][align][width][!]
+// Helper function to parse format spec: [fill][align][width][!]
 // The ! suffix enables truncation when value exceeds width
 // Returns true if valid format spec was found
 bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width, bool &truncate)
