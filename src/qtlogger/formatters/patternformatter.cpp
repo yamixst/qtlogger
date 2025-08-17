@@ -51,11 +51,12 @@ private:
 class FixedWidthToken : public ConditionToken
 {
 public:
-    void setFormatSpec(QChar fill, QChar align, int width)
+    void setFormatSpec(QChar fill, QChar align, int width, bool truncate = false)
     {
         m_fill = fill;
         m_align = align;
         m_width = width;
+        m_truncate = truncate;
     }
 
     bool hasFormatSpec() const { return m_width > 0 && !m_align.isNull(); }
@@ -65,32 +66,44 @@ public:
 protected:
     QString applyPadding(const QString &value) const
     {
-        if (m_width <= 0 || value.length() >= m_width || m_align.isNull()) {
+        if (m_width <= 0 || m_align.isNull()) {
             return value;
         }
 
-        int padding = m_width - value.length();
+        QString val = value;
+
+        // Truncate if enabled and value is longer than width
+        if (m_truncate && val.length() > m_width) {
+            val = val.left(m_width);
+        }
+
+        // If value is already at or exceeds width (and not truncating), return as-is
+        if (val.length() >= m_width) {
+            return val;
+        }
+
+        int padding = m_width - val.length();
         QString result;
         result.reserve(m_width);
 
         if (m_align == QLatin1Char('<')) {
             // Left align: content then padding
-            result.append(value);
+            result.append(val);
             result.append(QString(padding, m_fill));
         } else if (m_align == QLatin1Char('>')) {
             // Right align: padding then content
             result.append(QString(padding, m_fill));
-            result.append(value);
+            result.append(val);
         } else if (m_align == QLatin1Char('^')) {
             // Center align: extra padding goes to the right (Python behavior)
             int leftPad = padding / 2;
             int rightPad = padding - leftPad;
             result.append(QString(leftPad, m_fill));
-            result.append(value);
+            result.append(val);
             result.append(QString(rightPad, m_fill));
         } else {
             // Unknown alignment, return as-is
-            return value;
+            return val;
         }
 
         return result;
@@ -100,6 +113,7 @@ private:
     QChar m_fill = QLatin1Char(' ');
     QChar m_align = QChar();
     int m_width = 0;
+    bool m_truncate = false;
 };
 
 class LiteralToken : public FixedWidthToken
@@ -633,32 +647,43 @@ private:
     int m_removeAfter;
 };
 
-// Helper function to parse Python-style format spec: [fill][align][width]
+// Helper function to parse Python-style format spec: [fill][align][width][!]
+// The ! suffix enables truncation when value exceeds width
 // Returns true if valid format spec was found
-bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width)
+bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width, bool &truncate)
 {
     if (spec.isEmpty())
         return false;
 
+    QString s = spec;
     int pos = 0;
     fill = QLatin1Char(' ');
     align = QChar();
     width = 0;
+    truncate = false;
+
+    // Check for truncate suffix '!'
+    if (s.endsWith(QLatin1Char('!'))) {
+        truncate = true;
+        s.chop(1);
+        if (s.isEmpty())
+            return false;
+    }
 
     // Check if we have fill + align (fill is any char, align is <, >, ^)
-    if (spec.length() >= 2) {
-        QChar possibleAlign = spec.at(1);
+    if (s.length() >= 2) {
+        QChar possibleAlign = s.at(1);
         if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
             || possibleAlign == QLatin1Char('^')) {
-            fill = spec.at(0);
+            fill = s.at(0);
             align = possibleAlign;
             pos = 2;
         }
     }
 
     // If no fill+align found, check for just align
-    if (align.isNull() && !spec.isEmpty()) {
-        QChar possibleAlign = spec.at(0);
+    if (align.isNull() && !s.isEmpty()) {
+        QChar possibleAlign = s.at(0);
         if (possibleAlign == QLatin1Char('<') || possibleAlign == QLatin1Char('>')
             || possibleAlign == QLatin1Char('^')) {
             align = possibleAlign;
@@ -671,10 +696,10 @@ bool parseFormatSpec(const QString &spec, QChar &fill, QChar &align, int &width)
         return false;
 
     // Parse width (remaining characters should be digits)
-    if (pos >= spec.length())
+    if (pos >= s.length())
         return false;
 
-    QString widthStr = spec.mid(pos);
+    QString widthStr = s.mid(pos);
     bool ok;
     width = widthStr.toInt(&ok);
     if (!ok || width <= 0)
@@ -725,18 +750,19 @@ public:
                     QString placeholder = m_pattern.mid(pos + 2, closingPos - pos - 2);
 
                     // Try to extract format spec from the end of placeholder
-                    // Format: name[:format_spec] where format_spec is [fill][align][width]
+                    // Format: name[:format_spec] where format_spec is [fill][align][width][!]
                     QString formatSpecStr;
                     QChar fill = QLatin1Char(' ');
                     QChar align;
                     int width = 0;
+                    bool truncate = false;
                     bool hasFormatSpec = false;
 
                     // Find the last colon that might start a format spec
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        if (parseFormatSpec(possibleSpec, fill, align, width)) {
+                        if (parseFormatSpec(possibleSpec, fill, align, width, truncate)) {
                             hasFormatSpec = true;
                             placeholder = placeholder.left(lastColon);
                         }
@@ -818,7 +844,7 @@ public:
                             token->setCondition(currentCondition);
                         }
                         if (hasFormatSpec) {
-                            token->setFormatSpec(fill, align, width);
+                            token->setFormatSpec(fill, align, width, truncate);
                         }
                         m_tokens.append(QSharedPointer<Token>(token));
                     }
