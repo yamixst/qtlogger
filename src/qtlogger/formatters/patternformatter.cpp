@@ -595,16 +595,20 @@ private:
                 break;
             int opCheck = func.lastIndexOf("operator", closeAngle);
             if (opCheck != -1) {
-                bool isOperatorSymbol = true;
-                for (int i = opCheck + 8; i <= closeAngle; ++i) {
-                    char ch = func.at(i);
-                    if (ch != '<' && ch != '>' && !QByteArray("=!+-*/%^&|~").contains(ch)) {
-                        isOperatorSymbol = false;
-                        break;
+                int operatorEnd = opCheck + 8;
+                if (operatorEnd <= closeAngle) {
+                    bool isOperatorSymbol = true;
+                    static const QByteArray operatorChars("=!+-*/%^&|~<>");
+                    for (int i = operatorEnd; i <= closeAngle; ++i) {
+                        char ch = func.at(i);
+                        if (!operatorChars.contains(ch)) {
+                            isOperatorSymbol = false;
+                            break;
+                        }
                     }
+                    if (isOperatorSymbol)
+                        break;
                 }
-                if (isOperatorSymbol)
-                    break;
             }
             int openAngle = findBalancedReverse('<', '>', closeAngle);
             if (openAngle == -1)
