@@ -60,7 +60,7 @@ public:
         TruncateMode truncateMode = TruncateMode::None;
     };
 
-    void setFormatSpec(const FormatSpec &spec) { m_formatSpec = spec; }
+    void setFormatSpec(const FormatSpec &spec) { m_spec = spec; }
 
     static std::optional<FormatSpec> parseFormatSpec(const QString &spec)
     {
@@ -139,9 +139,9 @@ public:
 
     bool hasFormatSpec() const
     {
-        return m_formatSpec.width > 0
-               && (m_formatSpec.align != Alignment::None
-                   || m_formatSpec.truncateMode == TruncateMode::TruncateOnly);
+        return m_spec.width > 0
+               && (m_spec.align != Alignment::None
+                   || m_spec.truncateMode == TruncateMode::TruncateOnly);
     }
 
     static Alignment charToAlignment(QChar ch)
@@ -155,12 +155,12 @@ public:
         return Alignment::None;
     }
 
-    int formatWidth() const { return m_formatSpec.width; }
+    int formatWidth() const { return m_spec.width; }
 
 protected:
     QString applyPadding(const QString &value) const
     {
-        if (m_formatSpec.width <= 0) {
+        if (m_spec.width <= 0) {
             return value;
         }
 
@@ -168,65 +168,65 @@ protected:
         // With ! but no explicit fill character:
         //   - No align or < : truncate from right (keep first N chars)
         //   - > : truncate from left (keep last N chars)
-        if (m_formatSpec.truncateMode == TruncateMode::TruncateOnly) {
-            if (value.length() <= m_formatSpec.width) {
+        if (m_spec.truncateMode == TruncateMode::TruncateOnly) {
+            if (value.length() <= m_spec.width) {
                 return value;
             }
-            if (m_formatSpec.align == Alignment::Right) {
+            if (m_spec.align == Alignment::Right) {
                 // Truncate from left: keep last width characters
-                return value.right(m_formatSpec.width);
+                return value.right(m_spec.width);
             } else {
                 // Truncate from right: keep first width characters (default, or <)
-                return value.left(m_formatSpec.width);
+                return value.left(m_spec.width);
             }
         }
 
         // Regular mode with padding
-        if (m_formatSpec.align == Alignment::None) {
+        if (m_spec.align == Alignment::None) {
             return value;
         }
 
         QString val = value;
 
         // Truncate if enabled and value is longer than width
-        if (m_formatSpec.truncateMode == TruncateMode::Truncate
-            && val.length() > m_formatSpec.width) {
-            if (m_formatSpec.align == Alignment::Right) {
+        if (m_spec.truncateMode == TruncateMode::Truncate
+            && val.length() > m_spec.width) {
+            if (m_spec.align == Alignment::Right) {
                 // Truncate from left: keep last width characters
-                val = val.right(m_formatSpec.width);
+                val = val.right(m_spec.width);
             } else {
                 // Truncate from right: keep first width characters (default, < or ^)
-                val = val.left(m_formatSpec.width);
+                val = val.left(m_spec.width);
             }
         }
 
         // If value is already at or exceeds width (and not truncating), return as-is
-        if (val.length() >= m_formatSpec.width) {
+        if (val.length() >= m_spec.width) {
             return val;
         }
 
-        int padding = m_formatSpec.width - val.length();
+        int padding = m_spec.width - val.length();
         QString result;
-        result.reserve(m_formatSpec.width);
+        result.reserve(m_spec.width);
 
-        switch (m_formatSpec.align) {
+        switch (m_spec.align) {
         case Alignment::Left:
             // Left align: content then padding
             result.append(val);
-            result.append(QString(padding, m_formatSpec.fill));
+            result.append(QString(padding, m_spec.fill));
             break;
         case Alignment::Right:
             // Right align: padding then content
-            result.append(QString(padding, m_formatSpec.fill));
+            result.append(QString(padding, m_spec.fill));
             result.append(val);
             break;
         case Alignment::Center: {
             // Center align: extra padding goes to the right
             int leftPad = padding / 2;
             int rightPad = padding - leftPad;
-            result.append(QString(leftPad, m_formatSpec.fill));
+            result.append(QString(leftPad, m_spec.fill));
             result.append(val);
-            result.append(QString(rightPad, m_formatSpec.fill));
+            result.append(QString(rightPad, m_spec.fill));
             break;
         }
         case Alignment::None:
@@ -238,7 +238,7 @@ protected:
     }
 
 private:
-    FormatSpec m_formatSpec;
+    FormatSpec m_spec;
 };
 
 class LiteralToken : public FormattedToken
@@ -771,8 +771,6 @@ private:
     int m_removeBefore;
     int m_removeAfter;
 };
-
-
 
 } // namespace
 
