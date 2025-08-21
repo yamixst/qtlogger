@@ -10,6 +10,7 @@ bool DuplicateFilter::filter(const LogMessage &lmsg)
     }
 
     m_lastMessage = lmsg.message();
+
     return true;
 }
 
