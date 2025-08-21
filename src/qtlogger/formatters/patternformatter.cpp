@@ -457,8 +457,18 @@ private:
             if (end != -1) {
                 int openParen = findBalancedReverse('(', ')', end);
                 if (openParen != -1) {
-                    bool isOperatorCall =
-                            (openParen >= 8 && func.mid(openParen - 8, 8) == "operator");
+                    bool isOperatorCall = false;
+                    if (openParen >= 8 && func.mid(openParen - 8, 8) == "operator") {
+                        // Check that 'operator' is not part of a longer identifier
+                        if (openParen == 8) {
+                            isOperatorCall = true;
+                        } else {
+                            char prevChar = func.at(openParen - 9);
+                            if (!QChar::isLetterOrNumber(prevChar) && prevChar != '_') {
+                                isOperatorCall = true;
+                            }
+                        }
+                    }
                     if (!isOperatorCall)
                         func.truncate(openParen);
                 }
