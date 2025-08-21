@@ -954,6 +954,8 @@ public:
             }
         }
 
+        result.remove(DEL_MARKER);
+
         return result;
     }
 
