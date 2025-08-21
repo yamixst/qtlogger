@@ -65,7 +65,7 @@ QTLOGGER_DECL_SPEC
 bool CategoryFilter::filter(const LogMessage &lmsg)
 {
     bool enabled = true;
-    for (const auto &rule : m_rules) {
+    for (const auto &rule : std::as_const(m_rules)) {
         if (rule->matches(lmsg.category(), lmsg.type())) {
             enabled = rule->enabled;
         }
