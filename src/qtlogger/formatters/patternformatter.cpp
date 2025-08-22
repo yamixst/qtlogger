@@ -398,6 +398,8 @@ private:
 
         // Helper lambda: find balanced bracket in reverse
         auto findBalancedReverse = [&func](char open, char close, int startPos) -> int {
+            if (startPos <= 0)
+                return -1;
             int count = 1;
             int pos = startPos - 1;
             while (pos >= 0 && count > 0) {
