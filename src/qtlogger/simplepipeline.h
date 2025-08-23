@@ -27,6 +27,7 @@ public:
     SimplePipeline &filter(const QString &regexp);
     SimplePipeline &filterCategory(const QString &rules);
     SimplePipeline &filterDuplicate();
+    SimplePipeline &filterLevel(QtMsgType minLevel);
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);

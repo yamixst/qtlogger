@@ -8,6 +8,7 @@
 #include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
+#include "filters/levelfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatters/functionformatter.h"
 #include "formatters/jsonformatter.h"
@@ -95,6 +96,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filter(const QString &regexp)
 {
     append(RegExpFilterPtr::create(regexp));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::filterLevel(QtMsgType minLevel)
+{
+    append(LevelFilterPtr::create(minLevel));
     return *this;
 }
 
