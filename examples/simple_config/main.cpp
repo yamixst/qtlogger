@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         .pipeline()
             .addSeqNumber()
             .filter("^(?!.*password|.*secret).*$")
-            // .levelFilter() // TODO
+            .filterLevel(QtWarningMsg)
             .addSeqNumber("seq_number_after_filter")
             .format([](const QtLogger::LogMessage &lmsg){
                 return QString("[%1|%2] %3 %4")
