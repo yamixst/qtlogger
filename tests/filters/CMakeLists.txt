@@ -76,8 +76,26 @@ target_include_directories(test_regexpfilter PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../logmessage
 )
 
+# Create test executable for LevelFilter
+add_executable(test_levelfilter
+    test_levelfilter.cpp
+    ../logmessage/mock_context.h
+)
+
+target_link_libraries(test_levelfilter
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Test
+    qtlogger
+)
+
+target_include_directories(test_levelfilter PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../logmessage
+)
+
 # Add tests to CTest
 add_test(NAME CategoryFilterTest COMMAND test_categoryfilter)
 add_test(NAME DuplicateFilterTest COMMAND test_duplicatefilter)
 add_test(NAME FunctionFilterTest COMMAND test_functionfilter)
+add_test(NAME LevelFilterTest COMMAND test_levelfilter)
 add_test(NAME RegExpFilterTest COMMAND test_regexpfilter)
