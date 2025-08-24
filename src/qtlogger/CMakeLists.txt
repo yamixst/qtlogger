@@ -54,6 +54,7 @@ set(QTLOGGER_HEADERS
     filters/categoryfilter.h
     filters/duplicatefilter.h
     filters/functionfilter.h
+    filters/levelfilter.h
     filters/regexpfilter.h
     formatter.h
     formatters/functionformatter.h

@@ -6,6 +6,7 @@
 #include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
+#include "filters/levelfilter.h"
 #include "filters/regexpfilter.h"
 #include "formatter.h"
 #include "formatters/functionformatter.h"

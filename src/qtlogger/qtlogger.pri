@@ -91,6 +91,7 @@ HEADERS += \
     $$PWD/filters/categoryfilter.h \
     $$PWD/filters/duplicatefilter.h \
     $$PWD/filters/functionfilter.h \
+    $$PWD/filters/levelfilter.h \
     $$PWD/filters/regexpfilter.h \
     $$PWD/formatter.h \
     $$PWD/formatters/functionformatter.h \
