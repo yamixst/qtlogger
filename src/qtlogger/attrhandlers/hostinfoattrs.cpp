@@ -15,8 +15,9 @@ HostInfoAttrs::HostInfoAttrs()
 }
 
 QTLOGGER_DECL_SPEC
-QVariantHash HostInfoAttrs::attributes()
+QVariantHash HostInfoAttrs::attributes(const LogMessage &lmsg)
 {
+    Q_UNUSED(lmsg)
     return m_attrs;
 }
 
