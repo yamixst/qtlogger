@@ -37,7 +37,7 @@ public:
         }
         
         if (m_modifyAttributes) {
-            lmsg.attributes().insert(m_attributeKey, m_attributeValue);
+            lmsg.setAttribute(m_attributeKey, m_attributeValue);
         }
         
         return m_returnValue;
