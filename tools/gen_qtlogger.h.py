@@ -62,7 +62,9 @@ def process_includes(path):
 
 def main():
     sources = [os.path.join(root_dir, "qtlogger.h")]
-    sources += sorted(glob.glob(os.path.join(root_dir, "**", "*.cpp"), recursive=True))
+    all_cpp = sorted(glob.glob(os.path.join(root_dir, "**", "*.cpp"), recursive=True))
+    # Exclude build directory (contains CMake and moc-generated files)
+    sources += [f for f in all_cpp if "/build/" not in f and not f.endswith("/build")]
 
     result_code = []
     for path in sources:
