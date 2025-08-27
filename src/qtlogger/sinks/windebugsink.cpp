@@ -4,8 +4,11 @@
 
 #include <qt_windows.h>
 
+#include "../logger_global.h"
+
 namespace QtLogger {
 
+QTLOGGER_DECL_SPEC
 void WinDebugSink::send(const LogMessage &lmsg)
 {
     auto formattedMessage = lmsg.formattedMessage() + u'\n';

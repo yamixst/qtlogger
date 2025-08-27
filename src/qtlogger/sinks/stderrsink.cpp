@@ -13,6 +13,7 @@ void StdErrSink::send(const LogMessage &lmsg)
     std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
 }
 
+QTLOGGER_DECL_SPEC
 bool StdErrSink::flush()
 {
     std::flush(std::cerr);
