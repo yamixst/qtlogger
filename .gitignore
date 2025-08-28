@@ -105,5 +105,6 @@ captures/
 .venv
 .local
 .clangd
+.cache
 
 AGENTS.md
