@@ -13,6 +13,7 @@ void StdOutSink::send(const LogMessage &lmsg)
     std::cout << qPrintable(lmsg.formattedMessage()) << std::endl;
 }
 
+QTLOGGER_DECL_SPEC
 bool StdOutSink::flush()
 {
     std::flush(std::cout);
