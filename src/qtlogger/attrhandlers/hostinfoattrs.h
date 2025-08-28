@@ -14,7 +14,7 @@ class QTLOGGER_EXPORT HostInfoAttrs : public AttrHandler
 public:
     HostInfoAttrs();
 
-    QVariantHash attributes() override;
+    QVariantHash attributes(const LogMessage &lmsg) override;
 
 private:
     QVariantHash m_attrs;
