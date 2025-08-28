@@ -74,8 +74,7 @@ CMakeLists.txt.user*
 # Gradle files
 .gradle/
 build/
-build_test/
-build-*/
+build*/
 
 # Local configuration file (sdk path, etc)
 local.properties
