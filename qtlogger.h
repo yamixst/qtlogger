@@ -1488,7 +1488,7 @@ QTLOGGER_EXPORT QString restorePreviousMessagePattern();
 
 // version.h
 
-#define QTLOGGER_VERSION 0.5.0
+#define QTLOGGER_VERSION 0.6.0
 
 // end version.h
 
