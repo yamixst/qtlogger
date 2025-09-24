@@ -11,6 +11,8 @@ SOURCES += main.cpp
 
 include(../../qtlogger_link.pri)
 
+INCLUDEPATH += $$PWD/../../src
+
 CONFIG += file_copies
 COPIES += config_file
 config_file.files = $$PWD/config.ini
