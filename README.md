@@ -56,12 +56,46 @@ A simple yet powerful logging solution for the Qt Framework. This project is des
 - Qt 5.9 - Qt 6.x
 - C++17 compatible
 
-## Quick start
+## Integration
 
-Add qtlogger.h to your project and use the global gQtLogger object for configuration:
+There are multiple ways to integrate QtLogger into your project:
+
+### Option 1: Header-Only (Simplest)
+
+Just copy `qtlogger.h` to your project and include it:
 
 ```cpp
+#include "qtlogger.h"
+```
 
+This is the simplest approach - no build configuration needed.
+
+### Option 2: CMake
+
+Link against the QtLogger library in your `CMakeLists.txt`:
+
+```cmake
+# Add QtLogger subdirectory
+add_subdirectory(path/to/qtlogger)
+
+# Link your target
+target_link_libraries(your_target PRIVATE qtlogger)
+```
+
+### Option 3: qmake
+
+Include the QtLogger `.pri` file in your `.pro` file:
+
+```qmake
+# In your project's .pro file
+include(path/to/qtlogger/qtlogger_link.pri)
+```
+
+## Quick start
+
+Use the global gQtLogger object for configuration:
+
+```cpp
 #include "qtlogger.h"
 
 int main(int argc, char *argv[])
