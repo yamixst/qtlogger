@@ -4,6 +4,58 @@
 
 A simple yet powerful logging solution for the Qt Framework. This project is designed to provide developers with an intuitive and configurable logging system for Qt-based applications. QtLogger features a customizable pipeline for processing log messages through the `qInstallMessageHandler()` function, allowing for flexible handling and output of logs.
 
+## Key Features
+
+### 🚀 Drop-in Replacement
+- **Zero code changes** - works with existing `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, `qFatal()`
+- One-line configuration: `gQtLogger.configure()`
+- Full support for `Q_LOGGING_CATEGORY`
+
+### 🎯 Multiple Output Destinations (Sinks)
+- **Console**: stdout, stderr
+- **Files**: Simple files or rotating logs with automatic size management
+- **Platform-native**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
+- **Network**: HTTP endpoints for remote logging
+- **Custom**: Qt signals, any QIODevice
+
+### 🔧 Powerful Filtering
+- **Category-based**: Qt standard filter rules (`*.debug=false`)
+- **Regex patterns**: Filter by message content
+- **Level-based**: Minimum log level filtering
+- **Duplicate suppression**: Prevent log spam
+- **Custom filters**: Lambda/function-based filtering
+
+### 📝 Flexible Formatting
+- **Pattern formatter**: Rich placeholder support with advanced formatting
+  - Time formats: ISO 8601, custom patterns, process/boot time
+  - Fixed-width fields with alignment and truncation
+  - Conditional blocks based on log level
+  - Custom attributes support
+- **JSON formatter**: Structured logging for log aggregation
+- **Pretty formatter**: Human-readable with colors and alignment
+- **Custom formatters**: Full control with lambda functions
+
+### 🏗️ Pipeline Architecture
+- **Chainable API**: Fluent configuration style
+- **Multiple pipelines**: Different configurations for different outputs
+- **Custom attributes**: Enrich messages with metadata (sequence numbers, app info, user data)
+- **Sequential processing**: Attributes → Filters → Formatters → Sinks
+
+### ⚡ Performance
+- **Thread-safe**: Safe concurrent logging from multiple threads
+- **Asynchronous logging**: Optional dedicated thread for non-blocking I/O
+- **Efficient**: Minimal overhead on application performance
+
+### 📦 Configuration Options
+- **Programmatic**: Fluent API for code-based setup
+- **File-based**: INI file configuration for runtime flexibility
+- **Environment variables**: Standard Qt logging environment support
+
+### 🌍 Cross-Platform
+- Linux, Windows, macOS, iOS, Android
+- Qt 5.9 - Qt 6.x
+- C++17 compatible
+
 ## Quick start
 
 Add qtlogger.h to your project and use the global gQtLogger object for configuration:
@@ -14,13 +66,69 @@ Add qtlogger.h to your project and use the global gQtLogger object for configura
 
 int main(int argc, char *argv[])
 {
-    gQtLogger->configure();
+    QCoreApplication app(argc, argv);
+
+    gQtLogger.configure();
 
     qDebug() << "Hello QtLogger!";
 
-    return 0;
+    return app.exec();
 }
+```
 
+### Advanced Example
+
+```cpp
+#include "qtlogger.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    // Configure with multiple pipelines
+    gQtLogger
+        .addSeqNumber()                    // Add sequence numbers
+        .addAppInfo()                      // Add app metadata
+        .pipeline()
+            .filterLevel(QtWarningMsg)     // Only warnings and above
+            .formatPretty()                // Human-readable format
+            .sendToStdErr()                // Output to console
+        .end()
+        .pipeline()
+            .formatToJson()                // JSON format
+            .sendToFile("app.log", 10*1024*1024, 5)  // Rotating logs
+        .end()
+        .pipeline()
+            .filter("^(?!.*password).*$")  // Exclude sensitive data
+            .sendToHttp(QUrl("https://logs.example.com"))
+        .end();
+
+    gQtLogger.installMessageHandler();
+
+    qDebug() << "Application started";
+    qWarning() << "This is a warning";
+
+    return app.exec();
+}
+```
+
+### Configuration from File
+
+```cpp
+// Load configuration from INI file
+gQtLogger.configure("config.ini");
+```
+
+Example `config.ini`:
+```ini
+[logger]
+filter_rules = "*.debug=false"
+message_pattern = "[%{time}] [%{type}] %{message}"
+stdout = true
+path = "app.log"
+max_file_size = 1048576
+max_file_count = 5
+async = true
 ```
 
 ## Requirements
@@ -34,6 +142,12 @@ int main(int argc, char *argv[])
 - Clang 5.0 or later
 - MSVC 2017 (Visual Studio 15.0) or later
 - Apple Clang (Xcode 10.0) or later
+
+## Documentation
+
+- [**FEATURES.md**](FEATURES.md) - Comprehensive list of all features and capabilities
+- [**ARCHITECTURE.md**](ARCHITECTURE.md) - Internal architecture and design patterns
+- Examples in the `examples/` directory
 
 ## No Code Changes Required
 
