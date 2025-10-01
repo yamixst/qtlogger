@@ -1,4 +1,4 @@
-![Project Status](https://img.shields.io/badge/status-experimental-orange)
+![Project Status](https://img.shields.io/badge/status-beta-orange)
 
 # Qt Logger
 
