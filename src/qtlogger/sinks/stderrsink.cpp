@@ -8,9 +8,20 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
+StdErrSink::StdErrSink(ColorMode colorMode)
+    : ColoredConsole(colorMode)
+{
+    updateColorsEnabled();
+}
+
+QTLOGGER_DECL_SPEC
 void StdErrSink::send(const LogMessage &lmsg)
 {
-    std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
+    if (m_colorsEnabled) {
+        std::cerr << qPrintable(colorize(lmsg.formattedMessage(), lmsg.type())) << std::endl;
+    } else {
+        std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
+    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -18,6 +29,12 @@ bool StdErrSink::flush()
 {
     std::flush(std::cerr);
     return true;
+}
+
+QTLOGGER_DECL_SPEC
+bool StdErrSink::isTty() const
+{
+    return isStdErrTty();
 }
 
 } // namespace QtLogger
