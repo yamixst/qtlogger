@@ -43,7 +43,9 @@ QTLOGGER_EXPORT void configure(Pipeline *pipeline, int types, const QString &pat
  * logger/regexp_filter = <regexp>
  * logger/message_pattern = <string>
  * logger/stdout = true|false
+ * logger/stdout_color = true|false
  * logger/stderr = true|false
+ * logger/stderr_color = true|false
  * logger/platform_std_log = true|false
  * logger/syslog_ident = <string>
  * logger/sdjournal = true|false
