@@ -12,7 +12,7 @@ A simple yet powerful logging solution for the Qt Framework. This project is des
 - Full support for `Q_LOGGING_CATEGORY`
 
 ### 🎯 Multiple Output Destinations (Sinks)
-- **Console**: stdout, stderr
+- **Console**: stdout, stderr with optional **colored output** (ANSI escape codes, auto-detects TTY)
 - **Files**: Simple files or rotating logs with automatic size management
 - **Platform-native**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
 - **Network**: HTTP endpoints for remote logging
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         .pipeline()
             .filterLevel(QtWarningMsg)     // Only warnings and above
             .formatPretty()                // Human-readable format
-            .sendToStdErr()                // Output to console
+            .sendToStdErr(true)            // Output to console with colors
         .end()
         .pipeline()
             .formatToJson()                // JSON format
@@ -159,6 +159,7 @@ Example `config.ini`:
 filter_rules = "*.debug=false"
 message_pattern = "[%{time}] [%{type}] %{message}"
 stdout = true
+stdout_color = true
 path = "app.log"
 max_file_size = 1048576
 max_file_count = 5

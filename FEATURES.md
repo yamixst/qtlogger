@@ -235,11 +235,67 @@ Output to standard output stream:
 .sendToStdOut()
 ```
 
+With color output (ANSI escape codes):
+```cpp
+.sendToStdOut(true)  // Enable colored output
+```
+
+Or using the sink directly with color modes:
+```cpp
+auto sink = StdOutSinkPtr::create(ColorMode::Auto);   // Auto-detect TTY
+auto sink = StdOutSinkPtr::create(ColorMode::Always); // Always use colors
+auto sink = StdOutSinkPtr::create(ColorMode::Never);  // Never use colors
+```
+
+#### ColoredConsole Base Class
+Both `StdOutSink` and `StdErrSink` inherit from `ColoredConsole`, which provides:
+
+**Instance methods:**
+- `setColorMode(ColorMode mode)` - change color mode at runtime
+- `colorMode()` - get current color mode
+- `colorsEnabled()` - check if colors are currently enabled
+
+**Static utility methods:**
+```cpp
+// Colorize a message based on log level
+QString colored = ColoredConsole::colorize("message", QtWarningMsg);
+
+// Get ANSI color prefix for a log level
+QString prefix = ColoredConsole::colorPrefix(QtCriticalMsg);  // "\033[31m"
+
+// Get ANSI reset code
+QString reset = ColoredConsole::colorReset();  // "\033[0m"
+
+// Check if output streams are TTY
+bool stdoutTty = ColoredConsole::isStdOutTty();
+bool stderrTty = ColoredConsole::isStdErrTty();
+```
+
+**Class hierarchy:**
+```cpp
+class StdOutSink : public Sink, public ColoredConsole { ... };
+class StdErrSink : public Sink, public ColoredConsole { ... };
+```
+
+Color scheme by log level:
+- **Debug**: Gray (`\033[90m`)
+- **Info**: Green (`\033[32m`)
+- **Warning**: Yellow (`\033[33m`)
+- **Critical**: Red (`\033[31m`)
+- **Fatal**: Bold bright red (`\033[1;91m`)
+
 #### StdErrSink
 Output to standard error stream:
 ```cpp
 .sendToStdErr()
 ```
+
+With color output:
+```cpp
+.sendToStdErr(true)  // Enable colored output
+```
+
+Supports the same `ColorMode` options as `StdOutSink`.
 
 ### File Sinks
 
@@ -488,7 +544,9 @@ filter_rules = "*.debug=false; MyCategory.info=false"
 regexp_filter = "^(?!.*password|.*secret).*$"
 message_pattern = "[%{time}] [%{type}] %{category}: %{message}"
 stdout = true
+stdout_color = true
 stderr = false
+stderr_color = false
 platform_std_log = true
 syslog_ident = "myapp"
 sdjournal = true
