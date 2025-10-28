@@ -55,13 +55,6 @@ SimplePipeline &SimplePipeline::addAppInfo()
     return *this;
 }
 
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash(const LogMessage &lmsg)> func)
-{
-    append(FunctionAttrHandlerPtr::create(func));
-    return *this;
-}
-
 #ifdef QTLOGGER_NETWORK
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addHostInfo()
@@ -72,23 +65,16 @@ SimplePipeline &SimplePipeline::addHostInfo()
 #endif
 
 QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash(const LogMessage &lmsg)> func)
+{
+    append(FunctionAttrHandlerPtr::create(func));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filter(std::function<bool(const LogMessage &)> func)
 {
     append(FunctionFilterPtr::create(func));
-    return *this;
-}
-
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
-{
-    append(CategoryFilterPtr::create(rules));
-    return *this;
-}
-
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterDuplicate()
-{
-    append(DuplicateFilterPtr::create());
     return *this;
 }
 
@@ -103,6 +89,20 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filterLevel(QtMsgType minLevel)
 {
     append(LevelFilterPtr::create(minLevel));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
+{
+    append(CategoryFilterPtr::create(rules));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::filterDuplicate()
+{
+    append(DuplicateFilterPtr::create());
     return *this;
 }
 
