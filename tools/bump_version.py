@@ -108,11 +108,6 @@ def main():
     run_command(["git", "checkout", "-b", branch_name], cwd=root_dir)
     print(f"Created and switched to branch: {branch_name}")
 
-    # Create tag
-    tag_name = f"v{new_version}"
-    run_command(["git", "tag", tag_name], cwd=root_dir)
-    print(f"Created tag: {tag_name}")
-
     # Git add the changed files
     run_command(["git", "add", "src/qtlogger/version.h", "qtlogger.h"], cwd=root_dir)
     print("Added files to git staging area")
@@ -121,6 +116,11 @@ def main():
     commit_message = f"Bump version to {new_version}"
     run_command(["git", "commit", "-m", commit_message], cwd=root_dir)
     print(f"Committed with message: {commit_message}")
+
+    # Create tag
+    tag_name = f"v{new_version}"
+    run_command(["git", "tag", tag_name], cwd=root_dir)
+    print(f"Created tag: {tag_name}")
 
     # Switch back to original branch
     run_command(["git", "checkout", current_branch], cwd=root_dir)
