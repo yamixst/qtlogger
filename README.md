@@ -6,26 +6,26 @@ A simple yet powerful logging solution for the Qt Framework. This project is des
 
 ## Key Features
 
-### 🚀 Drop-in Replacement
+### Drop-in Replacement
 - **Zero code changes** - works with existing `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, `qFatal()`
 - One-line configuration: `gQtLogger.configure()`
 - Full support for `Q_LOGGING_CATEGORY`
 
-### 🎯 Multiple Output Destinations (Sinks)
+### Multiple Output Destinations (Sinks)
 - **Console**: stdout, stderr with optional **colored output** (ANSI escape codes, auto-detects TTY)
 - **Files**: Simple files or rotating logs with automatic size management
 - **Platform-native**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
 - **Network**: HTTP endpoints for remote logging
 - **Custom**: Qt signals, any QIODevice
 
-### 🔧 Powerful Filtering
+### Powerful Filtering
 - **Category-based**: Qt standard filter rules (`*.debug=false`)
 - **Regex patterns**: Filter by message content
 - **Level-based**: Minimum log level filtering
 - **Duplicate suppression**: Prevent log spam
 - **Custom filters**: Lambda/function-based filtering
 
-### 📝 Flexible Formatting
+### Flexible Formatting
 - **Pattern formatter**: Rich placeholder support with advanced formatting
   - Time formats: ISO 8601, custom patterns, process/boot time
   - Fixed-width fields with alignment and truncation
@@ -35,23 +35,23 @@ A simple yet powerful logging solution for the Qt Framework. This project is des
 - **Pretty formatter**: Human-readable with colors and alignment
 - **Custom formatters**: Full control with lambda functions
 
-### 🏗️ Pipeline Architecture
+### Pipeline Architecture
 - **Chainable API**: Fluent configuration style
 - **Multiple pipelines**: Different configurations for different outputs
 - **Custom attributes**: Enrich messages with metadata (sequence numbers, app info, user data)
 - **Sequential processing**: Attributes → Filters → Formatters → Sinks
 
-### ⚡ Performance
+### Performance
 - **Thread-safe**: Safe concurrent logging from multiple threads
 - **Asynchronous logging**: Optional dedicated thread for non-blocking I/O
 - **Efficient**: Minimal overhead on application performance
 
-### 📦 Configuration Options
+### Configuration Options
 - **Programmatic**: Fluent API for code-based setup
 - **File-based**: INI file configuration for runtime flexibility
 - **Environment variables**: Standard Qt logging environment support
 
-### 🌍 Cross-Platform
+### Cross-Platform
 - Linux, Windows, macOS, iOS, Android
 - Qt 5.9 - Qt 6.x
 - C++17 compatible
@@ -62,7 +62,7 @@ There are multiple ways to integrate QtLogger into your project:
 
 ### Option 1: Header-Only (Simplest)
 
-Just copy `qtlogger.h` to your project and include it:
+Just copy [qtlogger.h](https://github.com/yamixst/qtlogger/raw/refs/heads/main/qtlogger.h) to your project and include it:
 
 ```cpp
 #include "qtlogger.h"
