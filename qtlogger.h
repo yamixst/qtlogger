@@ -16,6 +16,12 @@
 
 // qtlogger.h
 
+// version.h
+
+#define QTLOGGER_VERSION 0.7.0
+
+// end version.h
+
 // attrhandler.h
 
 #include <QSharedPointer>
@@ -764,7 +770,9 @@ QTLOGGER_EXPORT void configure(Pipeline *pipeline, int types, const QString &pat
  * logger/regexp_filter = <regexp>
  * logger/message_pattern = <string>
  * logger/stdout = true|false
+ * logger/stdout_color = true|false
  * logger/stderr = true|false
+ * logger/stderr_color = true|false
  * logger/platform_std_log = true|false
  * logger/syslog_ident = <string>
  * logger/sdjournal = true|false
@@ -933,9 +941,9 @@ public:
 
     SimplePipeline &filter(std::function<bool(const LogMessage &)> func);
     SimplePipeline &filter(const QString &regexp);
+    SimplePipeline &filterLevel(QtMsgType minLevel);
     SimplePipeline &filterCategory(const QString &rules);
     SimplePipeline &filterDuplicate();
-    SimplePipeline &filterLevel(QtMsgType minLevel);
 
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);
@@ -943,8 +951,8 @@ public:
     SimplePipeline &formatPretty();
     SimplePipeline &formatToJson();
 
-    SimplePipeline &sendToStdOut();
-    SimplePipeline &sendToStdErr();
+    SimplePipeline &sendToStdOut(bool colorEnabled = false);
+    SimplePipeline &sendToStdErr(bool colorEnabled = false);
 #ifdef QTLOGGER_SYSLOG
     SimplePipeline &sendToSyslog();
 #endif
@@ -1163,7 +1171,9 @@ public:
      * logger/regexp_filter = <regexp>
      * logger/message_pattern = <string>
      * logger/stdout = true|false
+     * logger/stdout_color = true|false
      * logger/stderr = true|false
+     * logger/stderr_color = true|false
      * logger/platform_std_log = true|false
      * logger/syslog_ident = <string>
      * logger/sdjournal = true|false
@@ -1347,19 +1357,65 @@ using OslogSinkPtr = QSharedPointer<OslogSink>;
 
 #include <QSharedPointer>
 
+// coloredconsole.h
+
+#include <QString>
+#include <qlogging.h>
+
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdErrSink : public Sink
+enum class ColorMode {
+    Auto, // Enable colors if output is a TTY
+    Always, // Always enable colors
+    Never // Never use colors
+};
+
+class QTLOGGER_EXPORT ColoredConsole
 {
 public:
+    explicit ColoredConsole(ColorMode colorMode = ColorMode::Auto);
+    virtual ~ColoredConsole();
+
+    void setColorMode(ColorMode mode);
+    ColorMode colorMode() const;
+    bool colorsEnabled() const;
+
+    static QString colorPrefix(QtMsgType type);
+    static QString colorReset();
+    static QString colorize(const QString &message, QtMsgType type);
+    static bool isStdOutTty();
+    static bool isStdErrTty();
+
+protected:
+    virtual bool isTty() const = 0;
+
+    void updateColorsEnabled();
+
+    ColorMode m_colorMode = ColorMode::Auto;
+    bool m_colorsEnabled = false;
+};
+
+} // namespace QtLogger
+
+// end coloredconsole.h
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT StdErrSink : public Sink, public ColoredConsole
+{
+public:
+    explicit StdErrSink(ColorMode colorMode = ColorMode::Auto);
+
     void send(const LogMessage &lmsg) override;
-    virtual bool flush() override;
+    bool flush() override;
+
+protected:
+    bool isTty() const override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;
 
 } // namespace QtLogger
-
 // end stderrsink.h
 
 #endif
@@ -1443,17 +1499,21 @@ using SignalSinkPtr = QSharedPointer<SignalSink>;
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdOutSink : public Sink
+class QTLOGGER_EXPORT StdOutSink : public Sink, public ColoredConsole
 {
 public:
+    explicit StdOutSink(ColorMode colorMode = ColorMode::Auto);
+
     void send(const LogMessage &lmsg) override;
-    virtual bool flush() override;
+    bool flush() override;
+
+protected:
+    bool isTty() const override;
 };
 
 using StdOutSinkPtr = QSharedPointer<StdOutSink>;
 
 } // namespace QtLogger
-
 // end stdoutsink.h
 
 // utils.h
@@ -1485,12 +1545,6 @@ QTLOGGER_EXPORT QString restorePreviousMessagePattern();
 } // namespace QtLogger
 
 // end utils.h
-
-// version.h
-
-#define QTLOGGER_VERSION 0.6.0
-
-// end version.h
 
 #ifdef QTLOGGER_NETWORK
 
@@ -1857,17 +1911,19 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
     }
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
+        const bool stdoutColor = settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: stdout" << std::endl;
+        std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
-        *pipeline << StdOutSinkPtr::create();
+        *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Always : ColorMode::Never);
     }
 
     if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
+        const bool stderrColor = settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: stderr" << std::endl;
+        std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
-        *pipeline << StdErrSinkPtr::create();
+        *pipeline << StdErrSinkPtr::create(stderrColor ? ColorMode::Always : ColorMode::Never);
     }
 
     if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
@@ -2076,8 +2132,6 @@ QTLOGGER_DECL_SPEC
 QString JsonFormatter::format(const LogMessage &lmsg)
 {
     QJsonObject obj;
-
-    obj[QStringLiteral("message")] = lmsg.message();
 
     const auto attrs = lmsg.allAttributes();
     for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
@@ -3401,13 +3455,6 @@ SimplePipeline &SimplePipeline::addAppInfo()
     return *this;
 }
 
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash(const LogMessage &lmsg)> func)
-{
-    append(FunctionAttrHandlerPtr::create(func));
-    return *this;
-}
-
 #ifdef QTLOGGER_NETWORK
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addHostInfo()
@@ -3418,23 +3465,16 @@ SimplePipeline &SimplePipeline::addHostInfo()
 #endif
 
 QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::attrHandler(std::function<QVariantHash(const LogMessage &lmsg)> func)
+{
+    append(FunctionAttrHandlerPtr::create(func));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filter(std::function<bool(const LogMessage &)> func)
 {
     append(FunctionFilterPtr::create(func));
-    return *this;
-}
-
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
-{
-    append(CategoryFilterPtr::create(rules));
-    return *this;
-}
-
-QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::filterDuplicate()
-{
-    append(DuplicateFilterPtr::create());
     return *this;
 }
 
@@ -3449,6 +3489,20 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::filterLevel(QtMsgType minLevel)
 {
     append(LevelFilterPtr::create(minLevel));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::filterCategory(const QString &rules)
+{
+    append(CategoryFilterPtr::create(rules));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::filterDuplicate()
+{
+    append(DuplicateFilterPtr::create());
     return *this;
 }
 
@@ -3495,16 +3549,16 @@ SimplePipeline &SimplePipeline::formatToJson()
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToStdOut()
+SimplePipeline &SimplePipeline::sendToStdOut(bool colorEnabled)
 {
-    append(StdOutSinkPtr::create());
+    append(StdOutSinkPtr::create(colorEnabled ? ColorMode::Auto : ColorMode::Never));
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToStdErr()
+SimplePipeline &SimplePipeline::sendToStdErr(bool colorEnabled)
 {
-    append(StdErrSinkPtr::create());
+    append(StdErrSinkPtr::create(colorEnabled ? ColorMode::Auto : ColorMode::Never));
     return *this;
 }
 
@@ -3647,6 +3701,117 @@ void AndroidLogSink::send(const LogMessage &lmsg)
 } // namespace QtLogger
 
 #endif // QTLOGGER_ANDROIDLOG
+
+// coloredconsole.cpp
+
+#ifdef Q_OS_WIN
+#    include <io.h>
+#    include <stdio.h>
+#    ifndef STDOUT_FILENO
+#        define STDOUT_FILENO _fileno(stdout)
+#    endif
+#    ifndef STDERR_FILENO
+#        define STDERR_FILENO _fileno(stderr)
+#    endif
+#    define isatty _isatty
+#else
+#    include <unistd.h>
+#endif
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+ColoredConsole::ColoredConsole(ColorMode colorMode) : m_colorMode(colorMode) { }
+
+QTLOGGER_DECL_SPEC
+ColoredConsole::~ColoredConsole() = default;
+
+QTLOGGER_DECL_SPEC
+void ColoredConsole::setColorMode(ColorMode mode)
+{
+    m_colorMode = mode;
+    updateColorsEnabled();
+}
+
+QTLOGGER_DECL_SPEC
+ColorMode ColoredConsole::colorMode() const
+{
+    return m_colorMode;
+}
+
+QTLOGGER_DECL_SPEC
+bool ColoredConsole::colorsEnabled() const
+{
+    return m_colorsEnabled;
+}
+
+QTLOGGER_DECL_SPEC
+QString ColoredConsole::colorPrefix(QtMsgType type)
+{
+    switch (type) {
+    case QtDebugMsg:
+        return QStringLiteral("\033[90m"); // Gray
+    case QtInfoMsg:
+        return QStringLiteral("\033[32m"); // Green
+    case QtWarningMsg:
+        return QStringLiteral("\033[33m"); // Yellow
+    case QtCriticalMsg:
+        return QStringLiteral("\033[31m"); // Red
+    case QtFatalMsg:
+        return QStringLiteral("\033[1;91m"); // Bold bright red
+    default:
+        return QString();
+    }
+}
+
+QTLOGGER_DECL_SPEC
+QString ColoredConsole::colorReset()
+{
+    return QStringLiteral("\033[0m");
+}
+
+QTLOGGER_DECL_SPEC
+QString ColoredConsole::colorize(const QString &message, QtMsgType type)
+{
+    const QString prefix = colorPrefix(type);
+    if (prefix.isEmpty()) {
+        return message;
+    }
+    return prefix + message + colorReset();
+}
+
+QTLOGGER_DECL_SPEC
+bool ColoredConsole::isStdOutTty()
+{
+    static const bool isTty = isatty(STDOUT_FILENO) != 0;
+    return isTty;
+}
+
+QTLOGGER_DECL_SPEC
+bool ColoredConsole::isStdErrTty()
+{
+    static const bool isTty = isatty(STDERR_FILENO) != 0;
+    return isTty;
+}
+
+QTLOGGER_DECL_SPEC
+void ColoredConsole::updateColorsEnabled()
+{
+    switch (m_colorMode) {
+    case ColorMode::Always:
+        m_colorsEnabled = true;
+        break;
+    case ColorMode::Never:
+        m_colorsEnabled = false;
+        break;
+    case ColorMode::Auto:
+    default:
+        m_colorsEnabled = isTty();
+        break;
+    }
+}
+
+} // namespace QtLogger
 
 // filesink.cpp
 
@@ -4021,9 +4186,20 @@ void SignalSink::send(const LogMessage &lmsg)
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
+StdErrSink::StdErrSink(ColorMode colorMode)
+    : ColoredConsole(colorMode)
+{
+    updateColorsEnabled();
+}
+
+QTLOGGER_DECL_SPEC
 void StdErrSink::send(const LogMessage &lmsg)
 {
-    std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
+    if (m_colorsEnabled) {
+        std::cerr << qPrintable(colorize(lmsg.formattedMessage(), lmsg.type())) << std::endl;
+    } else {
+        std::cerr << qPrintable(lmsg.formattedMessage()) << std::endl;
+    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -4031,6 +4207,12 @@ bool StdErrSink::flush()
 {
     std::flush(std::cerr);
     return true;
+}
+
+QTLOGGER_DECL_SPEC
+bool StdErrSink::isTty() const
+{
+    return isStdErrTty();
 }
 
 } // namespace QtLogger
@@ -4042,9 +4224,20 @@ bool StdErrSink::flush()
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
+StdOutSink::StdOutSink(ColorMode colorMode)
+    : ColoredConsole(colorMode)
+{
+    updateColorsEnabled();
+}
+
+QTLOGGER_DECL_SPEC
 void StdOutSink::send(const LogMessage &lmsg)
 {
-    std::cout << qPrintable(lmsg.formattedMessage()) << std::endl;
+    if (m_colorsEnabled) {
+        std::cout << qPrintable(colorize(lmsg.formattedMessage(), lmsg.type())) << std::endl;
+    } else {
+        std::cout << qPrintable(lmsg.formattedMessage()) << std::endl;
+    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -4052,6 +4245,12 @@ bool StdOutSink::flush()
 {
     std::flush(std::cout);
     return true;
+}
+
+QTLOGGER_DECL_SPEC
+bool StdOutSink::isTty() const
+{
+    return isStdOutTty();
 }
 
 } // namespace QtLogger
