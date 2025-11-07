@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
 
     // Configure with multiple pipelines
     gQtLogger
+        .moveToOwnThread()                 // Asynchronous logging
         .addSeqNumber()
         .pipeline()
             .filterLevel(QtWarningMsg)     // Only warnings and above
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
             .sendToHttp(QUrl("https://logs.example.com"))
         .end();
 
-    gQtLogger.installMessageHandler(); // Asynchronous logging
+    gQtLogger.installMessageHandler();
 
     qDebug() << "Application started";
     qWarning() << "This is a warning";
