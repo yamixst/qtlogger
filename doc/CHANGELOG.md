@@ -2,6 +2,18 @@
 
 All notable changes to QtLogger will be documented in this file.
 
+## [0.7.1]
+
+### Added
+
+- `demo_showcase` example demonstrating QtLogger features
+
+### Changed
+
+- Refactored `OwnThreadHandler` thread/worker management for improved reliability
+- Updated README with `moveToOwnThread()` usage examples
+- Improved test suite to use `resetOwnThread()` in `OwnThreadHandler` tests
+
 ## [0.7.0]
 
 ### Added
