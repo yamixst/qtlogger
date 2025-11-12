@@ -5,6 +5,7 @@
 
 #include "logger_global.h"
 #include "sortedpipeline.h"
+#include "sinks/rotatingfilesink.h"
 
 namespace QtLogger {
 
@@ -44,7 +45,7 @@ public:
     SimplePipeline &sendToSdJournal();
 #endif
     SimplePipeline &sendToPlatformStdLog();
-    SimplePipeline &sendToFile(const QString &fileName, int maxFileSize = 0, int maxFileCount = 0);
+    SimplePipeline &sendToFile(const QString &fileName, int maxFileSize = 0, int maxFileCount = 0, RotatingFileSink::Options options = RotatingFileSink::None);
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
 #endif

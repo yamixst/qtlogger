@@ -189,12 +189,20 @@ SimplePipeline &SimplePipeline::sendToPlatformStdLog()
 
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToFile(const QString &fileName, int maxFileSize,
-                                           int maxFileCount)
+                                           int maxFileCount, RotatingFileSink::Options options)
 {
-    if (maxFileSize == 0)
-        append(RotatingFileSinkPtr::create(fileName));
-    else
-        append(RotatingFileSinkPtr::create(fileName, maxFileSize, maxFileCount));
+    if (fileName.isEmpty())
+        return *this;
+
+    if (maxFileSize > 0
+        || options.testFlag(RotatingFileSink::RotationOnStartup)
+        || options.testFlag(RotatingFileSink::RotationDaily)) {
+        append(RotatingFileSinkPtr::create(fileName, maxFileSize, maxFileCount, options));
+    }
+    else {
+        append(FileSinkPtr::create(fileName));
+    }
+
     return *this;
 }
 
