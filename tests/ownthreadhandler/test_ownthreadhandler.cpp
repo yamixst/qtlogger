@@ -35,7 +35,6 @@ private slots:
 
     // Thread management tests
     void testMoveToOwnThread();
-    void testMoveToMainThread();
     void testOwnThreadIsRunning();
     void testOwnThreadAccess();
     void testReset();
@@ -96,10 +95,10 @@ void TestOwnThreadHandler::cleanupTestCase()
 
 void TestOwnThreadHandler::init()
 {
-    m_mockHandler = ThreadSafeMockHandlerPtr::create();
-    m_mockSink = ThreadSafeMockSinkHandlerPtr::create();
-    m_mockFilter = ThreadSafeMockFilterHandlerPtr::create();
-    m_mockPipeline = ThreadSafeMockPipelinePtr::create();
+    m_mockHandler = QSharedPointer<ThreadSafeMockHandler>::create();
+    m_mockSink = QSharedPointer<ThreadSafeMockSinkHandler>::create();
+    m_mockFilter = QSharedPointer<ThreadSafeMockFilterHandler>::create(true);
+    m_mockPipeline = QSharedPointer<ThreadSafeMockPipeline>::create(false);
 }
 
 void TestOwnThreadHandler::cleanup()
@@ -194,19 +193,7 @@ void TestOwnThreadHandler::testMoveToOwnThread()
     QVERIFY(handler.ownThread()->isRunning());
     QVERIFY(handler.ownThread() != QThread::currentThread());
     
-    handler.reset(); // Clean up
-}
-
-void TestOwnThreadHandler::testMoveToMainThread()
-{
-    OwnThreadHandler<ThreadSafeMockHandler> handler;
-    
-    // Move to main thread
-    handler.moveToMainThread();
-    
-    // Should not have own thread running
-    QVERIFY(!handler.ownThreadIsRunning());
-    QVERIFY(handler.ownThread() == nullptr);
+    handler.resetOwnThread(); // Clean up
 }
 
 void TestOwnThreadHandler::testOwnThreadIsRunning()
@@ -218,7 +205,7 @@ void TestOwnThreadHandler::testOwnThreadIsRunning()
     handler.moveToOwnThread();
     QVERIFY(handler.ownThreadIsRunning());
     
-    handler.reset();
+    handler.resetOwnThread();
     QVERIFY(!handler.ownThreadIsRunning());
 }
 
@@ -234,7 +221,7 @@ void TestOwnThreadHandler::testOwnThreadAccess()
     QVERIFY(thread->isRunning());
     QCOMPARE(handler.ownThread(), thread); // Should return same thread
     
-    handler.reset();
+    handler.resetOwnThread();
     QVERIFY(handler.ownThread() == nullptr);
 }
 
@@ -246,7 +233,7 @@ void TestOwnThreadHandler::testReset()
     QVERIFY(handler.ownThreadIsRunning());
     QVERIFY(handler.ownThread() != nullptr);
     
-    handler.reset();
+    handler.resetOwnThread();
     QVERIFY(!handler.ownThreadIsRunning());
     QVERIFY(handler.ownThread() == nullptr);
     
@@ -259,36 +246,27 @@ void TestOwnThreadHandler::testMultipleResets()
     OwnThreadHandler<ThreadSafeMockHandler> handler;
     
     // Multiple resets should be safe
-    handler.reset();
-    handler.reset();
+    handler.resetOwnThread();
+    handler.resetOwnThread();
     
     handler.moveToOwnThread();
-    handler.reset();
-    handler.reset();
-    
-    handler.moveToMainThread();
-    handler.reset();
-    handler.reset();
+    handler.resetOwnThread();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testProcessInMainThread()
 {
     OwnThreadHandler<ThreadSafeMockHandler> handler;
-    handler.moveToMainThread();
+    // Don't move to own thread - process in main thread directly
     
     LogMessage msg(QtDebugMsg, QMessageLogContext(), "test message");
     bool result = handler.process(msg);
     
     QVERIFY(result);
     
-    // When moved to main thread, processing happens via events
-    // Allow some time for processing and check result
-    waitForEventProcessing(200);
-    
-    // Verify processing occurred (count may be 0 or 1 depending on event processing)
-    if (handler.processCallCount() > 0) {
-        QCOMPARE(handler.lastMessage(), QString("test message"));
-    }
+    // When not moved to own thread, processing happens directly
+    QCOMPARE(handler.processCallCount(), 1);
+    QCOMPARE(handler.lastMessage(), QString("test message"));
 }
 
 void TestOwnThreadHandler::testProcessInOwnThread()
@@ -311,7 +289,7 @@ void TestOwnThreadHandler::testProcessInOwnThread()
     QVERIFY(ThreadTester::isDifferentThread(handler.lastProcessingThreadId()));
     QVERIFY(handler.lastProcessingThreadId() != m_mainThreadId);
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testProcessMultipleMessages()
@@ -338,7 +316,7 @@ void TestOwnThreadHandler::testProcessMultipleMessages()
         QVERIFY(handler.processedMessages().contains(QString("message %1").arg(i)));
     }
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testProcessConcurrentMessages()
@@ -362,7 +340,7 @@ void TestOwnThreadHandler::testProcessConcurrentMessages()
     
     QCOMPARE(handler.processCallCount(), messageCount);
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testProcessOrderPreservation()
@@ -385,7 +363,7 @@ void TestOwnThreadHandler::testProcessOrderPreservation()
     // Verify order is preserved
     QCOMPARE(handler.processedMessages(), expectedOrder);
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testThreadSafetyWithSink()
@@ -408,7 +386,7 @@ void TestOwnThreadHandler::testThreadSafetyWithSink()
     // Should send in different thread
     QVERIFY(ThreadTester::isDifferentThread(handler.lastSendingThreadId()));
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testThreadSafetyWithFilter()
@@ -434,12 +412,12 @@ void TestOwnThreadHandler::testThreadSafetyWithFilter()
         QVERIFY(ThreadTester::isDifferentThread(handler.lastFilteringThreadId()));
     }
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testThreadSafetyWithPipeline()
 {
-    OwnThreadHandler<ThreadSafeMockPipeline> handler;
+    OwnThreadHandler<ThreadSafeMockPipeline> handler(false);
     handler.addMockSink(m_mockSink);
     handler.moveToOwnThread();
     
@@ -456,7 +434,7 @@ void TestOwnThreadHandler::testThreadSafetyWithPipeline()
     // Should process in different thread
     QVERIFY(ThreadTester::isDifferentThread(m_mockSink->lastSendingThreadId()));
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testMultipleHandlersInOwnThreads()
@@ -499,9 +477,9 @@ void TestOwnThreadHandler::testMultipleHandlersInOwnThreads()
     QCOMPARE(handler1.lastMessage(), QString("handler1"));
     
     // Clean up
-    handler1.reset();
-    handler2.reset();
-    handler3.reset();
+    handler1.resetOwnThread();
+    handler2.resetOwnThread();
+    handler3.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testProcessBeforeMoveToThread()
@@ -531,7 +509,7 @@ void TestOwnThreadHandler::testProcessAfterReset()
     QCOMPARE(handler.processCallCount(), 1);
     
     // Reset and process again
-    handler.reset();
+    handler.resetOwnThread();
     LogMessage msg2(QtDebugMsg, QMessageLogContext(), "after reset");
     bool result = handler.process(msg2);
     QVERIFY(result);
@@ -551,7 +529,7 @@ void TestOwnThreadHandler::testApplicationShutdown()
     QVERIFY(handler.ownThread()->isRunning());
     
     // Cleanup manually for this test
-    handler.reset();
+    handler.resetOwnThread();
     
     // Give time for cleanup to complete
     waitForEventProcessing(100);
@@ -571,7 +549,7 @@ void TestOwnThreadHandler::testWorkerLifecycle()
     QVERIFY(thread1->isRunning());
     
     // Reset destroys worker and thread
-    handler.reset();
+    handler.resetOwnThread();
     QVERIFY(handler.ownThread() == nullptr);
     waitForEventProcessing(100);
     
@@ -582,7 +560,7 @@ void TestOwnThreadHandler::testWorkerLifecycle()
     QVERIFY(thread2->isRunning());
     QVERIFY(thread1 != thread2); // Should be different instances
     
-    handler.reset();
+    handler.resetOwnThread();
     waitForEventProcessing(100);
 }
 
@@ -605,7 +583,7 @@ void TestOwnThreadHandler::testEventProcessing()
     
     QCOMPARE(handler.processCallCount(), messageCount);
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testHighVolumeMessages()
@@ -628,14 +606,14 @@ void TestOwnThreadHandler::testHighVolumeMessages()
     
     QCOMPARE(handler.processCallCount(), messageCount);
     
-    handler.reset();
+    handler.resetOwnThread();
 }
 
 void TestOwnThreadHandler::testRapidThreadSwitching()
 {
     OwnThreadHandler<ThreadSafeMockHandler> handler;
     
-    // Test basic switching between main thread and own thread
+    // Test switching to own thread
     handler.moveToOwnThread();
     QVERIFY(handler.ownThreadIsRunning());
     
@@ -643,17 +621,15 @@ void TestOwnThreadHandler::testRapidThreadSwitching()
     handler.process(msg1);
     QVERIFY(handler.waitForProcessing(2000));
     
-    handler.moveToMainThread();
+    // Reset brings back to direct processing
+    handler.resetOwnThread();
     QVERIFY(!handler.ownThreadIsRunning());
     
-    LogMessage msg2(QtDebugMsg, QMessageLogContext(), "main thread");
+    LogMessage msg2(QtDebugMsg, QMessageLogContext(), "direct processing");
     handler.process(msg2);
     
-    // Allow time for processing
-    waitForEventProcessing(200);
-    
     // Should handle switching correctly
-    QVERIFY(handler.processCallCount() >= 1);
+    QCOMPARE(handler.processCallCount(), 2);
 }
 
 void TestOwnThreadHandler::testMemoryManagement()
