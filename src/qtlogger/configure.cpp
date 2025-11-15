@@ -84,7 +84,8 @@ void configure(Pipeline *pipeline, const SinkTypeFlags &types, const QString &pa
         if (maxFileSize == 0) {
             *pipeline << FileSinkPtr::create(path);
         } else {
-            *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount);
+            *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, 
+                RotatingFileSink::RotationOnStartup);
         }
     }
 
@@ -188,20 +189,38 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
     const auto path = settings.value(group + QStringLiteral("/path")).toString();
     if (!path.isEmpty()) {
         const auto maxFileSize = settings.value(group + QStringLiteral("/max_file_size"),
-                                                RotatingFileDefaultMaxFileSize)
+                                                RotatingFileSink::DefaultMaxFileSize)
                                          .toInt();
 
         const auto maxFileCount = settings.value(group + QStringLiteral("/max_file_count"),
-                                                 RotatingFileDefaultMaxFileCount)
+                                                 RotatingFileSink::DefaultMaxFileCount)
                                           .toInt();
+
+        const auto rotateOnStartup = settings.value(group + QStringLiteral("/rotate_on_startup"),
+                                                    true).toBool();
+
+        const auto rotateDaily = settings.value(group + QStringLiteral("/rotate_daily"),
+                                                false).toBool();
+
+        const auto compress = settings.value(group + QStringLiteral("/compress_old_files"),
+                                             false).toBool();
 
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: path: " << path.toStdString()
                   << " maxFileSize: " << maxFileSize << " maxFileCount: " << maxFileCount
-                  << std::endl;
+                  << " rotateOnStartup: " << rotateOnStartup << " rotateDaily: " << rotateDaily
+                  << " compress: " << compress << std::endl;
 #endif
 
-        *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount);
+        RotatingFileSink::Options options = RotatingFileSink::Option::None;
+        if (rotateOnStartup)
+            options |= RotatingFileSink::RotationOnStartup;
+        if (rotateDaily)
+            options |= RotatingFileSink::RotationDaily;
+        if (compress)
+            options |= RotatingFileSink::Option::Compression;
+        
+        *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, options);
     }
 
 #ifdef QTLOGGER_NETWORK
