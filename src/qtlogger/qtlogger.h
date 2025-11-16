@@ -1,3 +1,5 @@
+#include "version.h"
+
 #include "attrhandler.h"
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/functionattrhandler.h"
@@ -31,7 +33,6 @@
 #include "sinks/stdoutsink.h"
 #include "sortedpipeline.h"
 #include "utils.h"
-#include "version.h"
 
 #ifdef QTLOGGER_NETWORK
 #    include "attrhandlers/hostinfoattrs.h"
