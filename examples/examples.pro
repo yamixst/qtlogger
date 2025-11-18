@@ -6,4 +6,5 @@ TEMPLATE = subdirs
 SUBDIRS += one_line_config \
            simple_config \
            config_from_file \
-           pattern_formatter
+           pattern_formatter \
+           file_rotation
