@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
 import argparse
 import os

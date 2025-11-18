@@ -1,5 +1,5 @@
+// Copyright (C) 2025 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2025 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
 #include "coloredconsole.h"
 

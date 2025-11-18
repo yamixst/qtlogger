@@ -1,5 +1,5 @@
+// Copyright (C) 2026 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2026 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
 #include <QCoreApplication>
 #include <QDebug>
