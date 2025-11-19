@@ -9,7 +9,7 @@
 # src/src.pro:
 # include(../3rdparty/qtlogger/qtlogger_link.pri)
 
-CONFIG += c++14
+CONFIG += c++17
 
 qtlogger_static {
     DEFINES *= QTLOGGER_STATIC

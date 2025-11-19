@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 
-CONFIG += c++14
+CONFIG += c++17
 
 !qtlogger_library {
     DEFINES *= QTLOGGER_STATIC
