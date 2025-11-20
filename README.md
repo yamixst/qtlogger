@@ -23,6 +23,18 @@ int main(int argc, char *argv[])
 
 ```
 
+## Requirements
+
+- **C++17 compatible compiler**: QtLogger requires a compiler with full C++17 standard support
+- **Qt Framework**: Qt 5.9 - Qt 6.x
+
+### Supported Compilers
+
+- GCC 7.0 or later
+- Clang 5.0 or later
+- MSVC 2017 (Visual Studio 15.0) or later
+- Apple Clang (Xcode 10.0) or later
+
 ## No Code Changes Required
 
 You don't need to modify your existing logging code if you're using standard Qt logging functions like `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, or `qFatal()`. Simply add one line of code to your `main()` function to configure QtLogger, and all your existing log statements will automatically work with the new logging system.
