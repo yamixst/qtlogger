@@ -1,76 +1,109 @@
 [logger]
-; Qt Filter rules
-; Value: [<category>|*][.debug|.info|.warning|.critical]=true|false;...
-; Reference: https://doc.qt.io/qt-5/qloggingcategory.html#setFilterRules
+;; Qt Filter rules
+;; Value: [<category>|*][.debug|.info|.warning|.critical]=true|false;...
+;; Reference: https://doc.qt.io/qt-5/qloggingcategory.html#setFilterRules
 filter_rules = "*.debug=true"
 
-; Qt Message pattern
-; Value: default|
-;    [%{appname}] [%{category}] [%{file}] [%{function}] [%{line}] [%{message}]
-;    [%{pid}] [%{threadid}] [%{qthreadptr}] [%{type}]
-;    [%{time process}] [%{time boot}] [%{time [format]}]
-;    [%{backtrace [depth=N] [separator="..."]}]
-;    [%{if-[debug|info|warning|fatal|*]} ... %{endif}]
-; Reference: https://doc.qt.io/qt-5/qtgvlobal.html#qSetMessagePattern
-; message_pattern = default
-message_pattern = "%{time yyyyMMdd h:mm:ss.zzz t} %{file}:%{line} %{message}"
+;; Message pattern with placeholders
+;; Basic placeholders:
+;;    %{message}    - Log message text
+;;    %{type}       - Message type (debug, info, warning, critical, fatal)
+;;    %{category}   - Logging category name
+;;    %{file}       - Source file path
+;;    %{shortfile}  - Source file name without path (or with base dir: %{shortfile /home/user/project})
+;;    %{line}       - Line number in source file
+;;    %{function}   - Full function signature
+;;    %{func}       - Cleaned function name (without return type and parameters)
+;;    %{threadid}   - Thread ID
+;;    %{qthreadptr} - QThread pointer
+;; Time placeholders:
+;;    %{time}         - ISO 8601 format (default)
+;;    %{time process} - Seconds since process start
+;;    %{time boot}    - Seconds since system boot
+;;    %{time FORMAT}  - Custom Qt date/time format (e.g., %{time yyyy-MM-dd hh:mm:ss.zzz})
+;; Fixed-width formatting (after colon):
+;;    %{type:<8}    - Left-aligned, 8 chars wide, space-padded
+;;    %{type:>8}    - Right-aligned, 8 chars wide
+;;    %{type:^8}    - Center-aligned, 8 chars wide
+;;    %{type:0>8}   - Right-aligned, zero-padded
+;;    %{category:>10!} - Right-aligned, truncate if longer than 10 chars
+;; Conditional blocks:
+;;    %{if-debug}...%{endif}   - Include content only for debug messages
+;;    %{if-warning}...%{endif} - Include content only for warning messages
+;; Custom attributes (added via addSeqNumber, addAppInfo, etc.):
+;;    %{seq_number}      - Sequence number
+;;    %{seq_number:0>6}  - Sequence number, zero-padded to 6 digits
+;;    %{attr?N,M}        - Optional attribute with N chars removed before and M after if empty
+message_pattern = "%{time yyyy-MM-dd hh:mm:ss} %{type:^8} [%{category}] %{message}"
 
-; Filter with regular expression
-; Value: <regexp>
-regexp_filter = "^net.*"
+;; Filter with regular expression
+;; Value: <regexp>
+; regexp_filter = "^(?!.*password).*$"
 
-; Sink into standard output stream
-; Value: true|false
+;; Sink into standard output stream
+;; Value: true|false
 stdout = false
 
-; Sink into standard error stream
-; Value: true|false
+;; Enable colored output for stdout (ANSI escape codes)
+;; Value: true|false
+stdout_color = false
+
+;; Sink into standard error stream
+;; Value: true|false
 stderr = false
 
-; Sink into standard platform output (Android Log or MacOS/iOS Log or stderr)
-; Value: true|false
+;; Enable colored output for stderr (ANSI escape codes)
+;; Value: true|false
+stderr_color = false
+
+;; Sink into standard platform output (Android Log or macOS/iOS os_log or stderr)
+;; Value: true|false
 platform_std_log = true
 
-; Sink into Syslog
-; Value: <string>
-syslog_ident = "myapp"
+;; Sink into Syslog (Unix/Linux only)
+;; Value: <string> - syslog identifier
+; syslog_ident = "myapp"
 
-; Sink into Systemd Journal
-; Value: true|false
+;; Sink into Systemd Journal (Linux only)
+;; Value: true|false
 sdjournal = false
 
-; Sink into file
-; Value: <string>
-path = "myapp.log"
+;; Sink into file
+;; Value: <string> - file path
+path = "app.log"
 
-; Maximum rotating file size
-; Value: <int>
+;; Maximum rotating file size in bytes (default: 1048576 = 1 MB)
+;; Value: <int>
 max_file_size = 1048576
 
-; Maximum rotating file count
-; Value: <int>
+;; Maximum rotating file count (default: 5)
+;; If 1 - rotation disabled, only main file kept
+;; If 0 or negative - rotated files kept indefinitely
+;; Value: <int>
 max_file_count = 5
 
-; Rotate log file on application startup
-; Value: true|false
+;; Rotate log file on application startup if non-empty
+;; Value: true|false
 rotate_on_startup = true
 
-; Rotate log file daily
-; Value: true|false
+;; Rotate log file daily (when message date changes)
+;; Value: true|false
 rotate_daily = false
 
-; Compress rotated log files to .gz format
-; Value: true|false
+;; Compress rotated log files to .gz format
+;; Rotated file naming: <basename>.<date>.<index>.<suffix>[.gz]
+;; Example: myapp.2024-05-15.1.log.gz
+;; Value: true|false
 compress_old_files = false
 
-; Send message to HTTP server
-; Value: <string>
-http_url = "http://127.0.0.1:8085/log/message"
+;; Send message to HTTP server
+;; Value: <string> - URL
+; http_url = "http://127.0.0.1:8085/log/message"
 
-; Message format for HTTP sink
-; Value: raw|default|json
-http_msg_format = json
+;; Message format for HTTP sink
+;; Value: raw|default|json
+; http_msg_format = json
 
-; Run the logger in its own thread
-; Value: true|false
+;; Run the logger in its own thread (asynchronous logging)
+;; Value: true|false
 async = true
