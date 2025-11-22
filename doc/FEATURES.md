@@ -309,14 +309,41 @@ Simple file output:
 - Flushable for immediate write
 
 #### RotatingFileSink
-Automatic log rotation:
+Automatic log rotation with advanced options:
 ```cpp
+// Basic usage
 .sendToFile("app.log", maxFileSize, maxFileCount)
+
+// With rotation options
+.sendToFile("app.log", maxFileSize, maxFileCount,
+            RotatingFileSink::RotationOnStartup
+            | RotatingFileSink::RotationDaily
+            | RotatingFileSink::Compression)
 ```
-- Rotates when file exceeds `maxFileSize` bytes
-- Keeps up to `maxFileCount` files
-- Automatic file naming: `app.log`, `app.log.1`, `app.log.2`, etc.
-- Default: 1MB max size, 3 files
+
+**Rotation Triggers:**
+- **By size**: Rotates when file exceeds `maxFileSize` bytes
+- **On startup** (`RotationOnStartup`): Rotates non-empty log file when application starts
+- **Daily** (`RotationDaily`): Rotates when message date differs from current log date
+
+**Options (flags):**
+- `RotatingFileSink::None` - No special options (default)
+- `RotatingFileSink::RotationOnStartup` - Rotate on application startup
+- `RotatingFileSink::RotationDaily` - Rotate daily
+- `RotatingFileSink::Compression` - Compress rotated files to `.gz` format
+
+**File Naming:**
+- Rotated files: `<basename>.<date>.<index>.<suffix>[.gz]`
+- Example: `app.2024-05-15.1.log` or `app.2024-05-15.1.log.gz`
+
+**File Count Behavior:**
+- `maxFileCount == 1`: Rotation disabled (only main file kept)
+- `maxFileCount <= 0`: Rotated files kept indefinitely (no cleanup)
+- `maxFileCount > 1`: Keeps up to `maxFileCount` files (including current)
+
+**Defaults:**
+- `DefaultMaxFileSize`: 1 MB
+- `DefaultMaxFileCount`: 5 files
 
 ### Platform-Specific Sinks
 
@@ -522,7 +549,10 @@ gQtLogger
     .filterLevel(QtWarningMsg)
     .formatPretty()
     .sendToStdErr()
-    .sendToFile("app.log", 1024*1024, 5);
+    .sendToFile("app.log", 1024*1024, 5,
+                RotatingFileSink::RotationOnStartup
+                | RotatingFileSink::RotationDaily
+                | RotatingFileSink::Compression);
 ```
 
 #### Advanced API
@@ -553,6 +583,9 @@ sdjournal = true
 path = "myapp.log"
 max_file_size = 1048576
 max_file_count = 5
+rotate_on_startup = true
+rotate_daily = false
+compress_old_files = false
 async = true
 http_url = "https://logs.example.com/api/v1/logs"
 http_msg_format = json
@@ -734,7 +767,10 @@ gQtLogger
     .end()
     .pipeline()
         .formatToJson()
-        .sendToFile("app.json", 10*1024*1024, 10)
+        .sendToFile("app.json", 10*1024*1024, 10,
+                    RotatingFileSink::RotationOnStartup
+                    | RotatingFileSink::RotationDaily
+                    | RotatingFileSink::Compression)
     .end()
     .pipeline()
         .filter("error|critical")

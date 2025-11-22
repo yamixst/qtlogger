@@ -6,9 +6,9 @@ filter_rules = "*.debug=true"
 
 ; Qt Message pattern
 ; Value: default|
-;    [%{appname}] [%{category}] [%{file}] [%{function}] [%{line}] [%{message}] 
-;    [%{pid}] [%{threadid}] [%{qthreadptr}] [%{type}] 
-;    [%{time process}] [%{time boot}] [%{time [format]}] 
+;    [%{appname}] [%{category}] [%{file}] [%{function}] [%{line}] [%{message}]
+;    [%{pid}] [%{threadid}] [%{qthreadptr}] [%{type}]
+;    [%{time process}] [%{time boot}] [%{time [format]}]
 ;    [%{backtrace [depth=N] [separator="..."]}]
 ;    [%{if-[debug|info|warning|fatal|*]} ... %{endif}]
 ; Reference: https://doc.qt.io/qt-5/qtgvlobal.html#qSetMessagePattern
@@ -49,7 +49,19 @@ max_file_size = 1048576
 
 ; Maximum rotating file count
 ; Value: <int>
-max_file_count = 3
+max_file_count = 5
+
+; Rotate log file on application startup
+; Value: true|false
+rotate_on_startup = true
+
+; Rotate log file daily
+; Value: true|false
+rotate_daily = false
+
+; Compress rotated log files to .gz format
+; Value: true|false
+compress_old_files = false
 
 ; Send message to HTTP server
 ; Value: <string>

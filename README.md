@@ -13,7 +13,7 @@ A simple yet powerful logging solution for the Qt Framework. This project is des
 
 ### Multiple Output Destinations (Sinks)
 - **Console**: stdout, stderr with optional **colored output** (ANSI escape codes, auto-detects TTY)
-- **Files**: Simple files or rotating logs with automatic size management
+- **Files**: Simple files or rotating logs with size-based, daily, and startup rotation + gzip compression
 - **Platform-native**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
 - **Network**: HTTP endpoints for remote logging
 - **Custom**: Qt signals, any QIODevice
@@ -131,7 +131,10 @@ int main(int argc, char *argv[])
         .end()
         .pipeline()
             .format("%{time} [%{category}] %{type}: %{message}")
-            .sendToFile("app.log", 1024 * 1024, 5)  // Rotating logs (1MB, 5 files)
+            .sendToFile("app.log", 1024 * 1024, 5,  // Rotating logs (1MB, 5 files)
+                        QtLogger::RotatingFileSink::RotationOnStartup
+                        | QtLogger::RotatingFileSink::RotationDaily
+                        | QtLogger::RotatingFileSink::Compression)
         .end()
         .pipeline()
             .addAppInfo()
@@ -167,6 +170,9 @@ stdout_color = true
 path = "app.log"
 max_file_size = 1048576
 max_file_count = 5
+rotate_on_startup = true
+rotate_daily = false
+compress_old_files = false
 async = true
 ```
 
