@@ -21,6 +21,7 @@
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
+#include "sinks/signalsink.h"
 
 #ifdef QTLOGGER_NETWORK
 #    include "attrhandlers/hostinfoattrs.h"
@@ -29,6 +30,14 @@
 
 #ifdef QTLOGGER_SYSLOG
 #    include "sinks/syslogsink.h"
+#endif
+
+#ifdef QTLOGGER_ANDROIDLOG
+#    include "sinks/androidlogsink.h"
+#endif
+
+#ifdef QTLOGGER_OSLOG
+#    include "sinks/oslogsink.h"
 #endif
 
 #ifdef QTLOGGER_SDJOURNAL
@@ -206,6 +215,22 @@ SimplePipeline &SimplePipeline::sendToFile(const QString &fileName, int maxFileS
     return *this;
 }
 
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToIODevice(const QIODevicePtr &device)
+{
+    append(IODeviceSinkPtr::create(device));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToSignal(QObject *receiver, const char *method)
+{
+    auto sink = SignalSinkPtr::create();
+    QObject::connect(sink.data(), SIGNAL(message(QtLogger::LogMessage)), receiver, method);
+    append(sink.staticCast<Sink>());
+    return *this;
+}
+
 #ifdef QTLOGGER_NETWORK
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
@@ -220,6 +245,24 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToWinDebug()
 {
     append(WinDebugSinkPtr::create());
+    return *this;
+}
+#endif
+
+#ifdef QTLOGGER_ANDROIDLOG
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToAndroidLog()
+{
+    append(AndroidLogSinkPtr::create());
+    return *this;
+}
+#endif
+
+#ifdef QTLOGGER_OSLOG
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToOsLog()
+{
+    append(OslogSinkPtr::create());
     return *this;
 }
 #endif

@@ -10,7 +10,7 @@
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT SignalSink : public QObject, Sink
+class QTLOGGER_EXPORT SignalSink : public QObject, public Sink
 {
     Q_OBJECT
 

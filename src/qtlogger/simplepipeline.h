@@ -5,7 +5,10 @@
 
 #include "logger_global.h"
 #include "sortedpipeline.h"
+#include "sinks/iodevicesink.h"
 #include "sinks/rotatingfilesink.h"
+
+QT_FORWARD_DECLARE_CLASS(QIODevice)
 
 namespace QtLogger {
 
@@ -46,11 +49,19 @@ public:
 #endif
     SimplePipeline &sendToPlatformStdLog();
     SimplePipeline &sendToFile(const QString &fileName, int maxFileSize = 0, int maxFileCount = 0, RotatingFileSink::Options options = RotatingFileSink::None);
+    SimplePipeline &sendToIODevice(const QIODevicePtr &device);
+    SimplePipeline &sendToSignal(QObject *receiver, const char *method);
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
 #endif
 #ifdef Q_OS_WIN
     SimplePipeline &sendToWinDebug();
+#endif
+#ifdef QTLOGGER_ANDROIDLOG
+    SimplePipeline &sendToAndroidLog();
+#endif
+#ifdef QTLOGGER_OSLOG
+    SimplePipeline &sendToOsLog();
 #endif
 
     SimplePipeline &pipeline();
