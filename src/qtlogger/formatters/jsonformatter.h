@@ -15,6 +15,8 @@ using JsonFormatterPtr = QSharedPointer<class JsonFormatter>;
 class QTLOGGER_EXPORT JsonFormatter : public Formatter
 {
 public:
+    explicit JsonFormatter(bool compact = false);
+
     static JsonFormatterPtr instance()
     {
         static const auto s_instance = JsonFormatterPtr::create();
@@ -22,6 +24,9 @@ public:
     }
 
     QString format(const LogMessage &lmsg) override;
+
+private:
+    bool m_compact = false;
 };
 
 } // namespace QtLogger

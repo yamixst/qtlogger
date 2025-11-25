@@ -151,9 +151,9 @@ SimplePipeline &SimplePipeline::formatPretty()
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::formatToJson()
+SimplePipeline &SimplePipeline::formatToJson(bool compact)
 {
-    append(JsonFormatterPtr::create());
+    append(JsonFormatterPtr::create(compact));
     return *this;
 }
 

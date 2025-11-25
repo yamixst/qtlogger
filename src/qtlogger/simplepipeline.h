@@ -37,7 +37,7 @@ public:
     SimplePipeline &format(const QString &pattern);
     SimplePipeline &formatByQt();
     SimplePipeline &formatPretty();
-    SimplePipeline &formatToJson();
+    SimplePipeline &formatToJson(bool compact = false);
 
     SimplePipeline &sendToStdOut(bool colorEnabled = false);
     SimplePipeline &sendToStdErr(bool colorEnabled = false);

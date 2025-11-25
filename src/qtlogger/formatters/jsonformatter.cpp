@@ -9,6 +9,11 @@
 
 namespace QtLogger {
 
+JsonFormatter::JsonFormatter(bool compact)
+    : m_compact(compact)
+{
+}
+
 QTLOGGER_DECL_SPEC
 QString JsonFormatter::format(const LogMessage &lmsg)
 {
@@ -19,7 +24,8 @@ QString JsonFormatter::format(const LogMessage &lmsg)
         obj.insert(it.key(), QJsonValue::fromVariant(it.value()));
     }
 
-    return QString::fromUtf8(QJsonDocument(obj).toJson());
+    return QString::fromUtf8(QJsonDocument(obj).toJson(m_compact ? QJsonDocument::Compact
+                                                                 : QJsonDocument::Indented));
 }
 
 } // namespace QtLogger
