@@ -7,11 +7,13 @@
 #include <QTemporaryFile>
 #include <QTextStream>
 #include <QDir>
+#include <QBuffer>
 
 #include "qtlogger/simplepipeline.h"
 #include "qtlogger/logmessage.h"
 #include "qtlogger/sinks/stdoutsink.h"
 #include "qtlogger/sinks/stderrsink.h"
+#include "qtlogger/sinks/signalsink.h"
 #include "mock_components.h"
 
 using namespace QtLogger;
@@ -62,6 +64,8 @@ private slots:
     void testSendToPlatformStdLog();
     void testSendToFile();
     void testSendToFileWithRotation();
+    void testSendToIODevice();
+    void testSendToSignal();
 #ifdef QTLOGGER_SYSLOG
     void testSendToSyslog();
 #endif
@@ -73,6 +77,12 @@ private slots:
 #endif
 #ifdef Q_OS_WIN
     void testSendToWinDebug();
+#endif
+#ifdef QTLOGGER_ANDROIDLOG
+    void testSendToAndroidLog();
+#endif
+#ifdef QTLOGGER_OSLOG
+    void testSendToOsLog();
 #endif
 
     // Pipeline nesting tests
@@ -733,6 +743,91 @@ void TestSimplePipeline::testFlush()
     mixedPipeline.flush();
     QCOMPARE(mixedMockSink->flushCallCount(), 3);
 }
+
+void TestSimplePipeline::testSendToIODevice()
+{
+    // Create a buffer as the IODevice
+    auto buffer = QSharedPointer<QBuffer>::create();
+    buffer->open(QIODevice::ReadWrite);
+
+    SimplePipeline pipeline;
+    pipeline.format("%{message}")
+            .sendToIODevice(buffer);
+
+    LogMessage msg(QtDebugMsg, QMessageLogContext(), "IODevice test message");
+    auto result = pipeline.process(msg);
+
+    QVERIFY(result);
+
+    // Verify the message was written to the buffer
+    buffer->seek(0);
+    auto content = QString::fromUtf8(buffer->readAll());
+    QVERIFY(content.contains("IODevice test message"));
+}
+
+void TestSimplePipeline::testSendToSignal()
+{
+    // Create a SignalSink directly to test with QSignalSpy
+    auto signalSink = SignalSinkPtr::create();
+
+    SimplePipeline pipeline;
+    pipeline.append(signalSink.staticCast<Sink>());
+
+    // Use QSignalSpy to capture the signal
+    QSignalSpy spy(signalSink.data(), &SignalSink::message);
+    QVERIFY(spy.isValid());
+
+    LogMessage msg(QtDebugMsg, QMessageLogContext(), "Signal test message");
+    auto result = pipeline.process(msg);
+
+    QVERIFY(result);
+    QCOMPARE(spy.count(), 1);
+
+    // Access the LogMessage through QVariant without assignment
+    auto arguments = spy.takeFirst();
+    QVERIFY(arguments.count() > 0);
+    auto variant = arguments.at(0);
+    QVERIFY(variant.canConvert<LogMessage>());
+    QCOMPARE(variant.value<LogMessage>().message(), QString("Signal test message"));
+
+    // Test multiple messages
+    LogMessage msg2(QtWarningMsg, QMessageLogContext(), "Second signal message");
+    pipeline.process(msg2);
+
+    QCOMPARE(spy.count(), 1);
+    arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).value<LogMessage>().message(), QString("Second signal message"));
+}
+
+#ifdef QTLOGGER_ANDROIDLOG
+void TestSimplePipeline::testSendToAndroidLog()
+{
+    SimplePipeline pipeline;
+    pipeline.format("%{message}")
+            .sendToAndroidLog();
+
+    LogMessage msg(QtDebugMsg, QMessageLogContext(), "Android log test");
+    auto result = pipeline.process(msg);
+
+    // Just verify it doesn't crash and returns true
+    QVERIFY(result);
+}
+#endif
+
+#ifdef QTLOGGER_OSLOG
+void TestSimplePipeline::testSendToOsLog()
+{
+    SimplePipeline pipeline;
+    pipeline.format("%{message}")
+            .sendToOsLog();
+
+    LogMessage msg(QtDebugMsg, QMessageLogContext(), "OSLog test");
+    auto result = pipeline.process(msg);
+
+    // Just verify it doesn't crash and returns true
+    QVERIFY(result);
+}
+#endif
 
 QTEST_MAIN(TestSimplePipeline)
 #include "test_simplepipeline.moc"
