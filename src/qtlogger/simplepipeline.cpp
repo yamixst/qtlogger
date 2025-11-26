@@ -158,16 +158,16 @@ SimplePipeline &SimplePipeline::formatToJson(bool compact)
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToStdOut(bool colorEnabled)
+SimplePipeline &SimplePipeline::sendToStdOut(bool colorize)
 {
-    append(StdOutSinkPtr::create(colorEnabled ? ColorMode::Auto : ColorMode::Never));
+    append(StdOutSinkPtr::create(colorize ? ColorMode::Auto : ColorMode::Never));
     return *this;
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::sendToStdErr(bool colorEnabled)
+SimplePipeline &SimplePipeline::sendToStdErr(bool colorize)
 {
-    append(StdErrSinkPtr::create(colorEnabled ? ColorMode::Auto : ColorMode::Never));
+    append(StdErrSinkPtr::create(colorize ? ColorMode::Auto : ColorMode::Never));
     return *this;
 }
 

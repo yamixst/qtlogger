@@ -39,8 +39,8 @@ public:
     SimplePipeline &formatPretty();
     SimplePipeline &formatToJson(bool compact = false);
 
-    SimplePipeline &sendToStdOut(bool colorEnabled = false);
-    SimplePipeline &sendToStdErr(bool colorEnabled = false);
+    SimplePipeline &sendToStdOut(bool colorize = false);
+    SimplePipeline &sendToStdErr(bool colorize = false);
 #ifdef QTLOGGER_SYSLOG
     SimplePipeline &sendToSyslog();
 #endif
