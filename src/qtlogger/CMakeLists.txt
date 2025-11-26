@@ -34,6 +34,7 @@ set(QTLOGGER_SOURCES
     logger.cpp
     pipeline.cpp
     simplepipeline.cpp
+    sinks/coloredconsole.cpp
     sinks/filesink.cpp
     sinks/iodevicesink.cpp
     sinks/rotatingfilesink.cpp
@@ -72,6 +73,7 @@ set(QTLOGGER_HEADERS
     qtlogger.h
     simplepipeline.h
     sink.h
+    sinks/coloredconsole.h
     sinks/filesink.h
     sinks/iodevicesink.h
     sinks/platformstdsink.h
