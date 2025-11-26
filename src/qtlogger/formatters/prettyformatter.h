@@ -18,28 +18,20 @@ class QTLOGGER_EXPORT PrettyFormatter : public Formatter
 public:
     static PrettyFormatterPtr instance()
     {
-        static const auto s_instance = PrettyFormatterPtr::create(true, 0);
+        static const auto s_instance = PrettyFormatterPtr::create(true, 0, false);
         return s_instance;
     }
 
-    explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15);
+    explicit PrettyFormatter(bool showThread = true, int maxCategoryWidth = 15,
+                             bool colorize = false);
 
     QString format(const LogMessage &lmsg) override;
 
-    inline bool showThreadId() const { return m_showThreadId; }
-    inline void setShowThreadId(bool newShowThreadId) { m_showThreadId = newShowThreadId; }
-
-    inline int maxCategoryWidth() const { return m_maxCategoryWidth; }
-    inline void setMaxCategoryWidth(int newMaxCategoryWidth)
-    {
-        m_maxCategoryWidth = newMaxCategoryWidth;
-    }
-
 private:
     bool m_showThreadId = true;
+    bool m_colorize = false;
     QMap<int, int> m_threads;
     int m_threadsIndex = 0;
-
     int m_maxCategoryWidth = 15;
     int m_categoryWidth = 0;
 };

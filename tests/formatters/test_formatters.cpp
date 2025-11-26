@@ -50,8 +50,6 @@ private slots:
     void testPrettyFormatterBasic();
     void testPrettyFormatterSingleton();
     void testPrettyFormatterWithoutThreadId();
-    void testPrettyFormatterMaxCategoryWidth();
-    void testPrettyFormatterMultipleThreads();
     void testPrettyFormatterDifferentCategories();
     void testPrettyFormatterDefaultCategory();
     void testPrettyFormatterLongCategory();
@@ -342,40 +340,6 @@ void TestFormatters::testPrettyFormatterWithoutThreadId()
     
     // Should not contain thread indicator when only one thread
     QVERIFY(!formatted.contains("#"));
-}
-
-void TestFormatters::testPrettyFormatterMaxCategoryWidth()
-{
-    PrettyFormatter formatter(true, 20);  // Max category width 20
-    formatter.setMaxCategoryWidth(15);
-    QCOMPARE(formatter.maxCategoryWidth(), 15);
-    
-    auto msg = MockLogMessage::createWithCategory("very.long.category.name", QtCriticalMsg, "Category width test");
-    QString formatted = formatter.format(msg);
-    
-    QVERIFY(!formatted.isEmpty());
-    QVERIFY(formatted.contains("Category width test"));
-    QVERIFY(formatted.contains("[very.long.category.name]"));
-}
-
-void TestFormatters::testPrettyFormatterMultipleThreads()
-{
-    PrettyFormatter formatter(true, 0);  // Show thread ID
-    formatter.setShowThreadId(true);
-    QVERIFY(formatter.showThreadId());
-    
-    // This test simulates multiple threads by using the same formatter
-    // In real usage, different thread IDs would be detected automatically
-    auto msg1 = MockLogMessage::create(QtDebugMsg, "Thread message 1");
-    auto msg2 = MockLogMessage::create(QtInfoMsg, "Thread message 2");
-    
-    QString formatted1 = formatter.format(msg1);
-    QString formatted2 = formatter.format(msg2);
-    
-    QVERIFY(!formatted1.isEmpty());
-    QVERIFY(!formatted2.isEmpty());
-    QVERIFY(formatted1.contains("Thread message 1"));
-    QVERIFY(formatted2.contains("Thread message 2"));
 }
 
 void TestFormatters::testPrettyFormatterDifferentCategories()
