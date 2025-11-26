@@ -7,14 +7,20 @@
 
 #include "../logger_global.h"
 #include "../sink.h"
+#include "coloredconsole.h"
 
 namespace QtLogger {
 
-class QTLOGGER_EXPORT StdErrSink : public Sink
+class QTLOGGER_EXPORT StdErrSink : public Sink, public ColoredConsole
 {
 public:
+    explicit StdErrSink(ColorMode colorMode = ColorMode::Auto);
+
     void send(const LogMessage &lmsg) override;
-    virtual bool flush() override;
+    bool flush() override;
+
+protected:
+    bool isTty() const override;
 };
 
 using StdErrSinkPtr = QSharedPointer<StdErrSink>;
