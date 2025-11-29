@@ -72,6 +72,7 @@ SOURCES += \
     $$PWD/logger.cpp \
     $$PWD/pipeline.cpp \
     $$PWD/simplepipeline.cpp \
+    $$PWD/sinks/coloredconsole.cpp \
     $$PWD/sinks/filesink.cpp \
     $$PWD/sinks/iodevicesink.cpp \
     $$PWD/sinks/rotatingfilesink.cpp \
@@ -108,6 +109,7 @@ HEADERS += \
     $$PWD/pipeline.h \
     $$PWD/simplepipeline.h \
     $$PWD/sink.h \
+    $$PWD/sinks/coloredconsole.h \
     $$PWD/sinks/filesink.h \
     $$PWD/sinks/iodevicesink.h \
     $$PWD/sinks/platformstdsink.h \
