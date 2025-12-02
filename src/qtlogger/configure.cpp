@@ -144,17 +144,19 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
     }
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
+        const bool stdoutColor = settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: stdout" << std::endl;
+        std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
-        *pipeline << StdOutSinkPtr::create();
+        *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Always : ColorMode::Never);
     }
 
     if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
+        const bool stderrColor = settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: stderr" << std::endl;
+        std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
-        *pipeline << StdErrSinkPtr::create();
+        *pipeline << StdErrSinkPtr::create(stderrColor ? ColorMode::Always : ColorMode::Never);
     }
 
     if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
