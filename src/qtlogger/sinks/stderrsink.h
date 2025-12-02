@@ -14,7 +14,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT StdErrSink : public Sink, public ColoredConsole
 {
 public:
-    explicit StdErrSink(ColorMode colorMode = ColorMode::Auto);
+    explicit StdErrSink(ColorMode colorMode = ColorMode::Never);
 
     void send(const LogMessage &lmsg) override;
     bool flush() override;
