@@ -26,8 +26,8 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
     static const QString reset { QStringLiteral("\033[0m") };
     static const QString darkGray { QStringLiteral("\033[90m") };       // dark gray for category
     static const QString bold { QStringLiteral("\033[1m") };            // bold for thread and datetime
-    static const QString blue { QStringLiteral("\033[34m") };           // blue for Info text
-    static const QString blueBold { QStringLiteral("\033[1;34m") };     // bold blue for Info letter
+    static const QString green { QStringLiteral("\033[32m") };           // green for Info text
+    static const QString greenBold { QStringLiteral("\033[1;32m") };     // bold green for Info letter
     static const QString orange { QStringLiteral("\033[38;5;172m") };   // orange for Warning text
     static const QString darkOrange { QStringLiteral("\033[38;5;208m") }; // dark orange for Warning letter
     static const QString redBold { QStringLiteral("\033[1;31m") };      // red bold for Error
@@ -44,8 +44,8 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
     auto type = lmsg.type();
     if (m_colorize) {
         switch (type) {
-        case QtInfoMsg:     // I - bold blue letter
-            result += blueBold + type_l.at(type) + reset;
+        case QtInfoMsg:     // I - bold green letter
+            result += greenBold + type_l.at(type) + reset;
             break;
         case QtWarningMsg:  // W - dark orange letter and text
             result += darkOrange + type_l.at(type) + reset;
@@ -115,7 +115,7 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
 
     // Message - with color for Info, Warning, Error and Fatal
     if (m_colorize && type == QtInfoMsg) {
-        result += blue + lmsg.message() + reset;
+        result += green + lmsg.message() + reset;
     } else if (m_colorize && type == QtWarningMsg) {
         result += orange + lmsg.message() + reset;
     } else if (m_colorize && type == QtCriticalMsg) {
