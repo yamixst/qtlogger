@@ -10,6 +10,8 @@
 
 #include "qtlogger/simplepipeline.h"
 #include "qtlogger/logmessage.h"
+#include "qtlogger/sinks/stdoutsink.h"
+#include "qtlogger/sinks/stderrsink.h"
 #include "mock_components.h"
 
 using namespace QtLogger;
@@ -53,7 +55,10 @@ private slots:
 
     // Sink tests
     void testSendToStdOut();
+    void testSendToStdOutWithColors();
     void testSendToStdErr();
+    void testSendToStdErrWithColors();
+    void testColorMode();
     void testSendToPlatformStdLog();
     void testSendToFile();
     void testSendToFileWithRotation();
@@ -363,6 +368,17 @@ void TestSimplePipeline::testSendToStdOut()
     QVERIFY(result);
 }
 
+void TestSimplePipeline::testSendToStdOutWithColors()
+{
+    // Test with colors enabled
+    m_pipeline->sendToStdOut(true);
+    
+    LogMessage msg(QtWarningMsg, QMessageLogContext(), "colored warning");
+    bool result = m_pipeline->process(msg);
+    
+    QVERIFY(result);
+}
+
 void TestSimplePipeline::testSendToStdErr()
 {
     // This test mainly checks that the method doesn't crash
@@ -372,6 +388,47 @@ void TestSimplePipeline::testSendToStdErr()
     bool result = m_pipeline->process(msg);
     
     QVERIFY(result);
+}
+
+void TestSimplePipeline::testSendToStdErrWithColors()
+{
+    // Test with colors enabled
+    m_pipeline->sendToStdErr(true);
+    
+    LogMessage msg(QtCriticalMsg, QMessageLogContext(), "colored critical");
+    bool result = m_pipeline->process(msg);
+    
+    QVERIFY(result);
+}
+
+void TestSimplePipeline::testColorMode()
+{
+    // Test StdOutSink color modes
+    auto sinkAuto = StdOutSinkPtr::create(ColorMode::Auto);
+    QCOMPARE(sinkAuto->colorMode(), ColorMode::Auto);
+    
+    auto sinkAlways = StdOutSinkPtr::create(ColorMode::Always);
+    QCOMPARE(sinkAlways->colorMode(), ColorMode::Always);
+    QVERIFY(sinkAlways->colorsEnabled());
+    
+    auto sinkNever = StdOutSinkPtr::create(ColorMode::Never);
+    QCOMPARE(sinkNever->colorMode(), ColorMode::Never);
+    QVERIFY(!sinkNever->colorsEnabled());
+    
+    // Test setColorMode
+    sinkNever->setColorMode(ColorMode::Always);
+    QCOMPARE(sinkNever->colorMode(), ColorMode::Always);
+    QVERIFY(sinkNever->colorsEnabled());
+    
+    // Test colorize static method from ColoredConsole
+    QString colorized = ColoredConsole::colorize("test", QtWarningMsg);
+    QVERIFY(colorized.contains("\033[33m"));  // Yellow for warning
+    QVERIFY(colorized.contains("\033[0m"));   // Reset at end
+    
+    // Test StdErrSink color modes
+    auto stderrSink = StdErrSinkPtr::create(ColorMode::Always);
+    QCOMPARE(stderrSink->colorMode(), ColorMode::Always);
+    QVERIFY(stderrSink->colorsEnabled());
 }
 
 void TestSimplePipeline::testSendToPlatformStdLog()
