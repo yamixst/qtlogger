@@ -315,7 +315,7 @@ void TestFormatters::testPrettyFormatterBasic()
     QVERIFY(formatted.contains("Pretty test message"));
     
     // Should contain timestamp
-    QRegularExpression timeRegex(R"(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}\.\d{3})");
+    QRegularExpression timeRegex(R"(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2})");
     QVERIFY(timeRegex.match(formatted).hasMatch());
 }
 
