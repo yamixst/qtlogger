@@ -104,8 +104,8 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
     }
     if (m_maxCategoryWidth > 0) {
         auto categoryLength = category.length();
-        if (categoryLength > m_categoryWidth && categoryLength <= m_maxCategoryWidth) {
-            m_categoryWidth = categoryLength;
+        if (categoryLength > m_categoryWidth) {
+            m_categoryWidth = qMin(categoryLength, m_maxCategoryWidth);
         }
         auto spaceCount = qMax(m_categoryWidth - categoryLength, 0);
         if (spaceCount > 0) {

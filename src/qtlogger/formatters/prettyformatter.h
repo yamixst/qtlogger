@@ -29,11 +29,11 @@ public:
 
 private:
     bool m_showThreadId = true;
-    bool m_colorize = false;
     QMap<int, int> m_threads;
     int m_threadsIndex = 0;
     int m_maxCategoryWidth = 15;
     int m_categoryWidth = 0;
+    bool m_colorize = false;
 };
 
 } // namespace QtLogger
