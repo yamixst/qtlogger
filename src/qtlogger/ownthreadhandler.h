@@ -2,8 +2,10 @@
 
 #include <type_traits>
 
+#include <QAtomicInt>
 #include <QCoreApplication>
 #include <QEvent>
+#include <QMutexLocker>
 #include <QObject>
 #include <QPointer>
 #include <QThread>
@@ -36,6 +38,8 @@ public:
 
     OwnThreadHandler<BaseHandler> &moveToOwnThread()
     {
+        QMutexLocker locker(&m_mutex);
+
         if (m_thread)
             return *this;
 
@@ -47,7 +51,8 @@ public:
             if (qApp->thread() != m_thread->thread()) {
                 m_thread->moveToThread(qApp->thread());
             }
-            QObject::connect(qApp, &QCoreApplication::aboutToQuit, m_thread, &QThread::quit);
+            QObject::connect(qApp, &QCoreApplication::aboutToQuit, m_thread,
+                             [this]() { resetOwnThread(); });
         }
 
         QObject::connect(m_thread, &QThread::finished, m_thread, &QThread::deleteLater);
@@ -71,18 +76,34 @@ public:
 
     void resetOwnThread()
     {
+        QMutexLocker locker(&m_mutex);
+
         if (!m_thread)
             return;
 
-        m_thread->quit();
-        m_thread.clear();
+        while (m_pendingCount.loadAcquire() > 0) {
+            locker.unlock();
+            QThread::msleep(10);
+            locker.relock();
+        }
 
+        m_thread->quit();
+
+        if (!m_thread->wait(3000)) {
+            m_thread->terminate();
+            m_thread->wait();
+        }
+
+        m_thread.clear();
         m_worker = nullptr;
     }
 
     bool process(LogMessage &lmsg) override
     {
+        QMutexLocker locker(&m_mutex);
+
         if (m_worker) {
+            m_pendingCount.fetchAndAddOrdered(1);
             QCoreApplication::postEvent(m_worker, new LogEvent(lmsg));
         } else {
             BaseHandler::process(lmsg);
@@ -115,6 +136,7 @@ private:
                 auto logEvent = dynamic_cast<LogEvent *>(event);
                 if (logEvent) {
                     m_handler->BaseHandler::process(logEvent->lmsg);
+                    m_handler->m_pendingCount.fetchAndSubOrdered(1);
                 }
             }
         }
@@ -126,6 +148,8 @@ private:
 private:
     QPointer<QThread> m_thread;
     Worker *m_worker = nullptr;
+    QMutex m_mutex;
+    QAtomicInt m_pendingCount;
 };
 
 } // namespace QtLogger
