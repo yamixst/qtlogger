@@ -58,9 +58,9 @@ def run_command(cmd, cwd=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Bump version for qtlogger")
-    parser.add_argument("--major", action="store_true", help="Bump major version")
-    parser.add_argument("--minor", action="store_true", help="Bump minor version")
-    parser.add_argument("--patch", action="store_true", help="Bump patch version")
+    parser.add_argument("-x", "--major", action="store_true", help="Bump major version")
+    parser.add_argument("-y", "--minor", action="store_true", help="Bump minor version")
+    parser.add_argument("-z", "--patch", action="store_true", help="Bump patch version")
     args = parser.parse_args()
 
     # Check that exactly one option is specified
