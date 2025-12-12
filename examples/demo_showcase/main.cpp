@@ -14,7 +14,7 @@
 
 Q_LOGGING_CATEGORY(lcMain, "main")
 Q_LOGGING_CATEGORY(lcConfig, "config")
-Q_LOGGING_CATEGORY(lcComm, "comm")
+Q_LOGGING_CATEGORY(lcComm, "commu")
 Q_LOGGING_CATEGORY(lcComputer, "computer.core")
 Q_LOGGING_CATEGORY(lcHelm, "ops.helm")
 Q_LOGGING_CATEGORY(lcNavigation, "ops.navigation")
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     gQtLogger.moveToOwnThread()
-            .formatPretty(12, true)
+            .formatPretty(true, 12)
             .format([](const QtLogger::LogMessage &lmsg) {
                 auto fmsg = lmsg.formattedMessage();
                 static QRegularExpression dateRegex(QStringLiteral("\\d{2}\\.\\d{2}\\.\\d{4}"));

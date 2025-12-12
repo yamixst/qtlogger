@@ -6,8 +6,8 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-PrettyFormatter::PrettyFormatter(int maxCategoryWidth, bool colorize)
-    : m_maxCategoryWidth(maxCategoryWidth), m_colorize(colorize)
+PrettyFormatter::PrettyFormatter(bool colorize, int maxCategoryWidth)
+    : m_colorize(colorize), m_maxCategoryWidth(maxCategoryWidth)
 {
 }
 

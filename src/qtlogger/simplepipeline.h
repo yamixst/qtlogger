@@ -36,7 +36,7 @@ public:
     SimplePipeline &format(std::function<QString(const LogMessage &)> func);
     SimplePipeline &format(const QString &pattern);
     SimplePipeline &formatByQt();
-    SimplePipeline &formatPretty(int maxCategoryWidth = 15, bool colorize = false);
+    SimplePipeline &formatPretty(bool colorize = false, int maxCategoryWidth = 15);
     SimplePipeline &formatToJson(bool compact = false);
 
     SimplePipeline &sendToStdOut(bool colorize = false);
