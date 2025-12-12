@@ -144,9 +144,9 @@ SimplePipeline &SimplePipeline::formatByQt()
 }
 
 QTLOGGER_DECL_SPEC
-SimplePipeline &SimplePipeline::formatPretty(bool colorize)
+SimplePipeline &SimplePipeline::formatPretty(bool showThread, int maxCategoryWidth, bool colorize)
 {
-    append(PrettyFormatterPtr::create(true, 15, colorize));
+    append(PrettyFormatterPtr::create(showThread, maxCategoryWidth, colorize));
     return *this;
 }
 

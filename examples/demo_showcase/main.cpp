@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     gQtLogger.moveToOwnThread()
-            .formatPretty(true)
+            .formatPretty(true, 12, true)
             .format([](const QtLogger::LogMessage &lmsg) {
                 auto fmsg = lmsg.formattedMessage();
                 static QRegularExpression dateRegex(QStringLiteral("\\d{2}\\.\\d{2}\\.\\d{4}"));
@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
         QThread::msleep(QRandomGenerator::global()->bounded(20, 400));
         qCInfo(lcMain) << "All stations report ready. Enterprise standing by, Captain on the bridge.";
 
-        // QThread::msleep(100);
         app.quit();
     });
 
