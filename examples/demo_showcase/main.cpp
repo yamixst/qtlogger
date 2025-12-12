@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     gQtLogger.moveToOwnThread()
-            .formatPretty(true, 12, true)
+            .formatPretty(12, true)
             .format([](const QtLogger::LogMessage &lmsg) {
                 auto fmsg = lmsg.formattedMessage();
                 static QRegularExpression dateRegex(QStringLiteral("\\d{2}\\.\\d{2}\\.\\d{4}"));

@@ -6,8 +6,8 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-PrettyFormatter::PrettyFormatter(bool showThread, int maxCategoryWidth, bool colorize)
-    : m_showThreadId(showThread), m_maxCategoryWidth(maxCategoryWidth), m_colorize(colorize)
+PrettyFormatter::PrettyFormatter(int maxCategoryWidth, bool colorize)
+    : m_maxCategoryWidth(maxCategoryWidth), m_colorize(colorize)
 {
 }
 
@@ -67,22 +67,20 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
     result += QChar::fromLatin1(' ');
 
     // Thread - bold when colorized
-    if (m_showThreadId) {
-        if (!m_threads.contains(lmsg.threadId())) {
-            m_threads[lmsg.threadId()] = m_threadsIndex++;
-        }
-        if (m_threads.count() > 1) {
-            auto index = m_threads.value(lmsg.threadId());
-            if (index == 0) {
-                auto thread = thread_f.arg(index);
-                thread.fill(QChar::fromLatin1(' '));
-                result += thread;
+    if (!m_threads.contains(lmsg.threadId())) {
+        m_threads[lmsg.threadId()] = m_threadsIndex++;
+    }
+    if (m_threads.count() > 1) {
+        auto index = m_threads.value(lmsg.threadId());
+        if (index == 0) {
+            auto thread = thread_f.arg(index);
+            thread.fill(QChar::fromLatin1(' '));
+            result += thread;
+        } else {
+            if (m_colorize) {
+                result += bold + thread_f.arg(index) + reset;
             } else {
-                if (m_colorize) {
-                    result += bold + thread_f.arg(index) + reset;
-                } else {
-                    result += thread_f.arg(index);
-                }
+                result += thread_f.arg(index);
             }
         }
     }

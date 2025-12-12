@@ -191,7 +191,6 @@ Human-readable format with colors and alignment:
 - Timestamp formatting
 - Type indicators
 - Configurable options:
-  - `showThreadId()` / `setShowThreadId()`
   - `maxCategoryWidth()` / `setMaxCategoryWidth()`
 
 ### JsonFormatter
