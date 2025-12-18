@@ -3,8 +3,7 @@
 
 #pragma once
 
-#include <QMap>
-#include <QStringList>
+#include <QHash>
 
 #include "../formatter.h"
 #include "../logger_global.h"
@@ -30,7 +29,7 @@ private:
     bool m_colorize = false;
     int m_maxCategoryWidth = 15;
 
-    QMap<int, int> m_threads;
+    QHash<int, int> m_threads;
     int m_threadsIndex = 0;
     int m_categoryWidth = 0;
 };

@@ -14,112 +14,164 @@ PrettyFormatter::PrettyFormatter(bool colorize, int maxCategoryWidth)
 QTLOGGER_DECL_SPEC
 QString PrettyFormatter::format(const LogMessage &lmsg)
 {
-    static const QString time_f { QStringLiteral("dd.MM.yyyy hh:mm:ss") };
-    static const QStringList type_l {
-        QStringLiteral(" "), QStringLiteral("W"), QStringLiteral("E"),
-        QStringLiteral("F"), QStringLiteral("I"), QStringLiteral("S")
+    static const QString timeFormat = QStringLiteral("dd.MM.yyyy hh:mm:ss");
+    static const QChar typeLetters[] = {
+        QLatin1Char(' '), QLatin1Char('W'), QLatin1Char('E'),
+        QLatin1Char('F'), QLatin1Char('I'), QLatin1Char('S')
     };
-    static const QString thread_f { QStringLiteral("T%1 ") };
-    static const QString category_f { QStringLiteral("[%1] ") };
 
     // ANSI color codes
-    static const QString reset { QStringLiteral("\033[0m") };
-    static const QString darkGray { QStringLiteral("\033[90m") };       // dark gray for category
-    static const QString bold { QStringLiteral("\033[1m") };            // bold for thread and datetime
-    static const QString green { QStringLiteral("\033[32m") };           // green for Info text
-    static const QString greenBold { QStringLiteral("\033[1;32m") };     // bold green for Info letter
-    static const QString orange { QStringLiteral("\033[38;5;172m") };   // orange for Warning text
-    static const QString darkOrange { QStringLiteral("\033[38;5;208m") }; // dark orange for Warning letter
-    static const QString redBold { QStringLiteral("\033[1;31m") };      // red bold for Error
-    static const QString darkRedBold { QStringLiteral("\033[1;38;5;88m") }; // dark red/maroon bold for Fatal
+    static const QLatin1String reset("\033[0m");
+    static const QLatin1String darkGray("\033[90m");
+    static const QLatin1String bold("\033[1m");
+    static const QLatin1String green("\033[32m");
+    static const QLatin1String greenBold("\033[1;32m");
+    static const QLatin1String orange("\033[38;5;172m");
+    static const QLatin1String darkOrange("\033[38;5;208m");
+    static const QLatin1String redBold("\033[1;31m");
+    static const QLatin1String darkRedBold("\033[1;38;5;88m");
+
+    static const QLatin1Char space(' ');
+    static const QLatin1Char bracketOpen('[');
+    static const QLatin1Char bracketClose(']');
+    static const QLatin1Char letterT('T');
+
+    const auto type = lmsg.type();
+    const auto threadId = lmsg.threadId();
+    const auto categoryRaw = lmsg.category();
+    const bool isDefaultCategory = (qstrcmp(categoryRaw, "default") == 0);
+
+    // Pre-calculate category string once if needed
+    QString category;
+    if (!isDefaultCategory) {
+        category = QString::fromUtf8(categoryRaw);
+    }
+
+    // Estimate result size to minimize reallocations
+    // DateTime(19) + space(1) + type(1) + space(1) + thread(~5) + category(~20) + message
+    const int estimatedSize = 30 + category.size() + 4 + lmsg.message().size()
+                              + (m_colorize ? 80 : 0);
 
     QString result;
+    result.reserve(estimatedSize);
 
-    // DateTime - standard text
-    result += lmsg.time().toString(time_f);
-
-    result += QChar::fromLatin1(' ');
+    // DateTime
+    result += lmsg.time().toString(timeFormat);
+    result += space;
 
     // Type letter with specific colors
-    auto type = lmsg.type();
     if (m_colorize) {
         switch (type) {
-        case QtInfoMsg:     // I - bold green letter
-            result += greenBold + type_l.at(type) + reset;
+        case QtInfoMsg:
+            result += greenBold;
+            result += typeLetters[type];
+            result += reset;
             break;
-        case QtWarningMsg:  // W - dark orange letter and text
-            result += darkOrange + type_l.at(type) + reset;
+        case QtWarningMsg:
+            result += darkOrange;
+            result += typeLetters[type];
+            result += reset;
             break;
-        case QtCriticalMsg: // E - red bold letter and text
-            result += redBold + type_l.at(type) + reset;
+        case QtCriticalMsg:
+            result += redBold;
+            result += typeLetters[type];
+            result += reset;
             break;
-        case QtFatalMsg:    // F - dark red bold letter and text
-            result += darkRedBold + type_l.at(type) + reset;
+        case QtFatalMsg:
+            result += darkRedBold;
+            result += typeLetters[type];
+            result += reset;
             break;
-        default:            // Debug, System - standard color
-            result += type_l.at(type);
+        default:
+            result += typeLetters[type];
             break;
         }
     } else {
-        result += type_l.at(type);
+        result += typeLetters[type];
     }
 
-    result += QChar::fromLatin1(' ');
+    result += space;
 
-    // Thread - bold when colorized
-    if (!m_threads.contains(lmsg.threadId())) {
-        m_threads[lmsg.threadId()] = m_threadsIndex++;
+    // Thread handling with optimized lookup
+    auto it = m_threads.find(threadId);
+    if (it == m_threads.end()) {
+        it = m_threads.insert(threadId, m_threadsIndex++);
     }
-    if (m_threads.count() > 1) {
-        auto index = m_threads.value(lmsg.threadId());
+
+    if (m_threads.size() > 1) {
+        const int index = it.value();
         if (index == 0) {
-            auto thread = thread_f.arg(index);
-            thread.fill(QChar::fromLatin1(' '));
-            result += thread;
+            // Calculate width needed for thread field
+            int threadWidth = 3; // "T0 " minimum
+            if (m_threadsIndex > 10) threadWidth = 4;
+            if (m_threadsIndex > 100) threadWidth = 5;
+            result += QString(threadWidth, space);
         } else {
             if (m_colorize) {
-                result += bold + thread_f.arg(index) + reset;
-            } else {
-                result += thread_f.arg(index);
+                result += bold;
+            }
+            result += letterT;
+            result += QString::number(index);
+            result += space;
+            if (m_colorize) {
+                result += reset;
             }
         }
     }
 
-    // Category - dark gray when colorized
-    if (qstrcmp(lmsg.category(), "default") != 0) {
-        auto category = category_f.arg(QString::fromUtf8(lmsg.category()));
+    // Category output (only if not default)
+    const int categoryFormatLength = isDefaultCategory ? 0 : (category.size() + 3); // "[name] "
+    if (!isDefaultCategory) {
         if (m_colorize) {
-            result += darkGray + category + reset;
-        } else {
-            result += category;
+            result += darkGray;
+        }
+        result += bracketOpen;
+        result += category;
+        result += bracketClose;
+        result += space;
+        if (m_colorize) {
+            result += reset;
         }
     }
 
     // Space for alignment
-    QString category;
-    if (qstrcmp(lmsg.category(), "default") != 0) {
-        category = category_f.arg(QString::fromUtf8(lmsg.category()));
-    }
     if (m_maxCategoryWidth > 0) {
-        auto categoryLength = category.length();
-        if (categoryLength > m_categoryWidth) {
-            m_categoryWidth = qMin(categoryLength, m_maxCategoryWidth);
+        if (categoryFormatLength > m_categoryWidth) {
+            m_categoryWidth = qMin(categoryFormatLength, m_maxCategoryWidth);
         }
-        auto spaceCount = qMax(m_categoryWidth - categoryLength, 0);
+        const int spaceCount = m_categoryWidth - categoryFormatLength;
         if (spaceCount > 0) {
-            result += QString(spaceCount, QChar::fromLatin1(' '));
+            result += QString(spaceCount, space);
         }
     }
 
-    // Message - with color for Info, Warning, Error and Fatal
-    if (m_colorize && type == QtInfoMsg) {
-        result += green + lmsg.message() + reset;
-    } else if (m_colorize && type == QtWarningMsg) {
-        result += orange + lmsg.message() + reset;
-    } else if (m_colorize && type == QtCriticalMsg) {
-        result += redBold + lmsg.message() + reset;
-    } else if (m_colorize && type == QtFatalMsg) {
-        result += darkRedBold + lmsg.message() + reset;
+    // Message with color
+    if (m_colorize) {
+        switch (type) {
+        case QtInfoMsg:
+            result += green;
+            result += lmsg.message();
+            result += reset;
+            break;
+        case QtWarningMsg:
+            result += orange;
+            result += lmsg.message();
+            result += reset;
+            break;
+        case QtCriticalMsg:
+            result += redBold;
+            result += lmsg.message();
+            result += reset;
+            break;
+        case QtFatalMsg:
+            result += darkRedBold;
+            result += lmsg.message();
+            result += reset;
+            break;
+        default:
+            result += lmsg.message();
+            break;
+        }
     } else {
         result += lmsg.message();
     }
