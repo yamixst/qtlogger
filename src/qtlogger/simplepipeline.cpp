@@ -235,7 +235,7 @@ SimplePipeline &SimplePipeline::sendToSignal(QObject *receiver, const char *meth
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 {
-    append(HttpSinkPtr::create(url));
+    append(HttpSinkPtr::create(QUrl(url)));
     return *this;
 }
 #endif
