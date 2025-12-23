@@ -5,7 +5,6 @@
 
 #include <QFlags>
 #include <QSettings>
-#include <QtCore/QtGlobal>
 
 #ifndef QTLOGGER_NO_THREAD
 #    include <QMutex>
@@ -38,39 +37,17 @@ class QTLOGGER_EXPORT Logger :
 #endif
 {
 public:
-    using SinkType = QtLogger::SinkType;
-    using SinkTypeFlags = QtLogger::SinkTypeFlags;
-
     static Logger *instance();
 
     Logger() = default;
     ~Logger() override;
 
-    void configure(const SinkTypeFlags &types = SinkType::PlatformStdLog, const QString &path = {},
-                   int maxFileSize = 0, int maxFileCount = 0, bool async = false);
+    void configure(const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
+                   RotatingFileSink::Options options = RotatingFileSink::Option::None,
+                   bool async = true);
 
-    void configure(int types, const QString &path = {}, int maxFileSize = 0, int maxFileCount = 0,
-                   bool async = false);
-
-    /** Configure logger from QSettings or ini file
-     *
-     * logger/filter_rules = [<category>|*][.debug|.info|.warning|.critical]=true|false;...
-     * logger/regexp_filter = <regexp>
-     * logger/message_pattern = <string>
-     * logger/stdout = true|false
-     * logger/stdout_color = true|false
-     * logger/stderr = true|false
-     * logger/stderr_color = true|false
-     * logger/platform_std_log = true|false
-     * logger/syslog_ident = <string>
-     * logger/sdjournal = true|false
-     * logger/path = <string>
-     * logger/max_file_size = <int>
-     * logger/max_file_count = <int>
-     * logger/async = true|false
-     */
     void configure(const QSettings &settings, const QString &group = QStringLiteral("logger"));
-    void configure(const QString &path, const QString &group = QStringLiteral("logger"));
+    void configureFromIniFile(const QString &path, const QString &group = QStringLiteral("logger"));
 
     Logger &operator<<(const HandlerPtr &handler);
 
@@ -88,6 +65,7 @@ public:
     void lock() const;
     void unlock() const;
     inline QRMUTEX *mutex() const { return &m_mutex; }
+
 private:
 #    if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     mutable QRecursiveMutex m_mutex;

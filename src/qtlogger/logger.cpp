@@ -53,19 +53,12 @@ Logger::~Logger()
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(const SinkTypeFlags &types, const QString &path, int maxFileSize,
-                       int maxFileCount, bool async)
+void Logger::configure(const QString &path, int maxFileSize, int maxFileCount,
+                       RotatingFileSink::Options options, bool async)
 {
-    QtLogger::configure(this, types, path, maxFileSize, maxFileCount, async);
+    QtLogger::configure(this, path, maxFileSize, maxFileCount, options, async);
 
     installMessageHandler();
-}
-
-QTLOGGER_DECL_SPEC
-void Logger::configure(int types, const QString &path, int maxFileSize, int maxFileCount,
-                       bool async)
-{
-    configure(SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount, async);
 }
 
 QTLOGGER_DECL_SPEC
@@ -77,7 +70,7 @@ void Logger::configure(const QSettings &settings, const QString &group)
 }
 
 QTLOGGER_DECL_SPEC
-void Logger::configure(const QString &path, const QString &group)
+void Logger::configureFromIniFile(const QString &path, const QString &group)
 {
     configure(QSettings(path, QSettings::IniFormat), group);
 }

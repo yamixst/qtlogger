@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     // Logging with QtLogger
 
-    gQtLogger.configure(app.applicationDirPath() + "/config.ini");
+    gQtLogger.configureFromIniFile(app.applicationDirPath() + "/config.ini");
 
     qDebug() << "Hello QtLogger";
     qInfo() << "Hello QtLogger";

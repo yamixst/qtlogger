@@ -3,7 +3,6 @@
 
 #include "configure.h"
 
-#include <QFileInfo>
 #include <QLoggingCategory>
 #include <QUrl>
 #include <QtCore/QtGlobal>
@@ -47,45 +46,23 @@
 namespace QtLogger {
 
 QTLOGGER_DECL_SPEC
-void configure(Pipeline *pipeline, const SinkTypeFlags &types, const QString &path,
-                       int maxFileSize, int maxFileCount, bool async)
+void configure(Pipeline *pipeline, const QString &path, int maxFileSize, int maxFileCount,
+               RotatingFileSink::Options options, bool async)
 {
     if (!pipeline) {
         return;
     }
 
-    *pipeline << PrettyFormatter::instance();
-
-    if (types.testFlag(SinkType::StdOut)) {
-        *pipeline << StdOutSinkPtr::create();
-    }
-
-    if (types.testFlag(SinkType::StdErr)) {
-        *pipeline << StdErrSinkPtr::create();
-    }
-
-    if (types.testFlag(SinkType::PlatformStdLog)) {
+    if (path.isEmpty()) {
+        *pipeline << PrettyFormatterPtr::create(true);
         *pipeline << PlatformStdSinkPtr::create();
-    }
-
-#ifdef QTLOGGER_SYSLOG
-    if (types.testFlag(SinkType::Syslog)) {
-        *pipeline << SyslogSinkPtr::create(QFileInfo(path).baseName());
-    }
-#endif
-
-#ifdef QTLOGGER_SDJOURNAL
-    if (types.testFlag(SinkType::SdJournal)) {
-        *pipeline << SdJournalSinkPtr::create();
-    }
-#endif
-
-    if (!path.isEmpty()) {
-        if (maxFileSize == 0) {
-            *pipeline << FileSinkPtr::create(path);
+    } else {
+        *pipeline << PrettyFormatterPtr::create();
+        if (maxFileSize > 0 || options.testFlag(RotatingFileSink::RotationOnStartup)
+            || options.testFlag(RotatingFileSink::RotationDaily)) {
+            *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, options);
         } else {
-            *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, 
-                RotatingFileSink::RotationOnStartup);
+            *pipeline << FileSinkPtr::create(path);
         }
     }
 
@@ -99,14 +76,6 @@ void configure(Pipeline *pipeline, const SinkTypeFlags &types, const QString &pa
 #else
     Q_UNUSED(async)
 #endif
-}
-
-QTLOGGER_DECL_SPEC
-void configure(Pipeline *pipeline, int types, const QString &path, int maxFileSize,
-                       int maxFileCount, bool async)
-{
-    configure(pipeline, SinkTypeFlags(QFlag(types)), path, maxFileSize, maxFileCount,
-                      async);
 }
 
 QTLOGGER_DECL_SPEC
@@ -138,14 +107,14 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
             settings.value(group + QStringLiteral("/message_pattern")).toString();
     if (!messagePattern.isEmpty()) {
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: messagePattern: " << messagePattern.toStdString()
-                  << std::endl;
+        std::cerr << "configure: messagePattern: " << messagePattern.toStdString() << std::endl;
 #endif
         *pipeline << PatternFormatterPtr::create(messagePattern);
     }
 
     if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
-        const bool stdoutColor = settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
+        const bool stdoutColor =
+                settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
@@ -153,7 +122,8 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
     }
 
     if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
-        const bool stderrColor = settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
+        const bool stderrColor =
+                settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
@@ -196,20 +166,19 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
                                                  RotatingFileSink::DefaultMaxFileCount)
                                           .toInt();
 
-        const auto rotateOnStartup = settings.value(group + QStringLiteral("/rotate_on_startup"),
-                                                    true).toBool();
+        const auto rotateOnStartup =
+                settings.value(group + QStringLiteral("/rotate_on_startup"), true).toBool();
 
-        const auto rotateDaily = settings.value(group + QStringLiteral("/rotate_daily"),
-                                                false).toBool();
+        const auto rotateDaily =
+                settings.value(group + QStringLiteral("/rotate_daily"), false).toBool();
 
-        const auto compress = settings.value(group + QStringLiteral("/compress_old_files"),
-                                             false).toBool();
+        const auto compress =
+                settings.value(group + QStringLiteral("/compress_old_files"), false).toBool();
 
 #ifdef QTLOGGER_DEBUG
-        std::cerr << "configure: path: " << path.toStdString()
-                  << " maxFileSize: " << maxFileSize << " maxFileCount: " << maxFileCount
-                  << " rotateOnStartup: " << rotateOnStartup << " rotateDaily: " << rotateDaily
-                  << " compress: " << compress << std::endl;
+        std::cerr << "configure: path: " << path.toStdString() << " maxFileSize: " << maxFileSize
+                  << " maxFileCount: " << maxFileCount << " rotateOnStartup: " << rotateOnStartup
+                  << " rotateDaily: " << rotateDaily << " compress: " << compress << std::endl;
 #endif
 
         RotatingFileSink::Options options = RotatingFileSink::Option::None;
@@ -219,7 +188,7 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
             options |= RotatingFileSink::RotationDaily;
         if (compress)
             options |= RotatingFileSink::Option::Compression;
-        
+
         *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, options);
     }
 
@@ -248,7 +217,7 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
 }
 
 QTLOGGER_DECL_SPEC
-void configure(Pipeline *pipeline, const QString &path, const QString &group)
+void configureFromIniFile(Pipeline *pipeline, const QString &path, const QString &group)
 {
     configure(pipeline, QSettings(path, QSettings::IniFormat), group);
 }
