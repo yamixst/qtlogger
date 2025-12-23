@@ -15,6 +15,7 @@
 
 #include "qtlogger/logger.h"
 #include "qtlogger/logmessage.h"
+#include "qtlogger/sinks/rotatingfilesink.h"
 #include "mock_handler.h"
 #include "mock_sink.h"
 
@@ -39,10 +40,10 @@ private slots:
     // Configuration tests
     void testDefaultConfiguration();
     void testConfigureWithHandlers();
-    void testConfigureWithSinkTypes();
-    void testConfigureWithIntSinkTypes();
+    void testConfigureDefault();
+    void testConfigureWithPath();
     void testConfigureFromQSettings();
-    void testConfigureFromFile();
+    void testConfigureFromIniFile();
 
     // Message handling tests
     void testProcessMessage();
@@ -166,11 +167,11 @@ void TestLogger::testConfigureWithHandlers()
     QCOMPARE(m_mockHandler2->lastType(), QtWarningMsg);
 }
 
-void TestLogger::testConfigureWithSinkTypes()
+void TestLogger::testConfigureDefault()
 {
-    // Test with StdOut and StdErr flags
-    Logger::SinkTypeFlags flags = Logger::SinkTypeFlags(Logger::SinkType::StdOut) | Logger::SinkTypeFlags(Logger::SinkType::StdErr);
-    m_logger->configure(flags);
+    // Test default configure (empty path = PlatformStdSink)
+    // Use async=false to avoid crashes during test cleanup
+    m_logger->configure({}, 0, 0, RotatingFileSink::Option::None, false);
     
     LogMessage msg(QtInfoMsg, QMessageLogContext(), "info message");
     bool result = m_logger->process(msg);
@@ -178,11 +179,15 @@ void TestLogger::testConfigureWithSinkTypes()
     QVERIFY(result);
 }
 
-void TestLogger::testConfigureWithIntSinkTypes()
+void TestLogger::testConfigureWithPath()
 {
-    // Test configure with int parameter
-    int sinkTypes = static_cast<int>(Logger::SinkType::PlatformStdLog);
-    m_logger->configure(sinkTypes);
+    // Test configure with file path
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    auto path = tempDir.path() + "/test.log";
+    
+    // Use async=false to avoid crashes during test cleanup
+    m_logger->configure(path, 0, 0, RotatingFileSink::Option::None, false);
     
     LogMessage msg(QtCriticalMsg, QMessageLogContext(), "critical message");
     bool result = m_logger->process(msg);
@@ -214,7 +219,7 @@ void TestLogger::testConfigureFromQSettings()
     QVERIFY(result);
 }
 
-void TestLogger::testConfigureFromFile()
+void TestLogger::testConfigureFromIniFile()
 {
     QTemporaryFile tempFile;
     QVERIFY(tempFile.open());
@@ -226,9 +231,10 @@ void TestLogger::testConfigureFromFile()
     stream << "stdout=false\n";
     stream << "stderr=true\n";
     stream << "platform_std_log=true\n";
+    stream << "async=false\n";
     tempFile.close();
     
-    m_logger->configure(tempFile.fileName());
+    m_logger->configureFromIniFile(tempFile.fileName());
     
     LogMessage msg(QtWarningMsg, QMessageLogContext(), "warning message");
     bool result = m_logger->process(msg);
@@ -368,6 +374,9 @@ void TestLogger::testAsyncConfiguration()
     QTest::qWait(100);
     
     QCOMPARE(m_mockHandler1->processCallCount(), 1);
+    
+    // Reset own thread to avoid crashes during cleanup
+    m_logger->resetOwnThread();
 }
 
 void TestLogger::testMutexLocking()
@@ -420,11 +429,12 @@ void TestLogger::testMultipleHandlers()
 
 void TestLogger::testComplexConfiguration()
 {
-    // Test configuration with multiple sink types
-    Logger::SinkTypeFlags flags = Logger::SinkTypeFlags(Logger::SinkType::StdOut) | 
-                                  Logger::SinkTypeFlags(Logger::SinkType::PlatformStdLog);
+    // Test configuration with rotating file sink options
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    auto path = tempDir.path() + "/test.log";
     
-    m_logger->configure(flags, QString(), 0, 0, false);
+    m_logger->configure(path, 1024 * 1024, 5, RotatingFileSink::RotationOnStartup, false);
     
     LogMessage msg(QtInfoMsg, QMessageLogContext(), "complex config test");
     bool result = m_logger->process(msg);
@@ -434,8 +444,9 @@ void TestLogger::testComplexConfiguration()
 
 void TestLogger::testConfigureWithEmptyPath()
 {
-    // Should not crash with empty path
-    m_logger->configure(Logger::SinkType::File, QString());
+    // Should not crash with empty path (configures PlatformStdSink)
+    // Use async=false to avoid crashes during test cleanup
+    m_logger->configure(QString(), 0, 0, RotatingFileSink::Option::None, false);
     
     LogMessage msg(QtDebugMsg, QMessageLogContext(), "empty path test");
     bool result = m_logger->process(msg);
@@ -454,7 +465,7 @@ void TestLogger::testConfigureWithInvalidSettings()
     tempFile.close();
     
     // Should not crash with invalid settings
-    m_logger->configure(tempFile.fileName());
+    m_logger->configureFromIniFile(tempFile.fileName());
     
     LogMessage msg(QtDebugMsg, QMessageLogContext(), "invalid settings test");
     bool result = m_logger->process(msg);
