@@ -4,12 +4,14 @@
 #include "configure.h"
 
 #include <QLoggingCategory>
+#include <QRegularExpression>
 #include <QUrl>
 #include <QtCore/QtGlobal>
 
 #include "filters/regexpfilter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
+#include "formatters/functionformatter.h"
 #include "pipeline.h"
 #include "simplepipeline.h"
 #include "sinks/filesink.h"
@@ -53,11 +55,17 @@ void configure(Pipeline *pipeline, const QString &path, int maxFileSize, int max
         return;
     }
 
-    if (path.isEmpty()) {
-        *pipeline << PrettyFormatterPtr::create(true);
-        *pipeline << PlatformStdSinkPtr::create();
-    } else {
-        *pipeline << PrettyFormatterPtr::create();
+    *pipeline << PrettyFormatterPtr::create(true);
+    *pipeline << PlatformStdSinkPtr::create();
+
+    if (!path.isEmpty()) {
+        *pipeline << FunctionFormatterPtr::create([](const LogMessage &lmsg){
+            auto fmsg = lmsg.formattedMessage();
+            static const QRegularExpression ansiEscape(QStringLiteral("\033\\[[0-9;]*m"));
+            fmsg.remove(ansiEscape);
+            return fmsg;
+        });
+
         if (maxFileSize > 0 || options.testFlag(RotatingFileSink::RotationOnStartup)
             || options.testFlag(RotatingFileSink::RotationDaily)) {
             *pipeline << RotatingFileSinkPtr::create(path, maxFileSize, maxFileCount, options);
