@@ -4,57 +4,44 @@
 
 A simple yet powerful logging solution for the Qt Framework. This project is designed to provide developers with an intuitive and configurable logging system for Qt-based applications. QtLogger features a customizable pipeline for processing log messages through the `qInstallMessageHandler()` function, allowing for flexible handling and output of logs.
 
+![Pretty output](screenshot.png "Pretty output")
+
+## Quick start
+
+Just copy [qtlogger.h](https://github.com/yamixst/qtlogger/raw/refs/heads/main/qtlogger.h) to your project directory and use the global `gQtLogger` object for configuration:
+
+```cpp
+#include "qtlogger.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    
+    gQtLogger.configure();  // That's it!
+    
+    qDebug() << "It just works!";
+    
+    return app.exec();
+}
+```
+
 ## Key Features
 
-### Drop-in Replacement
-- **Zero code changes** - works with existing `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, `qFatal()`
-- One-line configuration: `gQtLogger.configure()`
-- Full support for `Q_LOGGING_CATEGORY`
-
-### Multiple Output Destinations (Sinks)
-- **Console**: stdout, stderr with optional **colored output** (ANSI escape codes, auto-detects TTY)
-- **Files**: Simple files or rotating logs with size-based, daily, and startup rotation + gzip compression
-- **Platform-native**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
-- **Network**: HTTP endpoints for remote logging
-- **Custom**: Qt signals, any QIODevice
-
-### Powerful Filtering
-- **Category-based**: Qt standard filter rules (`*.debug=false`)
-- **Regex patterns**: Filter by message content
-- **Level-based**: Minimum log level filtering
-- **Duplicate suppression**: Prevent log spam
-- **Custom filters**: Lambda/function-based filtering
-
-### Flexible Formatting
-- **Pattern formatter**: Rich placeholder support with advanced formatting
-  - Time formats: ISO 8601, custom patterns, process/boot time
-  - Fixed-width fields with alignment and truncation
-  - Conditional blocks based on log level
-  - Custom attributes support
-- **JSON formatter**: Structured logging for log aggregation
-- **Pretty formatter**: Human-readable with colors and alignment
-- **Custom formatters**: Full control with lambda functions
-
-### Pipeline Architecture
-- **Chainable API**: Fluent configuration style
-- **Multiple pipelines**: Different configurations for different outputs
-- **Custom attributes**: Enrich messages with metadata (sequence numbers, app info, user data)
-- **Sequential processing**: Attributes → Filters → Formatters → Sinks
-
-### Performance
-- **Thread-safe**: Safe concurrent logging from multiple threads
-- **Asynchronous logging**: Optional dedicated thread for non-blocking I/O
-- **Efficient**: Minimal overhead on application performance
-
-### Configuration Options
-- **Programmatic**: Fluent API for code-based setup
-- **File-based**: INI file configuration for runtime flexibility
-- **Environment variables**: Standard Qt logging environment support
-
-### Cross-Platform
-- Linux, Windows, macOS, iOS, Android
-- Qt 5.9 - Qt 6.x
-- C++17 compatible
+- **Zero code changes** — works with existing `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, `qFatal()`
+- **One-line configuration**: `gQtLogger.configure()`
+- **Console output** with optional colored output
+- **Rotating logs** with size-based, daily, and startup rotation + gzip compression
+- **Platform-native sinks**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
+- **Network logging**: HTTP endpoints for remote logging
+- **Category-based and regex filtering** for fine-grained control
+- **Duplicate suppression** to prevent log spam
+- **Pattern formatter** with rich placeholder support (time formats, fixed-width fields, conditional blocks)
+- **JSON formatter** for structured logging and log aggregation
+- **Chainable fluent API** for elegant configuration
+- **Custom attributes** to enrich messages with metadata
+- **Thread-safe** concurrent logging from multiple threads
+- **Asynchronous logging** with optional dedicated thread for non-blocking I/O
+- **Cross-platform**: Linux, Windows, macOS, iOS, Android — Qt 5.9 to Qt 6.x
 
 ## Integration
 
@@ -91,9 +78,11 @@ Include the QtLogger `.pri` file in your `.pro` file:
 include(path/to/qtlogger/qtlogger_link.pri)
 ```
 
-## Quick start
+## More examples
 
-Use the global gQtLogger object for configuration:
+### Formatted logging with file rotation
+
+This example demonstrates how to set up logging with human-readable colored output to the console (stderr) and automatic file rotation. The `configure()` method creates a rotating log file that compresses old logs when they exceed the specified size limit.
 
 ```cpp
 #include "qtlogger.h"
@@ -102,7 +91,8 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     
-    gQtLogger.configure();  // That's it!
+    gQtLogger.configure("app.log", 1024 * 1024, 5,
+                        QtLogger::RotatingFileSink::Compression);
     
     qDebug() << "It just works!";
     
@@ -110,7 +100,9 @@ int main(int argc, char *argv[])
 }
 ```
 
-### Advanced Example
+### Advanced configuration
+
+For more complex scenarios, you can create multiple pipelines with different filters, formatters, and sinks. Each pipeline processes log messages independently, allowing you to route different types of logs to different destinations with specific formatting.
 
 ```cpp
 #include "qtlogger.h"
@@ -144,6 +136,7 @@ int main(int argc, char *argv[])
             .sendToHttp(QUrl("https://logs.example.com"))
         .end();
 
+    // In advanced configuration mode, you must call this method explicitly
     gQtLogger.installMessageHandler();
 
     qDebug() << "Application started";
@@ -153,11 +146,13 @@ int main(int argc, char *argv[])
 }
 ```
 
-### Configuration from File
+### Configuration from file
+
+You can configure the logger at runtime using an INI configuration file. This approach allows you to change logging behavior without recompiling your application.
 
 ```cpp
 // Load configuration from INI file
-gQtLogger.configure("config.ini");
+gQtLogger.configureFromIniFile("config.ini");
 ```
 
 Example `config.ini`:
@@ -165,7 +160,6 @@ Example `config.ini`:
 [logger]
 filter_rules = "*.debug=false"
 message_pattern = "%{time} [%{category}] %{type}: %{message}"
-stdout = true
 stdout_color = true
 path = "app.log"
 max_file_size = 1048576
@@ -181,22 +175,11 @@ async = true
 - **C++17 compatible compiler**: QtLogger requires a compiler with full C++17 standard support
 - **Qt Framework**: Qt 5.9 - Qt 6.x
 
-### Supported Compilers
-
-- GCC 7.0 or later
-- Clang 5.0 or later
-- MSVC 2017 (Visual Studio 15.0) or later
-- Apple Clang (Xcode 10.0) or later
-
 ## Documentation
 
 - [**FEATURES.md**](doc/FEATURES.md) - Comprehensive list of all features and capabilities
 - [**ARCHITECTURE.md**](doc/ARCHITECTURE.md) - Internal architecture and design patterns
-- Examples in the `examples/` directory
-
-## No Code Changes Required
-
-You don't need to modify your existing logging code if you're using standard Qt logging functions like `qDebug()`, `qInfo()`, `qWarning()`, `qCritical()`, or `qFatal()`. Simply add one line of code to your `main()` function to configure QtLogger, and all your existing log statements will automatically work with the new logging system.
+- Examples in the [examples/](examples/) directory
 
 ## Versioning
 
