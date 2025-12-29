@@ -55,7 +55,7 @@ QTLOGGER_DECL_SPEC
 FileSink::FileSink(const QString &path) : IODeviceSink(createFilePtr(path))
 {
     if (!file()->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        std::cerr << "Logger::FileHandler: Can't open log file: " << path.toStdString()
+        std::cerr << "FileSink: Can't open log file: " << path.toStdString()
                   << " error: " << file()->errorString().toStdString() << std::endl;
     }
 }
