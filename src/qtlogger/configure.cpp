@@ -8,10 +8,11 @@
 #include <QUrl>
 #include <QtCore/QtGlobal>
 
+#include "filters/categoryfilter.h"
 #include "filters/regexpfilter.h"
+#include "formatters/functionformatter.h"
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
-#include "formatters/functionformatter.h"
 #include "pipeline.h"
 #include "simplepipeline.h"
 #include "sinks/filesink.h"
@@ -19,7 +20,6 @@
 #include "sinks/rotatingfilesink.h"
 #include "sinks/stderrsink.h"
 #include "sinks/stdoutsink.h"
-#include "utils.h"
 
 #ifdef QTLOGGER_NETWORK
 #    include "sinks/httpsink.h"
@@ -59,7 +59,7 @@ void configure(Pipeline *pipeline, const QString &path, int maxFileSize, int max
     *pipeline << PlatformStdSinkPtr::create();
 
     if (!path.isEmpty()) {
-        *pipeline << FunctionFormatterPtr::create([](const LogMessage &lmsg){
+        *pipeline << FunctionFormatterPtr::create([](const LogMessage &lmsg) {
             auto fmsg = lmsg.formattedMessage();
             static const QRegularExpression ansiEscape(QStringLiteral("\033\\[[0-9;]*m"));
             fmsg.remove(ansiEscape);
@@ -93,14 +93,12 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
         return;
     }
 
-    *pipeline << PrettyFormatter::instance();
-
     const auto filterRules = settings.value(group + QStringLiteral("/filter_rules")).toString();
     if (!filterRules.isEmpty()) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: filterRules: " << filterRules.toStdString() << std::endl;
 #endif
-        QtLogger::setFilterRules(filterRules);
+        *pipeline << CategoryFilterPtr::create(filterRules);
     }
 
     const auto regExpFilter = settings.value(group + QStringLiteral("/regexp_filter")).toString();
@@ -118,24 +116,28 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
         std::cerr << "configure: messagePattern: " << messagePattern.toStdString() << std::endl;
 #endif
         *pipeline << PatternFormatterPtr::create(messagePattern);
+    } else {
+        *pipeline << PrettyFormatter::instance();
     }
 
-    if (settings.value(group + QStringLiteral("/stdout"), false).toBool()) {
-        const bool stdoutColor =
-                settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
+    const auto stdout = settings.value(group + QStringLiteral("/stdout"), false).toBool();
+    const auto stdoutColor =
+            settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
+    if (stdout || stdoutColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
-        *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Always : ColorMode::Never);
+        *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Auto : ColorMode::Never);
     }
 
-    if (settings.value(group + QStringLiteral("/stderr"), false).toBool()) {
-        const bool stderrColor =
-                settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
+    const auto stderr = settings.value(group + QStringLiteral("/stderr"), false).toBool();
+    const auto stderrColor =
+            settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
+    if (stderr || stderrColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
-        *pipeline << StdErrSinkPtr::create(stderrColor ? ColorMode::Always : ColorMode::Never);
+        *pipeline << StdErrSinkPtr::create(stderrColor ? ColorMode::Auto : ColorMode::Never);
     }
 
     if (settings.value(group + QStringLiteral("/platform_std_log"), true).toBool()) {
@@ -214,7 +216,7 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
 #ifndef QTLOGGER_NO_THREAD
     if (settings.value(group + QStringLiteral("/async"), false).toBool()) {
 #    ifdef QTLOGGER_DEBUG
-        std::cerr << "configureLogger: async" << std::endl;
+        std::cerr << "configure: async" << std::endl;
 #    endif
         auto *ownThreadLogger = dynamic_cast<OwnThreadHandler<SimplePipeline> *>(pipeline);
         if (ownThreadLogger) {
