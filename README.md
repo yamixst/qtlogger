@@ -170,6 +170,31 @@ compress_old_files = false
 async = true
 ```
 
+## Comparison with Other Libraries
+
+| Feature | QtLogger | Log4Qt | QsLog | spdlog |
+|---------|----------|--------|-------|--------|
+| **Qt Integration** | Native (`qDebug()`, `qInfo()`, etc.) | Own API | Own API | Own API |
+| **Header-only option** | ✅ | ❌ | ❌ | ✅ |
+| **Zero code changes** | ✅ | ❌ | ❌ | ❌ |
+| **Colored console output** | ✅ | ❌ | ✅ | ✅ |
+| **File rotation** | ✅ (size/daily/startup) | ✅ (size) | ✅ (size) | ✅ (size/daily) |
+| **Gzip compression** | ✅ | ❌ | ❌ | ❌ |
+| **Async logging** | ✅ | ❌ | ✅ | ✅ |
+| **JSON formatter** | ✅ | ❌ | ❌ | ✅ |
+| **Pattern formatter** | ✅ | ✅ | ❌ | ✅ |
+| **HTTP sink** | ✅ | ❌ | ❌ | ❌ |
+| **Android logcat** | ✅ | ❌ | ❌ | ✅ |
+| **macOS/iOS os_log** | ✅ | ❌ | ❌ | ❌ |
+| **Linux syslog/journald** | ✅ | ✅ | ❌ | ✅ |
+| **Duplicate suppression** | ✅ | ❌ | ❌ | ❌ |
+| **Category filtering** | ✅ | ✅ | ❌ | ❌ |
+| **Regex filtering** | ✅ | ❌ | ❌ | ❌ |
+| **Fluent API** | ✅ | ❌ | ❌ | ❌ |
+| **INI configuration** | ✅ | ✅ (XML) | ❌ | ❌ |
+| **Qt dependency** | Required | Required | Required | None |
+| **License** | MIT | Apache 2.0 | BSD/MIT | MIT |
+
 ## Requirements
 
 - **C++17 compatible compiler**: QtLogger requires a compiler with full C++17 standard support
