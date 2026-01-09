@@ -2,6 +2,20 @@
 
 All notable changes to QtLogger will be documented in this file.
 
+## [0.8.0]
+
+### Added
+
+- `RotatingFileSink` with configurable rotation modes (by size, by time)
+- `PrettyFormatter` with colorized output support
+- Compact JSON formatting support
+
+### Changed
+
+- Refactored configuration API with `path` and rotating sink support
+- Improved `OwnThreadHandler` thread safety with mutex guard
+- Updated README with library comparison table and new examples
+
 ## [0.7.1]
 
 ### Added
