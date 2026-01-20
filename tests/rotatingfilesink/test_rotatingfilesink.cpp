@@ -294,6 +294,7 @@ void TestRotatingFileSink::testNoRotationOnStartupWhenEmpty()
 
 void TestRotatingFileSink::testRotationDaily()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
     auto logPath = m_tempDir->filePath("daily.log");
 
     // Create a log file and set its modification time to yesterday
@@ -318,6 +319,9 @@ void TestRotatingFileSink::testRotationDaily()
 
     auto rotatedFiles = findRotatedFiles(logPath);
     QCOMPARE(rotatedFiles.size(), 1);
+#else
+    QSKIP("QFile::setFileTime requires Qt 5.10 or later");
+#endif
 }
 
 void TestRotatingFileSink::testMaxFileCountLimit()

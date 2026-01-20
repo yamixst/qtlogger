@@ -11,6 +11,8 @@
 
 #include "qtlogger/simplepipeline.h"
 #include "qtlogger/logmessage.h"
+
+Q_DECLARE_METATYPE(QtLogger::LogMessage)
 #include "qtlogger/sinks/stdoutsink.h"
 #include "qtlogger/sinks/stderrsink.h"
 #include "qtlogger/sinks/signalsink.h"
@@ -110,6 +112,9 @@ void TestSimplePipeline::initTestCase()
 {
     // Set application name for syslog tests
     QCoreApplication::setApplicationName("test_simplepipeline");
+    
+    // Register LogMessage for QSignalSpy
+    qRegisterMetaType<QtLogger::LogMessage>("QtLogger::LogMessage");
 }
 
 void TestSimplePipeline::cleanupTestCase()

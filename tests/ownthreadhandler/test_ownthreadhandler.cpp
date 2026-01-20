@@ -544,7 +544,7 @@ void TestOwnThreadHandler::testWorkerLifecycle()
     
     // Move to own thread creates worker and thread
     handler.moveToOwnThread();
-    QThread *thread1 = handler.ownThread();
+    auto thread1 = handler.ownThread();
     QVERIFY(thread1 != nullptr);
     QVERIFY(thread1->isRunning());
     
@@ -555,10 +555,12 @@ void TestOwnThreadHandler::testWorkerLifecycle()
     
     // Move to own thread again creates new worker and thread
     handler.moveToOwnThread();
-    QThread *thread2 = handler.ownThread();
+    auto thread2 = handler.ownThread();
     QVERIFY(thread2 != nullptr);
     QVERIFY(thread2->isRunning());
-    QVERIFY(thread1 != thread2); // Should be different instances
+    // Note: We cannot compare thread1 != thread2 because thread1 is a dangling pointer
+    // after resetOwnThread() and memory may be reused. The important thing is that
+    // a new thread was created and is running.
     
     handler.resetOwnThread();
     waitForEventProcessing(100);

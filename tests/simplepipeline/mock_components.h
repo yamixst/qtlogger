@@ -187,7 +187,7 @@ public:
     FileOutputCapture() 
     {
         m_tempFile = new QTemporaryFile();
-        m_tempFile->open();
+        (void)m_tempFile->open();
     }
     
     ~FileOutputCapture()
