@@ -3,12 +3,18 @@
 
 #include <QCoreApplication>
 #include <QDebug>
+#include <QGlobalStatic>
 #include <QLoggingCategory>
 #include <QMutex>
-#include <QRandomGenerator>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+#    include <QRandomGenerator>
+#endif
 #include <QThread>
+#include <QTime>
 #include <QTimer>
 #include <QWaitCondition>
+
+#include <cstdlib>
 
 #include <qtlogger/qtlogger.h>
 
@@ -22,6 +28,24 @@ Q_LOGGING_CATEGORY(lcEngineering, "engineering.atf")
 Q_LOGGING_CATEGORY(lcSecurity, "sec.access")
 Q_LOGGING_CATEGORY(lcTactical, "sec.tactical.sensors")
 Q_LOGGING_CATEGORY(lcShields, "sec.shields.deflector")
+
+namespace {
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+Q_GLOBAL_STATIC(QMutex, randMutex)
+#endif
+
+int randomBounded(int min, int max)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    return QRandomGenerator::global()->bounded(min, max);
+#else
+    QMutexLocker locker(randMutex());
+    return min + (std::rand() % (max - min));
+#endif
+}
+
+} // namespace
 
 class LoggerThread : public QThread
 {
@@ -50,39 +74,39 @@ protected:
     void runThread1()
     {
         qCDebug(lcHelm) << QString("Helm control: adjusting course to heading %1 mark %2")
-                                   .arg(QRandomGenerator::global()->bounded(0, 360))
-                                   .arg(QRandomGenerator::global()->bounded(0, 90));
-        QThread::msleep(QRandomGenerator::global()->bounded(15, 350));
+                                   .arg(randomBounded(0, 360))
+                                   .arg(randomBounded(0, 90));
+        QThread::msleep(randomBounded(15, 350));
         qCWarning(lcNavigation) << "Navigation: minor stellar drift detected, recalculating";
-        QThread::msleep(QRandomGenerator::global()->bounded(20, 400));
+        QThread::msleep(randomBounded(20, 400));
         qCDebug(lcHelm) << QString("Engaging impulse engines at %1%% power")
-                                   .arg(QRandomGenerator::global()->bounded(25, 100));
-        QThread::msleep(QRandomGenerator::global()->bounded(15, 300));
+                                   .arg(randomBounded(25, 100));
+        QThread::msleep(randomBounded(15, 300));
         qCDebug(lcNavigation) << "Warp field geometry: nominal, ready for warp";
     }
 
     void runThread2()
     {
         qCDebug(lcEngineering) << "Antimatter containment: monitoring magnetic bottle integrity";
-        QThread::msleep(QRandomGenerator::global()->bounded(20, 400));
+        QThread::msleep(randomBounded(20, 400));
         qCInfo(lcEngineering) << "Dilithium crystal matrix: stable at 98.7% efficiency";
-        QThread::msleep(QRandomGenerator::global()->bounded(15, 350));
+        QThread::msleep(randomBounded(15, 350));
         qCWarning(lcEngineering) << "Warp core temperature elevated: initiating coolant flow";
-        QThread::msleep(QRandomGenerator::global()->bounded(25, 450));
+        QThread::msleep(randomBounded(25, 450));
         qCDebug(lcEngineering) << "Plasma injector alignment: within tolerance";
     }
 
     void runThread3()
     {
-        auto sector = QString("sector_%1").arg(QRandomGenerator::global()->bounded(1, 999));
+        auto sector = QString("sector_%1").arg(randomBounded(1, 999));
         qCDebug(lcSecurity) << QString("Security clearance verified: Bridge access granted");
-        QThread::msleep(QRandomGenerator::global()->bounded(20, 400));
+        QThread::msleep(randomBounded(20, 400));
         qCDebug(lcShields) << QString("Deflector shield harmonic frequency: %1 MHz")
-                                      .arg(QRandomGenerator::global()->bounded(1000, 9999));
-        QThread::msleep(QRandomGenerator::global()->bounded(15, 350));
+                                      .arg(randomBounded(1000, 9999));
+        QThread::msleep(randomBounded(15, 350));
         qCWarning(lcTactical)
                 << QString("Long-range sensors: unidentified vessel in %1").arg(sector);
-        QThread::msleep(QRandomGenerator::global()->bounded(15, 300));
+        QThread::msleep(randomBounded(15, 300));
         qCCritical(lcTactical)
                 << QString("RED ALERT: Klingon Bird-of-Prey decloaking in %1!").arg(sector);
     }
@@ -96,6 +120,10 @@ private:
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+    std::srand(static_cast<unsigned int>(QTime::currentTime().msecsSinceStartOfDay()));
+#endif
 
     gQtLogger.moveToOwnThread()
             .formatPretty(true, 12)
@@ -152,18 +180,18 @@ int main(int argc, char *argv[])
         startCondition.wakeAll();
 
         qCDebug(lcMain) << "Initiating multi-system diagnostic sequence...";
-        QThread::msleep(QRandomGenerator::global()->bounded(30, 500));
+        QThread::msleep(randomBounded(30, 500));
         qCDebug(lcComm) << "Hailing frequencies open, Captain";
-        QThread::msleep(QRandomGenerator::global()->bounded(40, 600));
+        QThread::msleep(randomBounded(40, 600));
         qCDebug(lcComputer) << "Ship's log entry recorded: Stardate 47634.44";
-        QThread::msleep(QRandomGenerator::global()->bounded(30, 500));
+        QThread::msleep(randomBounded(30, 500));
         qCCritical(lcComputer) << "Warning: Auxiliary computer core offline in Engineering Section 31";
 
         thread1.wait();
         thread2.wait();
         thread3.wait();
 
-        QThread::msleep(QRandomGenerator::global()->bounded(20, 400));
+        QThread::msleep(randomBounded(20, 400));
         qCInfo(lcMain) << "All stations report ready. Enterprise standing by, Captain on the bridge.";
 
         app.quit();
