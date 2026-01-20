@@ -18,7 +18,7 @@
 
 // version.h
 
-#define QTLOGGER_VERSION 0.8.0
+#define QTLOGGER_VERSION 0.8.1
 
 // end version.h
 
