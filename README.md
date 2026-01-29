@@ -101,11 +101,11 @@ Use the global gQtLogger object for configuration:
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-
-    gQtLogger.configure();
-
-    qDebug() << "Hello QtLogger!";
-
+    
+    gQtLogger.configure();  // That's it!
+    
+    qDebug() << "It just works!";
+    
     return app.exec();
 }
 ```
@@ -121,23 +121,26 @@ int main(int argc, char *argv[])
 
     // Configure with multiple pipelines
     gQtLogger
-        .addSeqNumber()                    // Add sequence numbers
-        .addAppInfo()                      // Add app metadata
+        .addSeqNumber()
         .pipeline()
             .filterLevel(QtWarningMsg)     // Only warnings and above
-            .formatPretty()                // Human-readable format
-            .sendToStdErr(true)            // Output to console with colors
+            .filterDuplicate()
+            .formatPretty()
+            .sendToStdErr(true)            // Colored output
         .end()
         .pipeline()
-            .formatToJson()                // JSON format
-            .sendToFile("app.log", 10*1024*1024, 5)  // Rotating logs
+            .format("%{time} [%{category}] %{type}: %{message}")
+            .sendToFile("app.log", 1024 * 1024, 5)  // Rotating logs (1MB, 5 files)
         .end()
         .pipeline()
-            .filter("^(?!.*password).*$")  // Exclude sensitive data
+            .addAppInfo()
+            .addHostInfo()
+            .filter("^(?!.*password:).*$")  // Filter out sensitive data via Regex
+            .formatToJson()
             .sendToHttp(QUrl("https://logs.example.com"))
         .end();
 
-    gQtLogger.installMessageHandler();
+    gQtLogger.installMessageHandler(); // Asynchronous logging
 
     qDebug() << "Application started";
     qWarning() << "This is a warning";
@@ -157,7 +160,7 @@ Example `config.ini`:
 ```ini
 [logger]
 filter_rules = "*.debug=false"
-message_pattern = "[%{time}] [%{type}] %{message}"
+message_pattern = "%{time} [%{category}] %{type}: %{message}"
 stdout = true
 stdout_color = true
 path = "app.log"
@@ -180,8 +183,8 @@ async = true
 
 ## Documentation
 
-- [**FEATURES.md**](FEATURES.md) - Comprehensive list of all features and capabilities
-- [**ARCHITECTURE.md**](ARCHITECTURE.md) - Internal architecture and design patterns
+- [**FEATURES.md**](doc/FEATURES.md) - Comprehensive list of all features and capabilities
+- [**ARCHITECTURE.md**](doc/ARCHITECTURE.md) - Internal architecture and design patterns
 - Examples in the `examples/` directory
 
 ## No Code Changes Required
