@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     
-    gQtLogger.configure("app.log", 1024 * 1024, 5,
+    gQtLogger.configure("app.log", 1024 * 1024, 5,   // Max 5 files of 1 MB each
                         QtLogger::RotatingFileSink::Compression);
     
     qDebug() << "It just works!";
