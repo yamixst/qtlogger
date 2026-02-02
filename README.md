@@ -3,7 +3,7 @@
 ![Qt Version](https://img.shields.io/badge/Qt-5.9--6.10-green)
 ![License](https://img.shields.io/badge/license-MIT-brightgreen)
 
-# Qt Logger
+# Qt Logger - Advanced Qt logging library
 
 A simple yet powerful logging solution for the Qt Framework. This project is designed to provide developers with an intuitive and configurable logging system for Qt-based applications. QtLogger features a customizable pipeline for processing log messages through the `qInstallMessageHandler()` function, allowing for flexible handling and output of logs.
 
