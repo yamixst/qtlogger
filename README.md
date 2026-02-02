@@ -1,4 +1,7 @@
 ![Project Status](https://img.shields.io/badge/status-beta-orange)
+![C++ Standard](https://img.shields.io/badge/C%2B%2B-17-blue)
+![Qt Version](https://img.shields.io/badge/Qt-5.9--6.10-green)
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
 
 # Qt Logger
 
