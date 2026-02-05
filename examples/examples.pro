@@ -7,4 +7,5 @@ SUBDIRS += one_line_config \
            simple_config \
            config_from_file \
            pattern_formatter \
-           file_rotation
+           file_rotation \
+           sentry_example
