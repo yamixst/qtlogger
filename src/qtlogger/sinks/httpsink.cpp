@@ -16,6 +16,18 @@ namespace QtLogger {
 QTLOGGER_DECL_SPEC
 HttpSink::HttpSink(const QUrl &url) : m_url(url)
 {
+    init();
+}
+
+QTLOGGER_DECL_SPEC
+HttpSink::HttpSink(const QUrl &url, const Headers &headers) : m_url(url), m_headers(headers)
+{
+    init();
+}
+
+QTLOGGER_DECL_SPEC
+void HttpSink::init()
+{
     m_manager = new QNetworkAccessManager();
 
 #ifndef QTLOGGER_NO_THREAD
@@ -25,6 +37,9 @@ HttpSink::HttpSink(const QUrl &url) : m_url(url)
 #endif
 
     m_request.setUrl(m_url);
+    for (const auto &header : m_headers) {
+        m_request.setRawHeader(header.first, header.second);
+    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -76,6 +91,15 @@ QTLOGGER_DECL_SPEC
 void HttpSink::setRequest(const QNetworkRequest &request)
 {
     m_request = request;
+}
+
+QTLOGGER_DECL_SPEC
+void HttpSink::setHeaders(const Headers &headers)
+{
+    m_headers = headers;
+    for (const auto &header : m_headers) {
+        m_request.setRawHeader(header.first, header.second);
+    }
 }
 
 } // namespace QtLogger

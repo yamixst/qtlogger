@@ -25,11 +25,11 @@ QString sentryStoreUrl()
             .arg(SENTRY_PUBLIC_KEY);
 }
 
-// Custom attribute handler to set MIME type for Sentry
-QVariantHash sentryAttrsHandler(const QtLogger::LogMessage &)
+// HTTP headers for Sentry API
+QList<QPair<QByteArray, QByteArray>> sentryHeaders()
 {
     return {
-        { "mime_type", "application/json" }
+        { "Content-Type", "application/json; charset=utf-8" }
     };
 }
 
@@ -55,9 +55,8 @@ int main(int argc, char *argv[])
         .pipeline()
             .filterLevel(QtWarningMsg)  // Only warnings, critical, and fatal
             .filterDuplicate()          // Prevent spam to Sentry
-            .attrHandler(sentryAttrsHandler)
             .formatToSentry()
-            .sendToHttp(sentryStoreUrl())
+            .sendToHttp(sentryStoreUrl(), sentryHeaders())
         .end();
 
     gQtLogger.installMessageHandler();

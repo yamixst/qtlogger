@@ -246,6 +246,14 @@ SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
     append(HttpSinkPtr::create(QUrl(url)));
     return *this;
 }
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToHttp(const QString &url,
+                                           const QList<QPair<QByteArray, QByteArray>> &headers)
+{
+    append(HttpSinkPtr::create(QUrl(url), headers));
+    return *this;
+}
 #endif
 
 #ifdef Q_OS_WIN

@@ -55,6 +55,8 @@ public:
     SimplePipeline &sendToSignal(QObject *receiver, const char *method);
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
+    SimplePipeline &sendToHttp(const QString &url,
+                               const QList<QPair<QByteArray, QByteArray>> &headers);
 #endif
 #ifdef Q_OS_WIN
     SimplePipeline &sendToWinDebug();
