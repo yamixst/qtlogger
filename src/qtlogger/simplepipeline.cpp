@@ -5,6 +5,7 @@
 #include "attrhandlers/appinfoattrs.h"
 #include "attrhandlers/functionattrhandler.h"
 #include "attrhandlers/seqnumberattr.h"
+#include "attrhandlers/sysinfoattrs.h"
 #include "filters/categoryfilter.h"
 #include "filters/duplicatefilter.h"
 #include "filters/functionfilter.h"
@@ -62,6 +63,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addAppInfo()
 {
     append(AppInfoAttrsPtr::create());
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::addSysInfo()
+{
+    append(SysInfoAttrsPtr::create());
     return *this;
 }
 

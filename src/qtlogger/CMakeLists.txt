@@ -24,6 +24,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
 set(QTLOGGER_SOURCES
     attrhandlers/appinfoattrs.cpp
     attrhandlers/seqnumberattr.cpp
+    attrhandlers/sysinfoattrs.cpp
     configure.cpp
     filters/categoryfilter.cpp
     filters/duplicatefilter.cpp
@@ -51,6 +52,7 @@ set(QTLOGGER_HEADERS
     attrhandlers/appinfoattrs.h
     attrhandlers/functionattrhandler.h
     attrhandlers/seqnumberattr.h
+    attrhandlers/sysinfoattrs.h
     configure.h
     filter.h
     filters/categoryfilter.h
