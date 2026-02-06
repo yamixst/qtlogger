@@ -59,11 +59,7 @@ void HttpSink::send(const LogMessage &lmsg)
         m_manager = new QNetworkAccessManager();
     }
 
-    if (lmsg.hasAttribute("mime_type")) {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("%1; charset=utf-8")
-                                    .arg(lmsg.attribute("mime_type").toByteArray()));
-    } else {
+    if (!m_request.hasRawHeader("Content-Type")) {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("text/plain; charset=utf-8"));
     }
