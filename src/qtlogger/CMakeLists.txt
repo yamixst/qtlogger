@@ -31,6 +31,7 @@ set(QTLOGGER_SOURCES
     formatters/jsonformatter.cpp
     formatters/patternformatter.cpp
     formatters/prettyformatter.cpp
+    formatters/sentryformatter.cpp
     logger.cpp
     pipeline.cpp
     simplepipeline.cpp
@@ -62,6 +63,7 @@ set(QTLOGGER_HEADERS
     formatters/jsonformatter.h
     formatters/patternformatter.h
     formatters/prettyformatter.h
+    formatters/sentryformatter.h
     formatters/qtlogmessageformatter.h
     functionhandler.h
     handler.h

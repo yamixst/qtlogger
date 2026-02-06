@@ -38,6 +38,8 @@ public:
     SimplePipeline &formatByQt();
     SimplePipeline &formatPretty(bool colorize = false, int maxCategoryWidth = 15);
     SimplePipeline &formatToJson(bool compact = false);
+    SimplePipeline &formatToSentry(const QString &sdkName = QStringLiteral("qtlogger.sentry"),
+                                   const QString &sdkVersion = QStringLiteral("1.0.0"));
 
     SimplePipeline &sendToStdOut(bool colorize = false);
     SimplePipeline &sendToStdErr(bool colorize = false);

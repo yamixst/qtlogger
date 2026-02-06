@@ -15,6 +15,7 @@
 #include "formatters/patternformatter.h"
 #include "formatters/prettyformatter.h"
 #include "formatters/qtlogmessageformatter.h"
+#include "formatters/sentryformatter.h"
 #include "functionhandler.h"
 #include "messagepatterns.h"
 #include "sinks/platformstdsink.h"
@@ -154,6 +155,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::formatToJson(bool compact)
 {
     append(JsonFormatterPtr::create(compact));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::formatToSentry(const QString &sdkName, const QString &sdkVersion)
+{
+    append(SentryFormatterPtr::create(sdkName, sdkVersion));
     return *this;
 }
 

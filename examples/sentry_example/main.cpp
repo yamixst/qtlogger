@@ -3,12 +3,8 @@
 
 #include <QCoreApplication>
 #include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QUuid>
+#include <QLoggingCategory>
 #include <QTimer>
-#include <QSysInfo>
 
 #include <qtlogger/qtlogger.h>
 
@@ -27,127 +23,6 @@ QString sentryStoreUrl()
             .arg(SENTRY_HOST)
             .arg(SENTRY_PROJECT_ID)
             .arg(SENTRY_PUBLIC_KEY);
-}
-
-// Map Qt message types to Sentry severity levels
-QString qtMsgTypeToSentryLevel(QtMsgType type)
-{
-    switch (type) {
-    case QtDebugMsg:   return "debug";
-    case QtInfoMsg:    return "info";
-    case QtWarningMsg: return "warning";
-    case QtCriticalMsg: return "error";
-    case QtFatalMsg:   return "fatal";
-    default:           return "info";
-    }
-}
-
-// Custom Sentry formatter function
-QString formatForSentry(const QtLogger::LogMessage &lmsg)
-{
-    QJsonObject event;
-
-    // Required: Event ID (UUID without dashes)
-    QString eventId = QUuid::createUuid().toString(QUuid::Id128);
-    event["event_id"] = eventId;
-
-    // Required: Timestamp in ISO 8601 format
-    event["timestamp"] = lmsg.time().toUTC().toString(Qt::ISODate);
-
-    // Platform
-    event["platform"] = "native";
-
-    // Severity level
-    event["level"] = qtMsgTypeToSentryLevel(lmsg.type());
-
-    // Logger name (category)
-    QString category = QString::fromLatin1(lmsg.category());
-    if (!category.isEmpty() && category != "default") {
-        event["logger"] = category;
-    }
-
-    // Message
-    QJsonObject message;
-    message["formatted"] = lmsg.message();
-    event["message"] = message;
-
-    // Transaction/culprit (function name)
-    if (lmsg.function() && strlen(lmsg.function()) > 0) {
-        event["culprit"] = QString::fromLatin1(lmsg.function());
-    }
-
-    // Tags
-    QJsonObject tags;
-    tags["qt_version"] = QString(qVersion());
-    if (lmsg.hasAttribute("app_name")) {
-        tags["app_name"] = lmsg.attribute("app_name").toString();
-    }
-    if (lmsg.hasAttribute("app_version")) {
-        tags["app_version"] = lmsg.attribute("app_version").toString();
-    }
-    event["tags"] = tags;
-
-    // Extra context
-    QJsonObject extra;
-    extra["line"] = lmsg.line();
-    if (lmsg.file() && strlen(lmsg.file()) > 0) {
-        extra["file"] = QString::fromLatin1(lmsg.file());
-    }
-    extra["thread_id"] = QString::number(lmsg.threadId());
-
-    // Add custom attributes to extra
-    const auto attrs = lmsg.attributes();
-    for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
-        // Skip already handled attributes
-        if (it.key() == "app_name" || it.key() == "app_version" ||
-            it.key() == "mime_type") {
-            continue;
-        }
-        extra[it.key()] = QJsonValue::fromVariant(it.value());
-    }
-    event["extra"] = extra;
-
-    // Contexts
-    QJsonObject contexts;
-
-    // OS context
-    QJsonObject osContext;
-    osContext["name"] = QSysInfo::productType();
-    osContext["version"] = QSysInfo::productVersion();
-    osContext["kernel_version"] = QSysInfo::kernelVersion();
-    osContext["build"] = QSysInfo::buildAbi();
-    contexts["os"] = osContext;
-
-    // Device context
-    QJsonObject deviceContext;
-    deviceContext["arch"] = QSysInfo::currentCpuArchitecture();
-    if (lmsg.hasAttribute("host_name")) {
-        deviceContext["name"] = lmsg.attribute("host_name").toString();
-    }
-    contexts["device"] = deviceContext;
-
-    // Runtime context
-    QJsonObject runtimeContext;
-    runtimeContext["name"] = "Qt";
-    runtimeContext["version"] = QString(qVersion());
-    contexts["runtime"] = runtimeContext;
-
-    event["contexts"] = contexts;
-
-    // SDK info
-    QJsonObject sdk;
-    sdk["name"] = "qtlogger.sentry";
-    sdk["version"] = "1.0.0";
-    event["sdk"] = sdk;
-
-    // Fingerprint (for grouping similar events)
-    QJsonArray fingerprint;
-    fingerprint.append(qtMsgTypeToSentryLevel(lmsg.type()));
-    fingerprint.append(category.isEmpty() ? "default" : category);
-    fingerprint.append(lmsg.message().left(100)); // First 100 chars of message
-    event["fingerprint"] = fingerprint;
-
-    return QString::fromUtf8(QJsonDocument(event).toJson(QJsonDocument::Compact));
 }
 
 // Custom attribute handler to set MIME type for Sentry
@@ -181,7 +56,7 @@ int main(int argc, char *argv[])
             .filterLevel(QtWarningMsg)  // Only warnings, critical, and fatal
             .filterDuplicate()          // Prevent spam to Sentry
             .attrHandler(sentryAttrsHandler)
-            .format(formatForSentry)
+            .formatToSentry()
             .sendToHttp(sentryStoreUrl())
         .end();
 
