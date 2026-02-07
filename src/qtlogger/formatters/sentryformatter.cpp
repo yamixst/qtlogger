@@ -12,6 +12,7 @@ namespace QtLogger {
 
 namespace {
 
+QTLOGGER_DECL_SPEC
 QString qtMsgTypeToSentryLevel(QtMsgType type)
 {
     switch (type) {
