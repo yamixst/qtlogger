@@ -6,7 +6,6 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QSysInfo>
 #include <QUuid>
 
 namespace QtLogger {
@@ -79,11 +78,11 @@ QString SentryFormatter::format(const LogMessage &lmsg)
     // Tags
     QJsonObject tags;
     tags[QStringLiteral("qt_version")] = QString::fromLatin1(qVersion());
-    if (lmsg.hasAttribute(QStringLiteral("app_name"))) {
-        tags[QStringLiteral("app_name")] = lmsg.attribute(QStringLiteral("app_name")).toString();
+    if (lmsg.hasAttribute(QStringLiteral("appname"))) {
+        tags[QStringLiteral("app_name")] = lmsg.attribute(QStringLiteral("appname")).toString();
     }
-    if (lmsg.hasAttribute(QStringLiteral("app_version"))) {
-        tags[QStringLiteral("app_version")] = lmsg.attribute(QStringLiteral("app_version")).toString();
+    if (lmsg.hasAttribute(QStringLiteral("appversion"))) {
+        tags[QStringLiteral("app_version")] = lmsg.attribute(QStringLiteral("appversion")).toString();
     }
     event[QStringLiteral("tags")] = tags;
 
@@ -99,8 +98,10 @@ QString SentryFormatter::format(const LogMessage &lmsg)
     const auto attrs = lmsg.attributes();
     for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
         // Skip already handled attributes
-        if (it.key() == QLatin1String("app_name") || it.key() == QLatin1String("app_version")
-            || it.key() == QLatin1String("mime_type")) {
+        if (it.key() == QLatin1String("appname") || it.key() == QLatin1String("appversion")
+            || it.key() == QLatin1String("os_name") || it.key() == QLatin1String("os_version")
+            || it.key() == QLatin1String("kernel_version") || it.key() == QLatin1String("build_abi")
+            || it.key() == QLatin1String("cpu_arch") || it.key() == QLatin1String("host_name")) {
             continue;
         }
         extra[it.key()] = QJsonValue::fromVariant(it.value());
@@ -110,21 +111,35 @@ QString SentryFormatter::format(const LogMessage &lmsg)
     // Contexts
     QJsonObject contexts;
 
-    // OS context
+    // OS context (from SysInfoAttrs)
     QJsonObject osContext;
-    osContext[QStringLiteral("name")] = QSysInfo::productType();
-    osContext[QStringLiteral("version")] = QSysInfo::productVersion();
-    osContext[QStringLiteral("kernel_version")] = QSysInfo::kernelVersion();
-    osContext[QStringLiteral("build")] = QSysInfo::buildAbi();
-    contexts[QStringLiteral("os")] = osContext;
+    if (lmsg.hasAttribute(QStringLiteral("os_name"))) {
+        osContext[QStringLiteral("name")] = lmsg.attribute(QStringLiteral("os_name")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("os_version"))) {
+        osContext[QStringLiteral("version")] = lmsg.attribute(QStringLiteral("os_version")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("kernel_version"))) {
+        osContext[QStringLiteral("kernel_version")] = lmsg.attribute(QStringLiteral("kernel_version")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("build_abi"))) {
+        osContext[QStringLiteral("build")] = lmsg.attribute(QStringLiteral("build_abi")).toString();
+    }
+    if (!osContext.isEmpty()) {
+        contexts[QStringLiteral("os")] = osContext;
+    }
 
     // Device context
     QJsonObject deviceContext;
-    deviceContext[QStringLiteral("arch")] = QSysInfo::currentCpuArchitecture();
+    if (lmsg.hasAttribute(QStringLiteral("cpu_arch"))) {
+        deviceContext[QStringLiteral("arch")] = lmsg.attribute(QStringLiteral("cpu_arch")).toString();
+    }
     if (lmsg.hasAttribute(QStringLiteral("host_name"))) {
         deviceContext[QStringLiteral("name")] = lmsg.attribute(QStringLiteral("host_name")).toString();
     }
-    contexts[QStringLiteral("device")] = deviceContext;
+    if (!deviceContext.isEmpty()) {
+        contexts[QStringLiteral("device")] = deviceContext;
+    }
 
     // Runtime context
     QJsonObject runtimeContext;

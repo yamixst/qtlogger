@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     gQtLogger
         .moveToOwnThread()  // Async logging for non-blocking HTTP requests
         .addAppInfo()       // Add app name, version, etc.
+        .addSysInfo()       // Add OS, kernel, CPU architecture info
         .addHostInfo()      // Add hostname
 
         // Pipeline 1: Console output for local debugging
