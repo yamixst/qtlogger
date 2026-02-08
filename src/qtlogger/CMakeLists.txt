@@ -75,6 +75,7 @@ set(QTLOGGER_HEADERS
     messagepatterns.h
     pipeline.h
     qtlogger.h
+    sentry.h
     simplepipeline.h
     sink.h
     sinks/coloredconsole.h

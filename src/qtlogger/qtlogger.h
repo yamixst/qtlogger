@@ -19,6 +19,7 @@
 #include "formatters/qtlogmessageformatter.h"
 #include "formatters/sentryformatter.h"
 #include "functionhandler.h"
+#include "sentry.h"
 #include "handler.h"
 #include "logger.h"
 #include "logmessage.h"
