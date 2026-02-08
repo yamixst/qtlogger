@@ -42,9 +42,6 @@ int main(int argc, char *argv[])
     // Configure QtLogger with Sentry integration
     gQtLogger
         .moveToOwnThread()  // Async logging for non-blocking HTTP requests
-        .addAppInfo()       // Add app name, version, etc.
-        .addSysInfo()       // Add OS, kernel, CPU architecture info
-        .addHostInfo()      // Add hostname
 
         // Pipeline 1: Console output for local debugging
         .pipeline()
@@ -54,6 +51,9 @@ int main(int argc, char *argv[])
 
         // Pipeline 2: Send warnings and errors to Sentry
         .pipeline()
+            .addAppInfo()               // Add app name, version, etc.
+            .addSysInfo()               // Add OS, kernel, CPU architecture info
+            .addHostInfo()              // Add hostname
             .filterLevel(QtWarningMsg)  // Only warnings, critical, and fatal
             .filterDuplicate()          // Prevent spam to Sentry
             .formatToSentry()
