@@ -10,34 +10,56 @@
 
 // Sentry DSN format: https://<public_key>@<host>/<project_id>
 // Example: https://abc123@o123456.ingest.sentry.io/1234567
-
-// Replace with your Sentry DSN components
-const QString SENTRY_PUBLIC_KEY = "your_public_key_here";
-const QString SENTRY_HOST = "o123456.ingest.sentry.io";
-const QString SENTRY_PROJECT_ID = "1234567";
-
-// Build Sentry Store API endpoint URL
-QString sentryStoreUrl()
-{
-    return QString("https://%1/api/%2/store/?sentry_version=7&sentry_key=%3")
-            .arg(SENTRY_HOST)
-            .arg(SENTRY_PROJECT_ID)
-            .arg(SENTRY_PUBLIC_KEY);
-}
-
-// HTTP headers for Sentry API
-QList<QPair<QByteArray, QByteArray>> sentryHeaders()
-{
-    return {
-        { "Content-Type", "application/json; charset=utf-8" }
-    };
-}
+//
+// Environment variables (use either SENTRY_DSN or all three individual variables):
+//   SENTRY_DSN        - Full Sentry DSN URL (alternative to individual variables)
+//   SENTRY_PUBLIC_KEY - Sentry public key
+//   SENTRY_HOST       - Sentry host (e.g., o123456.ingest.sentry.io)
+//   SENTRY_PROJECT_ID - Sentry project ID
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     app.setApplicationName("SentryExample");
     app.setApplicationVersion("1.0.0");
+
+    // Check environment variables - either SENTRY_DSN or individual variables
+    auto sentryDsn = qEnvironmentVariable("SENTRY_DSN");
+    QString sentryUrl;
+
+    if (!sentryDsn.isEmpty()) {
+        // Parse DSN: https://<public_key>@<host>/<project_id>
+        QUrl dsn(sentryDsn);
+        auto publicKey = dsn.userName();
+        auto host = dsn.host();
+        auto projectId = dsn.path().mid(1); // Remove leading '/'
+
+        sentryUrl = QString("https://%1/api/%2/store/?sentry_version=7&sentry_key=%3")
+                .arg(host, projectId, publicKey);
+    } else {
+        auto sentryHost = qEnvironmentVariable("SENTRY_HOST");
+        auto sentryProjectId = qEnvironmentVariable("SENTRY_PROJECT_ID");
+        auto sentryPublicKey = qEnvironmentVariable("SENTRY_PUBLIC_KEY");
+
+        if (sentryHost.isEmpty() || sentryProjectId.isEmpty() || sentryPublicKey.isEmpty()) {
+            qWarning() << "Missing required environment variables.";
+            qWarning() << "Set SENTRY_DSN or all of: SENTRY_HOST, SENTRY_PROJECT_ID, SENTRY_PUBLIC_KEY";
+            if (sentryHost.isEmpty())
+                qWarning() << "  SENTRY_HOST is not set";
+            if (sentryProjectId.isEmpty())
+                qWarning() << "  SENTRY_PROJECT_ID is not set";
+            if (sentryPublicKey.isEmpty())
+                qWarning() << "  SENTRY_PUBLIC_KEY is not set";
+            return 1;
+        }
+
+        sentryUrl = QString("https://%1/api/%2/store/?sentry_version=7&sentry_key=%3")
+                .arg(sentryHost, sentryProjectId, sentryPublicKey);
+    }
+
+    QList<QPair<QByteArray, QByteArray>> sentryHeaders = {
+        { "Content-Type", "application/json; charset=utf-8" }
+    };
 
     // Configure QtLogger with Sentry integration
     gQtLogger
@@ -57,7 +79,7 @@ int main(int argc, char *argv[])
             .filterLevel(QtWarningMsg)  // Only warnings, critical, and fatal
             .filterDuplicate()          // Prevent spam to Sentry
             .formatToSentry()
-            .sendToHttp(sentryStoreUrl(), sentryHeaders())
+            .sendToHttp(sentryUrl, sentryHeaders)
         .end();
 
     gQtLogger.installMessageHandler();
