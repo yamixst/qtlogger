@@ -19,6 +19,8 @@ Formatters convert `LogMessage` objects into formatted strings for output. This 
 - [PrettyFormatter](#prettyformatter)
 - [QtLogMessageFormatter](#qtlogmessageformatter)
 - [FunctionFormatter](#functionformatter)
+- [SentryFormatter](#sentryformatter)
+- [Sentry Utilities](#sentry-utilities)
 
 ---
 
@@ -679,6 +681,266 @@ gQtLogger
 **JSON-like (but not actual JSON):**
 ```
 {"time":"%{time}","level":"%{type}","msg":"%{message}"}
+```
+
+---
+
+## SentryFormatter
+
+A formatter that outputs log messages in [Sentry](https://sentry.io) event format for error tracking.
+
+### Inheritance
+
+```
+Handler
+└── Formatter
+    └── SentryFormatter
+```
+
+### Constructor
+
+```cpp
+explicit SentryFormatter(const QString &sdkName = "qtlogger.sentry",
+                         const QString &sdkVersion = "1.0.0");
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sdkName` | `QString` | `"qtlogger.sentry"` | SDK name reported to Sentry |
+| `sdkVersion` | `QString` | `"1.0.0"` | SDK version reported to Sentry |
+
+### Static Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `instance()` | `SentryFormatterPtr` | Get singleton instance with default settings |
+
+### SimplePipeline Method
+
+```cpp
+SimplePipeline &formatToSentry(const QString &sdkName = "qtlogger.sentry",
+                               const QString &sdkVersion = "1.0.0");
+```
+
+### Output Format
+
+The formatter produces JSON compatible with Sentry's Store API:
+
+```json
+{
+    "event_id": "550e8400e29b41d4a716446655440000",
+    "timestamp": "2024-01-15T14:30:45Z",
+    "platform": "native",
+    "level": "warning",
+    "logger": "network",
+    "message": {
+        "formatted": "Connection timeout"
+    },
+    "culprit": "void NetworkManager::connect()",
+    "tags": {
+        "qt_version": "6.6.1",
+        "app_name": "MyApp",
+        "app_version": "1.0.0"
+    },
+    "extra": {
+        "line": 42,
+        "file": "networkmanager.cpp",
+        "thread_id": "140234567890"
+    },
+    "contexts": {
+        "os": {
+            "name": "linux",
+            "version": "22.04",
+            "kernel_version": "5.15.0",
+            "build": "x86_64-linux-gnu"
+        },
+        "device": {
+            "arch": "x86_64",
+            "name": "hostname"
+        },
+        "runtime": {
+            "name": "Qt",
+            "version": "6.6.1"
+        }
+    },
+    "sdk": {
+        "name": "qtlogger.sentry",
+        "version": "1.0.0"
+    },
+    "fingerprint": ["warning", "network", "Connection timeout"]
+}
+```
+
+### Severity Level Mapping
+
+| Qt Message Type | Sentry Level |
+|-----------------|--------------|
+| `QtDebugMsg` | `debug` |
+| `QtInfoMsg` | `info` |
+| `QtWarningMsg` | `warning` |
+| `QtCriticalMsg` | `error` |
+| `QtFatalMsg` | `fatal` |
+
+### Required Attribute Handlers
+
+For full context information, use these attribute handlers before the formatter:
+
+| Handler | Provides |
+|---------|----------|
+| `addAppInfo()` | `appname`, `appversion` → tags |
+| `addSysInfo()` | `os_name`, `os_version`, `kernel_version`, `build_abi`, `cpu_arch` → contexts.os, contexts.device |
+| `addHostInfo()` | `host_name` → contexts.device.name |
+
+### Example
+
+```cpp
+#include "qtlogger.h"
+
+gQtLogger
+    .moveToOwnThread()  // Async for non-blocking HTTP
+
+    .pipeline()
+        .addAppInfo()
+        .addSysInfo()
+        .addHostInfo()
+        .filterLevel(QtWarningMsg)
+        .filterDuplicate()
+        .formatToSentry()
+        .sendToHttp(QtLogger::sentryUrl(), QtLogger::sentryHeaders())
+    .end();
+
+gQtLogger.installMessageHandler();
+```
+
+---
+
+## Sentry Utilities
+
+QtLogger provides utility functions for Sentry integration in `<qtlogger/sentry.h>`.
+
+### Functions
+
+#### sentryUrl (from DSN)
+
+```cpp
+QString sentryUrl(const QString &sentryDsn);
+```
+
+Parses a Sentry DSN and returns the Store API URL.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sentryDsn` | `QString` | Full Sentry DSN (e.g., `https://key@o123.ingest.sentry.io/456`) |
+
+**Returns:** Store API URL for HTTP sink
+
+#### sentryUrl (from components)
+
+```cpp
+QString sentryUrl(const QString &sentryHost,
+                  const QString &sentryProjectId,
+                  const QString &sentryPublicKey);
+```
+
+Builds the Store API URL from individual components.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sentryHost` | `QString` | Sentry host (e.g., `o123456.ingest.sentry.io`) |
+| `sentryProjectId` | `QString` | Project ID |
+| `sentryPublicKey` | `QString` | Public key |
+
+**Returns:** Store API URL for HTTP sink
+
+#### sentryUrl (from environment)
+
+```cpp
+QString sentryUrl();
+```
+
+Reads Sentry configuration from environment variables and returns the Store API URL.
+
+**Environment Variables:**
+- `SENTRY_DSN` — Full DSN (preferred)
+- Or all of: `SENTRY_HOST`, `SENTRY_PROJECT_ID`, `SENTRY_PUBLIC_KEY`
+
+**Returns:** Store API URL for HTTP sink
+
+#### checkSentryEnv
+
+```cpp
+bool checkSentryEnv();
+```
+
+Checks if required Sentry environment variables are set.
+
+**Returns:** `true` if `SENTRY_DSN` is set, or if all three individual variables are set
+
+#### sentryHeaders
+
+```cpp
+QList<QPair<QByteArray, QByteArray>> sentryHeaders();
+```
+
+Returns HTTP headers required for Sentry API.
+
+**Returns:** List containing `Content-Type: application/json; charset=utf-8`
+
+### Complete Example
+
+```cpp
+#include "qtlogger.h"
+#include "qtlogger/sentry.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("MyApp");
+    app.setApplicationVersion("1.0.0");
+
+    // Validate environment
+    if (!QtLogger::checkSentryEnv()) {
+        qWarning() << "Set SENTRY_DSN or SENTRY_HOST + SENTRY_PROJECT_ID + SENTRY_PUBLIC_KEY";
+        return 1;
+    }
+
+    gQtLogger
+        .moveToOwnThread()
+
+        // Console output
+        .pipeline()
+            .formatPretty(true)
+            .sendToStdErr()
+        .end()
+
+        // Sentry integration
+        .pipeline()
+            .addAppInfo()
+            .addSysInfo()
+            .addHostInfo()
+            .filterLevel(QtWarningMsg)
+            .filterDuplicate()
+            .formatToSentry()
+            .sendToHttp(QtLogger::sentryUrl(), QtLogger::sentryHeaders())
+        .end();
+
+    gQtLogger.installMessageHandler();
+
+    qWarning() << "This goes to Sentry";
+    qCritical() << "This too";
+
+    return app.exec();
+}
+```
+
+### Using Explicit DSN
+
+```cpp
+// From DSN string
+auto url = QtLogger::sentryUrl("https://abc123@o456.ingest.sentry.io/789");
+
+// From components
+auto url = QtLogger::sentryUrl("o456.ingest.sentry.io", "789", "abc123");
 ```
 
 ---

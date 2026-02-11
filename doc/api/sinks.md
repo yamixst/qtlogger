@@ -521,11 +521,21 @@ Handler
 
 ```cpp
 explicit HttpSink(const QUrl &url);
+HttpSink(const QUrl &url, const Headers &headers);
 ```
+
+#### Type Aliases
+
+```cpp
+using Headers = QList<QPair<QByteArray, QByteArray>>;
+```
+
+#### Constructor Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `url` | `QUrl` | HTTP endpoint URL |
+| `headers` | `Headers` | Optional HTTP headers to include in requests |
 
 #### Methods
 
@@ -534,6 +544,7 @@ explicit HttpSink(const QUrl &url);
 | `send(const LogMessage &lmsg)` | `void` | POST message to HTTP endpoint |
 | `setNetworkAccessManager(QNetworkAccessManager *manager)` | `void` | Set custom network manager |
 | `setRequest(const QNetworkRequest &request)` | `void` | Set custom request (for headers, etc.) |
+| `setHeaders(const Headers &headers)` | `void` | Set HTTP headers for all requests |
 
 #### Request Format
 
@@ -547,11 +558,18 @@ gQtLogger
     .sendToHttp("https://logs.example.com/api/logs");
 ```
 
-#### SimplePipeline Method
+#### SimplePipeline Methods
 
 ```cpp
 SimplePipeline &sendToHttp(const QString &url);
+SimplePipeline &sendToHttp(const QString &url,
+                           const QList<QPair<QByteArray, QByteArray>> &headers);
 ```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | `QString` | HTTP endpoint URL |
+| `headers` | `QList<QPair<QByteArray, QByteArray>>` | Optional HTTP headers |
 
 #### Example
 
@@ -567,15 +585,35 @@ gQtLogger
 
 gQtLogger.installMessageHandler();
 
-// With custom headers
-auto sink = QtLogger::HttpSinkPtr::create(QUrl("https://logs.mycompany.com/ingest"));
+// With custom headers (fluent API)
+QList<QPair<QByteArray, QByteArray>> headers = {
+    { "Content-Type", "application/json" },
+    { "Authorization", "Bearer your-api-key" },
+    { "X-Custom-Header", "custom-value" }
+};
 
-QNetworkRequest request(QUrl("https://logs.mycompany.com/ingest"));
-request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-request.setRawHeader("Authorization", "Bearer your-api-key");
-sink->setRequest(request);
+gQtLogger
+    .formatToJson(true)
+    .sendToHttp("https://logs.mycompany.com/ingest", headers);
+
+// With custom headers (manual setup)
+auto sink = QtLogger::HttpSinkPtr::create(
+    QUrl("https://logs.mycompany.com/ingest"),
+    {
+        { "Authorization", "Bearer your-api-key" }
+    }
+);
 
 gQtLogger << sink;
+
+// Sentry integration example
+gQtLogger
+    .addAppInfo()
+    .addSysInfo()
+    .addHostInfo()
+    .filterLevel(QtWarningMsg)
+    .formatToSentry()
+    .sendToHttp(QtLogger::sentryUrl(), QtLogger::sentryHeaders());
 ```
 
 ---

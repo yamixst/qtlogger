@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 - **Duplicate suppression** to prevent log spam
 - **Pattern formatter** with rich placeholder support (time formats, fixed-width fields, conditional blocks)
 - **JSON formatter** for structured logging and log aggregation
+- **Sentry integration** for error tracking with built-in formatter and utilities
 - **Chainable fluent API** for elegant configuration
 - **Custom attributes** to enrich messages with metadata
 - **Thread-safe** concurrent logging from multiple threads
@@ -149,6 +150,59 @@ int main(int argc, char *argv[])
 }
 ```
 
+### Sentry Integration
+
+Send warnings and errors to [Sentry](https://sentry.io) for error tracking. QtLogger provides a built-in `SentryFormatter` and utility functions for easy integration.
+
+```cpp
+#include "qtlogger.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    app.setApplicationName("MyApp");
+    app.setApplicationVersion("1.0.0");
+
+    // Check required environment variables
+    // Set SENTRY_DSN or (SENTRY_HOST + SENTRY_PROJECT_ID + SENTRY_PUBLIC_KEY)
+    if (!QtLogger::checkSentryEnv()) {
+        qWarning() << "Sentry environment variables not set";
+        return 1;
+    }
+
+    gQtLogger
+        .moveToOwnThread()  // Async logging for non-blocking HTTP requests
+
+        // Console output for local debugging
+        .pipeline()
+            .formatPretty(true)
+            .sendToStdErr()
+        .end()
+
+        // Send warnings and errors to Sentry
+        .pipeline()
+            .addAppInfo()               // Add app name, version
+            .addSysInfo()               // Add OS, kernel, CPU info
+            .addHostInfo()              // Add hostname
+            .filterLevel(QtWarningMsg)  // Only warnings and above
+            .filterDuplicate()          // Prevent spam
+            .formatToSentry()
+            .sendToHttp(QtLogger::sentryUrl(), QtLogger::sentryHeaders())
+        .end();
+
+    gQtLogger.installMessageHandler();
+
+    qWarning() << "This warning is sent to Sentry";
+    qCritical() << "This error is sent to Sentry";
+
+    return app.exec();
+}
+```
+
+Environment variables:
+- `SENTRY_DSN` — Full Sentry DSN URL (e.g., `https://key@o123.ingest.sentry.io/123`)
+- Or use individual variables: `SENTRY_HOST`, `SENTRY_PROJECT_ID`, `SENTRY_PUBLIC_KEY`
+
 ### Configuration from file
 
 You can configure the logger at runtime using an INI configuration file. This approach allows you to change logging behavior without recompiling your application.
@@ -185,6 +239,7 @@ async = true
 | **Gzip compression** | ✅ | ❌ | ❌ | ❌ |
 | **Async logging** | ✅ | ❌ | ✅ | ✅ |
 | **JSON formatter** | ✅ | ❌ | ❌ | ✅ |
+| **Sentry formatter** | ✅ | ❌ | ❌ | ❌ |
 | **Pattern formatter** | ✅ | ✅ | ❌ | ✅ |
 | **HTTP sink** | ✅ | ❌ | ❌ | ❌ |
 | **Android logcat** | ✅ | ❌ | ❌ | ✅ |

@@ -11,6 +11,7 @@ Attribute handlers enrich log messages with custom metadata. This section docume
 - [AttrHandler (Base Class)](#attrhandler-base-class)
 - [SeqNumberAttr](#seqnumberattr)
 - [AppInfoAttrs](#appinfoattrs)
+- [SysInfoAttrs](#sysinfoattrs)
 - [HostInfoAttrs](#hostinfoattrs)
 - [FunctionAttrHandler](#functionattrhandler)
 
@@ -241,6 +242,101 @@ gQtLogger
 - **Centralized logging**: Identify which application produced a log entry
 - **Multi-process systems**: Distinguish logs from different processes
 - **Debugging**: Include version information in error reports
+
+---
+
+## SysInfoAttrs
+
+Adds system and OS information to log messages.
+
+### Inheritance
+
+```
+Handler
+└── AttrHandler
+    └── SysInfoAttrs
+```
+
+### Description
+
+`SysInfoAttrs` adds information about the operating system, kernel, and CPU architecture. The attributes are captured once at construction time and cached for efficiency.
+
+### Constructor
+
+```cpp
+SysInfoAttrs();
+```
+
+### Static Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `instance()` | `SysInfoAttrsPtr` | Get cached singleton instance |
+
+### Attributes Added
+
+| Name | Type | Description | Source |
+|------|------|-------------|--------|
+| `os_name` | `QString` | Operating system type | `QSysInfo::productType()` |
+| `os_version` | `QString` | Operating system version | `QSysInfo::productVersion()` |
+| `kernel_type` | `QString` | Kernel type (e.g., "linux", "darwin") | `QSysInfo::kernelType()` |
+| `kernel_version` | `QString` | Kernel version string | `QSysInfo::kernelVersion()` |
+| `cpu_arch` | `QString` | Current CPU architecture | `QSysInfo::currentCpuArchitecture()` |
+| `build_abi` | `QString` | Build ABI string | `QSysInfo::buildAbi()` |
+| `build_cpu_arch` | `QString` | Build-time CPU architecture | `QSysInfo::buildCpuArchitecture()` |
+| `pretty_product_name` | `QString` | Human-readable OS name | `QSysInfo::prettyProductName()` |
+
+### SimplePipeline Method
+
+```cpp
+SimplePipeline &addSysInfo();
+```
+
+### Example
+
+```cpp
+#include "qtlogger.h"
+
+gQtLogger
+    .addSysInfo()
+    .formatToJson()
+    .sendToFile("system.log");
+
+gQtLogger.installMessageHandler();
+
+qInfo() << "System initialized";
+
+// JSON output includes:
+// {
+//     "os_name": "ubuntu",
+//     "os_version": "22.04",
+//     "kernel_type": "linux",
+//     "kernel_version": "5.15.0-91-generic",
+//     "cpu_arch": "x86_64",
+//     "build_abi": "x86_64-little_endian-lp64",
+//     "pretty_product_name": "Ubuntu 22.04.3 LTS",
+//     "message": "System initialized",
+//     ...
+// }
+```
+
+### Using in Patterns
+
+```cpp
+gQtLogger
+    .addSysInfo()
+    .format("[%{os_name} %{os_version}] [%{cpu_arch}] %{message}")
+    .sendToStdErr();
+
+// Output: [ubuntu 22.04] [x86_64] Application started
+```
+
+### Use Cases
+
+- **Sentry integration**: Provides OS context for error tracking
+- **Diagnostics**: Include system info in crash reports
+- **Multi-platform support**: Track which platforms encounter issues
+- **Centralized logging**: Identify host OS in aggregated logs
 
 ---
 
