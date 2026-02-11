@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
+// Copyright (C) 2026 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <QCoreApplication>
