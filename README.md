@@ -260,20 +260,20 @@ async = true
 
 ## Documentation
 
-Full documentation is available in the [doc/](doc/) directory:
+Full documentation is available in the [docs/](docs/) directory:
 
-- **[Getting Started](doc/getting_started.md)** — Installation, integration options, and Hello World examples
-- **[Architecture](doc/architecture.md)** — Pipeline concept, data flow, and handler types
-- **[Configuration Guide](doc/configuration.md)** — Fluent API, INI file configuration, and Qt logging rules
-- **[API Reference](doc/api/index.md)** — Complete API documentation
-  - [Core Classes](doc/api/core.md) — `Logger`, `LogMessage`, utilities
-  - [Pipelines](doc/api/pipelines.md) — `Pipeline`, `SimplePipeline`, `SortedPipeline`
-  - [Sinks](doc/api/sinks.md) — File, Console, Network, Syslog, and platform-specific outputs
-  - [Formatters](doc/api/formatters.md) — Pattern, JSON, Pretty formatters with full placeholder reference
-  - [Filters](doc/api/filters.md) — Level, Category, RegExp, and Duplicate filters
-  - [Attribute Handlers](doc/api/attributes.md) — Custom attributes, AppInfo, HostInfo, SeqNumber
-- **[Advanced Usage](doc/advanced.md)** — Async logging, thread safety, custom handlers
-- **[Changelog](doc/CHANGELOG.md)** — Version history
+- **[Getting Started](docs/getting_started.md)** — Installation, integration options, and Hello World examples
+- **[Architecture](docs/architecture.md)** — Pipeline concept, data flow, and handler types
+- **[Configuration Guide](docs/configuration.md)** — Fluent API, INI file configuration, and Qt logging rules
+- **[API Reference](docs/api/index.md)** — Complete API documentation
+  - [Core Classes](docs/api/core.md) — `Logger`, `LogMessage`, utilities
+  - [Pipelines](docs/api/pipelines.md) — `Pipeline`, `SimplePipeline`, `SortedPipeline`
+  - [Sinks](docs/api/sinks.md) — File, Console, Network, Syslog, and platform-specific outputs
+  - [Formatters](docs/api/formatters.md) — Pattern, JSON, Pretty formatters with full placeholder reference
+  - [Filters](docs/api/filters.md) — Level, Category, RegExp, and Duplicate filters
+  - [Attribute Handlers](docs/api/attributes.md) — Custom attributes, AppInfo, HostInfo, SeqNumber
+- **[Advanced Usage](docs/advanced.md)** — Async logging, thread safety, custom handlers
+- **[Changelog](docs/CHANGELOG.md)** — Version history
 
 Examples are available in the [examples/](examples/) directory.
 

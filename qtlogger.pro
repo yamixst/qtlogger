@@ -19,6 +19,6 @@ SUBDIRS += src
 }
 
 DISTFILES += \
-    $$PWD/doc/qtlogger.conf.example \
+    $$PWD/docs/qtlogger.conf.example \
     $$PWD/LICENSE \
     $$PWD/README.md
