@@ -2,6 +2,22 @@
 
 All notable changes to QtLogger will be documented in this file.
 
+## [0.9.0]
+
+### Added
+
+- Sentry integration: `SentryFormatter`, helper functions (`sentryUrl`, `sentryHeaders`, `checkSentryEnv`)
+- `SysInfoAttrs` for collecting system information (OS, architecture, hostname)
+- HTTP headers support for `HttpSink`
+- `SimplePipeline` methods: `addSysInfo()`, `formatToSentry()`, HTTP sink with headers
+- Sentry example and comprehensive documentation
+- Unit tests for `SentryFormatter`
+
+### Changed
+
+- Improved documentation structure with comprehensive API reference
+- Added badges and library comparison to README
+
 ## [0.8.0]
 
 ### Added

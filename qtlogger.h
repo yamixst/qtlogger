@@ -24,7 +24,7 @@
 
 // version.h
 
-#define QTLOGGER_VERSION 0.8.2
+#define QTLOGGER_VERSION 0.9.0
 
 // end version.h
 
@@ -363,6 +363,28 @@ using SeqNumberAttrPtr = QSharedPointer<SeqNumberAttr>;
 
 // end seqnumberattr.h
 
+// sysinfoattrs.h
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT SysInfoAttrs : public AttrHandler
+{
+public:
+    SysInfoAttrs();
+
+    QVariantHash attributes(const LogMessage &lmsg) override;
+
+private:
+    QVariantHash m_attrs;
+};
+
+using SysInfoAttrsPtr = QSharedPointer<SysInfoAttrs>;
+
+} // namespace QtLogger
+// end sysinfoattrs.h
+
 // filter.h
 
 #include <QSharedPointer>
@@ -694,6 +716,36 @@ private:
 
 // end qtlogmessageformatter.h
 
+// sentryformatter.h
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+using SentryFormatterPtr = QSharedPointer<class SentryFormatter>;
+
+class QTLOGGER_EXPORT SentryFormatter : public Formatter
+{
+public:
+    explicit SentryFormatter(const QString &sdkName = QStringLiteral("qtlogger.sentry"),
+                             const QString &sdkVersion = QStringLiteral("1.0.0"));
+
+    static SentryFormatterPtr instance()
+    {
+        static const auto s_instance = SentryFormatterPtr::create();
+        return s_instance;
+    }
+
+    QString format(const LogMessage &lmsg) override;
+
+private:
+    QString m_sdkName;
+    QString m_sdkVersion;
+};
+
+} // namespace QtLogger
+// end sentryformatter.h
+
 // functionhandler.h
 
 #include <functional>
@@ -720,6 +772,67 @@ using FunctionHandlerPtr = QSharedPointer<FunctionHandler>;
 } // namespace QtLogger
 
 // end functionhandler.h
+
+// sentry.h
+
+#include <QList>
+#include <QPair>
+#include <QString>
+#include <QUrl>
+
+namespace QtLogger {
+
+inline QString sentryUrl(const QString &sentryDsn)
+{
+    QUrl dsn(sentryDsn);
+    auto publicKey = dsn.userName();
+    auto host = dsn.host();
+    auto projectId = dsn.path().mid(1); // Remove leading '/'
+
+    return QString("https://%1/api/%2/store/?sentry_version=7&sentry_key=%3")
+            .arg(host, projectId, publicKey);
+}
+
+inline QString sentryUrl(const QString &sentryHost,
+                         const QString &sentryProjectId,
+                         const QString &sentryPublicKey)
+{
+    return QString("https://%1/api/%2/store/?sentry_version=7&sentry_key=%3")
+            .arg(sentryHost, sentryProjectId, sentryPublicKey);
+}
+
+inline QString sentryUrl()
+{
+    auto dsn = qEnvironmentVariable("SENTRY_DSN");
+    if (!dsn.isEmpty()) {
+        return sentryUrl(dsn);
+    }
+
+    return sentryUrl(qEnvironmentVariable("SENTRY_HOST"),
+                     qEnvironmentVariable("SENTRY_PROJECT_ID"),
+                     qEnvironmentVariable("SENTRY_PUBLIC_KEY"));
+}
+
+inline bool checkSentryEnv()
+{
+    if (!qEnvironmentVariable("SENTRY_DSN").isEmpty()) {
+        return true;
+    }
+
+    return !qEnvironmentVariable("SENTRY_HOST").isEmpty()
+           && !qEnvironmentVariable("SENTRY_PROJECT_ID").isEmpty()
+           && !qEnvironmentVariable("SENTRY_PUBLIC_KEY").isEmpty();
+}
+
+inline QList<QPair<QByteArray, QByteArray>> sentryHeaders()
+{
+    return {
+        { "Content-Type", "application/json; charset=utf-8" }
+    };
+}
+
+} // namespace QtLogger
+// end sentry.h
 
 // logger.h
 
@@ -993,6 +1106,7 @@ public:
 
     SimplePipeline &addSeqNumber(const QString &name = QStringLiteral("seq_number"));
     SimplePipeline &addAppInfo();
+    SimplePipeline &addSysInfo();
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &addHostInfo();
 #endif
@@ -1009,6 +1123,8 @@ public:
     SimplePipeline &formatByQt();
     SimplePipeline &formatPretty(bool colorize = false, int maxCategoryWidth = 15);
     SimplePipeline &formatToJson(bool compact = false);
+    SimplePipeline &formatToSentry(const QString &sdkName = QStringLiteral("qtlogger.sentry"),
+                                   const QString &sdkVersion = QStringLiteral("1.0.0"));
 
     SimplePipeline &sendToStdOut(bool colorize = false);
     SimplePipeline &sendToStdErr(bool colorize = false);
@@ -1024,6 +1140,8 @@ public:
     SimplePipeline &sendToSignal(QObject *receiver, const char *method);
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &sendToHttp(const QString &url);
+    SimplePipeline &sendToHttp(const QString &url,
+                               const QList<QPair<QByteArray, QByteArray>> &headers);
 #endif
 #ifdef Q_OS_WIN
     SimplePipeline &sendToWinDebug();
@@ -1563,16 +1681,23 @@ namespace QtLogger {
 class QTLOGGER_EXPORT HttpSink : public Sink
 {
 public:
+    using Headers = QList<QPair<QByteArray, QByteArray>>;
+
     explicit HttpSink(const QUrl &url);
+    HttpSink(const QUrl &url, const Headers &headers);
     ~HttpSink();
 
     void send(const LogMessage &lmsg) override;
 
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     void setRequest(const QNetworkRequest &request);
+    void setHeaders(const Headers &headers);
 
 private:
+    void init();
+
     QUrl m_url;
+    Headers m_headers;
     QPointer<QNetworkAccessManager> m_manager;
     QNetworkRequest m_request;
 };
@@ -1748,6 +1873,36 @@ QVariantHash SeqNumberAttr::attributes(const LogMessage &lmsg)
 {
     Q_UNUSED(lmsg)
     return { { m_name, m_count++ } };
+}
+
+} // namespace QtLogger
+
+// sysinfoattrs.cpp
+
+#include <QSysInfo>
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+SysInfoAttrs::SysInfoAttrs()
+{
+    m_attrs = QVariantHash {
+        { QStringLiteral("os_name"), QSysInfo::productType() },
+        { QStringLiteral("os_version"), QSysInfo::productVersion() },
+        { QStringLiteral("kernel_type"), QSysInfo::kernelType() },
+        { QStringLiteral("kernel_version"), QSysInfo::kernelVersion() },
+        { QStringLiteral("cpu_arch"), QSysInfo::currentCpuArchitecture() },
+        { QStringLiteral("build_abi"), QSysInfo::buildAbi() },
+        { QStringLiteral("build_cpu_arch"), QSysInfo::buildCpuArchitecture() },
+        { QStringLiteral("pretty_product_name"), QSysInfo::prettyProductName() },
+    };
+}
+
+QTLOGGER_DECL_SPEC
+QVariantHash SysInfoAttrs::attributes(const LogMessage &lmsg)
+{
+    Q_UNUSED(lmsg)
+    return m_attrs;
 }
 
 } // namespace QtLogger
@@ -3276,6 +3431,173 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
 
 } // namespace QtLogger
 
+// sentryformatter.cpp
+
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QUuid>
+
+namespace QtLogger {
+
+namespace {
+
+QTLOGGER_DECL_SPEC
+QString qtMsgTypeToSentryLevel(QtMsgType type)
+{
+    switch (type) {
+    case QtDebugMsg:
+        return QStringLiteral("debug");
+    case QtInfoMsg:
+        return QStringLiteral("info");
+    case QtWarningMsg:
+        return QStringLiteral("warning");
+    case QtCriticalMsg:
+        return QStringLiteral("error");
+    case QtFatalMsg:
+        return QStringLiteral("fatal");
+    default:
+        return QStringLiteral("info");
+    }
+}
+
+} // namespace
+
+SentryFormatter::SentryFormatter(const QString &sdkName, const QString &sdkVersion)
+    : m_sdkName(sdkName), m_sdkVersion(sdkVersion)
+{
+}
+
+QTLOGGER_DECL_SPEC
+QString SentryFormatter::format(const LogMessage &lmsg)
+{
+    QJsonObject event;
+
+    // Required: Event ID (UUID without dashes)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+    auto eventId = QUuid::createUuid().toString(QUuid::Id128);
+#else
+    auto eventId = QUuid::createUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}')).remove(QLatin1Char('-'));
+#endif
+    event[QStringLiteral("event_id")] = eventId;
+
+    // Required: Timestamp in ISO 8601 format
+    event[QStringLiteral("timestamp")] = lmsg.time().toUTC().toString(Qt::ISODate);
+
+    // Platform
+    event[QStringLiteral("platform")] = QStringLiteral("native");
+
+    // Severity level
+    event[QStringLiteral("level")] = qtMsgTypeToSentryLevel(lmsg.type());
+
+    // Logger name (category)
+    auto category = QString::fromLatin1(lmsg.category());
+    if (!category.isEmpty() && category != QLatin1String("default")) {
+        event[QStringLiteral("logger")] = category;
+    }
+
+    // Message
+    QJsonObject message;
+    message[QStringLiteral("formatted")] = lmsg.message();
+    event[QStringLiteral("message")] = message;
+
+    // Transaction/culprit (function name)
+    if (lmsg.function() && strlen(lmsg.function()) > 0) {
+        event[QStringLiteral("culprit")] = QString::fromLatin1(lmsg.function());
+    }
+
+    // Tags
+    QJsonObject tags;
+    tags[QStringLiteral("qt_version")] = QString::fromLatin1(qVersion());
+    if (lmsg.hasAttribute(QStringLiteral("appname"))) {
+        tags[QStringLiteral("app_name")] = lmsg.attribute(QStringLiteral("appname")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("appversion"))) {
+        tags[QStringLiteral("app_version")] = lmsg.attribute(QStringLiteral("appversion")).toString();
+    }
+    event[QStringLiteral("tags")] = tags;
+
+    // Extra context
+    QJsonObject extra;
+    extra[QStringLiteral("line")] = lmsg.line();
+    if (lmsg.file() && strlen(lmsg.file()) > 0) {
+        extra[QStringLiteral("file")] = QString::fromLatin1(lmsg.file());
+    }
+    extra[QStringLiteral("thread_id")] = QString::number(lmsg.threadId());
+
+    // Add custom attributes to extra
+    const auto attrs = lmsg.attributes();
+    for (auto it = attrs.cbegin(); it != attrs.cend(); ++it) {
+        // Skip already handled attributes
+        if (it.key() == QLatin1String("appname") || it.key() == QLatin1String("appversion")
+            || it.key() == QLatin1String("os_name") || it.key() == QLatin1String("os_version")
+            || it.key() == QLatin1String("kernel_version") || it.key() == QLatin1String("build_abi")
+            || it.key() == QLatin1String("cpu_arch") || it.key() == QLatin1String("host_name")) {
+            continue;
+        }
+        extra[it.key()] = QJsonValue::fromVariant(it.value());
+    }
+    event[QStringLiteral("extra")] = extra;
+
+    // Contexts
+    QJsonObject contexts;
+
+    // OS context (from SysInfoAttrs)
+    QJsonObject osContext;
+    if (lmsg.hasAttribute(QStringLiteral("os_name"))) {
+        osContext[QStringLiteral("name")] = lmsg.attribute(QStringLiteral("os_name")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("os_version"))) {
+        osContext[QStringLiteral("version")] = lmsg.attribute(QStringLiteral("os_version")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("kernel_version"))) {
+        osContext[QStringLiteral("kernel_version")] = lmsg.attribute(QStringLiteral("kernel_version")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("build_abi"))) {
+        osContext[QStringLiteral("build")] = lmsg.attribute(QStringLiteral("build_abi")).toString();
+    }
+    if (!osContext.isEmpty()) {
+        contexts[QStringLiteral("os")] = osContext;
+    }
+
+    // Device context
+    QJsonObject deviceContext;
+    if (lmsg.hasAttribute(QStringLiteral("cpu_arch"))) {
+        deviceContext[QStringLiteral("arch")] = lmsg.attribute(QStringLiteral("cpu_arch")).toString();
+    }
+    if (lmsg.hasAttribute(QStringLiteral("host_name"))) {
+        deviceContext[QStringLiteral("name")] = lmsg.attribute(QStringLiteral("host_name")).toString();
+    }
+    if (!deviceContext.isEmpty()) {
+        contexts[QStringLiteral("device")] = deviceContext;
+    }
+
+    // Runtime context
+    QJsonObject runtimeContext;
+    runtimeContext[QStringLiteral("name")] = QStringLiteral("Qt");
+    runtimeContext[QStringLiteral("version")] = QString::fromLatin1(qVersion());
+    contexts[QStringLiteral("runtime")] = runtimeContext;
+
+    event[QStringLiteral("contexts")] = contexts;
+
+    // SDK info
+    QJsonObject sdk;
+    sdk[QStringLiteral("name")] = m_sdkName;
+    sdk[QStringLiteral("version")] = m_sdkVersion;
+    event[QStringLiteral("sdk")] = sdk;
+
+    // Fingerprint (for grouping similar events)
+    QJsonArray fingerprint;
+    fingerprint.append(qtMsgTypeToSentryLevel(lmsg.type()));
+    fingerprint.append(category.isEmpty() ? QStringLiteral("default") : category);
+    fingerprint.append(lmsg.message().left(100)); // First 100 chars of message
+    event[QStringLiteral("fingerprint")] = fingerprint;
+
+    return QString::fromUtf8(QJsonDocument(event).toJson(QJsonDocument::Compact));
+}
+
+} // namespace QtLogger
+
 // logger.cpp
 
 #include <QFileInfo>
@@ -3553,6 +3875,13 @@ SimplePipeline &SimplePipeline::addAppInfo()
     return *this;
 }
 
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::addSysInfo()
+{
+    append(SysInfoAttrsPtr::create());
+    return *this;
+}
+
 #ifdef QTLOGGER_NETWORK
 QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addHostInfo()
@@ -3647,6 +3976,13 @@ SimplePipeline &SimplePipeline::formatToJson(bool compact)
 }
 
 QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::formatToSentry(const QString &sdkName, const QString &sdkVersion)
+{
+    append(SentryFormatterPtr::create(sdkName, sdkVersion));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToStdOut(bool colorize)
 {
     append(StdOutSinkPtr::create(colorize ? ColorMode::Auto : ColorMode::Never));
@@ -3725,6 +4061,14 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::sendToHttp(const QString &url)
 {
     append(HttpSinkPtr::create(QUrl(url)));
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::sendToHttp(const QString &url,
+                                           const QList<QPair<QByteArray, QByteArray>> &headers)
+{
+    append(HttpSinkPtr::create(QUrl(url), headers));
     return *this;
 }
 #endif
@@ -4045,6 +4389,18 @@ namespace QtLogger {
 QTLOGGER_DECL_SPEC
 HttpSink::HttpSink(const QUrl &url) : m_url(url)
 {
+    init();
+}
+
+QTLOGGER_DECL_SPEC
+HttpSink::HttpSink(const QUrl &url, const Headers &headers) : m_url(url), m_headers(headers)
+{
+    init();
+}
+
+QTLOGGER_DECL_SPEC
+void HttpSink::init()
+{
     m_manager = new QNetworkAccessManager();
 
 #ifndef QTLOGGER_NO_THREAD
@@ -4054,6 +4410,9 @@ HttpSink::HttpSink(const QUrl &url) : m_url(url)
 #endif
 
     m_request.setUrl(m_url);
+    for (const auto &header : m_headers) {
+        m_request.setRawHeader(header.first, header.second);
+    }
 }
 
 QTLOGGER_DECL_SPEC
@@ -4073,11 +4432,7 @@ void HttpSink::send(const LogMessage &lmsg)
         m_manager = new QNetworkAccessManager();
     }
 
-    if (lmsg.hasAttribute("mime_type")) {
-        m_request.setHeader(QNetworkRequest::ContentTypeHeader,
-                            QStringLiteral("%1; charset=utf-8")
-                                    .arg(lmsg.attribute("mime_type").toByteArray()));
-    } else {
+    if (!m_request.hasRawHeader("Content-Type")) {
         m_request.setHeader(QNetworkRequest::ContentTypeHeader,
                             QStringLiteral("text/plain; charset=utf-8"));
     }
@@ -4105,6 +4460,15 @@ QTLOGGER_DECL_SPEC
 void HttpSink::setRequest(const QNetworkRequest &request)
 {
     m_request = request;
+}
+
+QTLOGGER_DECL_SPEC
+void HttpSink::setHeaders(const Headers &headers)
+{
+    m_headers = headers;
+    for (const auto &header : m_headers) {
+        m_request.setRawHeader(header.first, header.second);
+    }
 }
 
 } // namespace QtLogger
