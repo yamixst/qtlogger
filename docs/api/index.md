@@ -50,6 +50,8 @@ This section provides detailed documentation for all QtLogger classes and their 
 - **[Attribute Handlers](attributes.md)** — Message enrichment
   - `SeqNumberAttr` — Sequential numbering
   - `AppInfoAttrs` — Application metadata
+  - `AppUuidAttr` — Persistent application UUID
+  - `SysInfoAttrs` — System information
   - `HostInfoAttrs` — Host information
   - `FunctionAttrHandler` — Custom attributes
 
@@ -62,6 +64,8 @@ Handler (abstract)
 ├── AttrHandler (abstract)
 │   ├── SeqNumberAttr
 │   ├── AppInfoAttrs
+│   ├── AppUuidAttr
+│   ├── SysInfoAttrs
 │   ├── HostInfoAttrs
 │   └── FunctionAttrHandler
 ├── Filter (abstract)

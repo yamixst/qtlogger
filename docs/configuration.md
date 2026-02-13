@@ -132,6 +132,8 @@ gQtLogger.installMessageHandler();  // Activate!
 |--------|-------------|
 | `addSeqNumber(name)` | Add sequential message number. Default name: `"seq_number"` |
 | `addAppInfo()` | Add application info (name, version, PID, paths) |
+| `addAppUuid(name)` | Add persistent application UUID (stored in QSettings). Default name: `"app_uuid"` |
+| `addSysInfo()` | Add system info (OS, kernel, CPU architecture) |
 | `addHostInfo()` | Add host info (hostname, IP). Requires `QTLOGGER_NETWORK` |
 | `attrHandler(func)` | Add custom attribute function |
 

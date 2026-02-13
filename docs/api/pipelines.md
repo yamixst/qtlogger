@@ -235,6 +235,7 @@ All methods return `SimplePipeline &` for chaining.
 |--------|-------------|
 | `addSeqNumber(const QString &name = "seq_number")` | Add sequential message numbering |
 | `addAppInfo()` | Add application info (name, version, PID, paths) |
+| `addAppUuid(const QString &name = "app_uuid")` | Add persistent application UUID (stored in QSettings) |
 | `addHostInfo()` | Add hostname and IP (requires `QTLOGGER_NETWORK`) |
 | `attrHandler(std::function<QVariantHash(const LogMessage &)> func)` | Add custom attribute function |
 

@@ -11,6 +11,7 @@ Attribute handlers enrich log messages with custom metadata. This section docume
 - [AttrHandler (Base Class)](#attrhandler-base-class)
 - [SeqNumberAttr](#seqnumberattr)
 - [AppInfoAttrs](#appinfoattrs)
+- [AppUuidAttr](#appuuidattr)
 - [SysInfoAttrs](#sysinfoattrs)
 - [HostInfoAttrs](#hostinfoattrs)
 - [FunctionAttrHandler](#functionattrhandler)
@@ -242,6 +243,137 @@ gQtLogger
 - **Centralized logging**: Identify which application produced a log entry
 - **Multi-process systems**: Distinguish logs from different processes
 - **Debugging**: Include version information in error reports
+
+---
+
+## AppUuidAttr
+
+Adds a persistent application UUID to log messages.
+
+### Inheritance
+
+```
+Handler
+└── AttrHandler
+    └── AppUuidAttr
+```
+
+### Description
+
+`AppUuidAttr` generates a unique UUID for the application instance and stores it in `QSettings` (UserScope). The UUID is created once on first use and persists across application restarts. This is useful for tracking logs from specific application installations.
+
+### Constructor
+
+```cpp
+explicit AppUuidAttr(const QString &name = QStringLiteral("app_uuid"));
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `name` | `QString` | `"app_uuid"` | Attribute name for the UUID |
+
+### Attributes Added
+
+| Name | Type | Description |
+|------|------|-------------|
+| `app_uuid` (or custom) | `QString` | Persistent UUID without braces (e.g., `"550e8400-e29b-41d4-a716-446655440000"`) |
+
+### Storage
+
+The UUID is stored in `QSettings` with:
+- **Scope**: `QSettings::UserScope`
+- **Organization**: `QCoreApplication::organizationName()`
+- **Application**: `QCoreApplication::applicationName()`
+- **Key**: `"app_uuid"`
+
+### SimplePipeline Method
+
+```cpp
+SimplePipeline &addAppUuid(const QString &name = QStringLiteral("app_uuid"));
+```
+
+### Example
+
+```cpp
+#include "qtlogger.h"
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    app.setOrganizationName("MyCompany");
+    app.setApplicationName("MyApp");
+    
+    gQtLogger
+        .addAppUuid()
+        .formatToJson()
+        .sendToFile("app.log");
+    
+    gQtLogger.installMessageHandler();
+    
+    qInfo() << "Application started";
+    
+    return app.exec();
+}
+
+// JSON output includes:
+// {
+//     "app_uuid": "550e8400-e29b-41d4-a716-446655440000",
+//     "message": "Application started",
+//     ...
+// }
+```
+
+### Using in Patterns
+
+```cpp
+gQtLogger
+    .addAppUuid()
+    .format("[%{app_uuid}] %{message}")
+    .sendToStdErr();
+
+// Output: [550e8400-e29b-41d4-a716-446655440000] Application started
+```
+
+### Custom Attribute Name
+
+```cpp
+gQtLogger
+    .addAppUuid("installation_id")
+    .format("[%{installation_id}] %{message}")
+    .sendToStdErr();
+```
+
+### Persistence Behavior
+
+```cpp
+// First run - UUID is generated and stored
+gQtLogger.addAppUuid();
+qInfo() << "First run";  // [abc-123-...] First run
+
+// Second run (after restart) - same UUID is loaded from QSettings
+gQtLogger.addAppUuid();
+qInfo() << "Second run"; // [abc-123-...] Second run (same UUID)
+```
+
+### Use Cases
+
+- **Installation tracking**: Identify specific application installations in centralized logs
+- **Sentry integration**: Track errors from specific installations
+- **Analytics**: Correlate logs from the same installation over time
+- **Multi-instance debugging**: Distinguish between multiple installations on the same machine
+
+### Combining with Other Attributes
+
+```cpp
+gQtLogger
+    .addAppUuid()
+    .addAppInfo()
+    .addHostInfo()
+    .formatToJson()
+    .sendToHttp("https://logs.example.com/ingest");
+
+// Each log entry includes installation UUID, app info, and host info
+```
 
 ---
 
