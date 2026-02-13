@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 
 #include "attrhandlers/appinfoattrs.h"
+#include "attrhandlers/appuuidattr.h"
 #include "attrhandlers/functionattrhandler.h"
 #include "attrhandlers/seqnumberattr.h"
 #include "attrhandlers/sysinfoattrs.h"
@@ -63,6 +64,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addAppInfo()
 {
     append(AppInfoAttrsPtr::create());
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::addAppUuid(const QString &name)
+{
+    append(AppUuidAttrPtr::create(name));
     return *this;
 }
 

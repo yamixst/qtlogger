@@ -23,6 +23,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
 
 set(QTLOGGER_SOURCES
     attrhandlers/appinfoattrs.cpp
+    attrhandlers/appuuidattr.cpp
     attrhandlers/seqnumberattr.cpp
     attrhandlers/sysinfoattrs.cpp
     configure.cpp
@@ -50,6 +51,7 @@ set(QTLOGGER_SOURCES
 set(QTLOGGER_HEADERS
     attrhandler.h
     attrhandlers/appinfoattrs.h
+    attrhandlers/appuuidattr.h
     attrhandlers/functionattrhandler.h
     attrhandlers/seqnumberattr.h
     attrhandlers/sysinfoattrs.h

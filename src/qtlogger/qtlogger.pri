@@ -61,6 +61,7 @@ qtlogger_journal {
 
 SOURCES += \
     $$PWD/attrhandlers/appinfoattrs.cpp \
+    $$PWD/attrhandlers/appuuidattr.cpp \
     $$PWD/attrhandlers/seqnumberattr.cpp \
     $$PWD/configure.cpp \
     $$PWD/filters/categoryfilter.cpp \
@@ -85,6 +86,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/attrhandler.h \
     $$PWD/attrhandlers/appinfoattrs.h \
+    $$PWD/attrhandlers/appuuidattr.h \
     $$PWD/attrhandlers/functionattrhandler.h \
     $$PWD/attrhandlers/seqnumberattr.h \
     $$PWD/configure.h \

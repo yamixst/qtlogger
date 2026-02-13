@@ -22,6 +22,7 @@ public:
 
     SimplePipeline &addSeqNumber(const QString &name = QStringLiteral("seq_number"));
     SimplePipeline &addAppInfo();
+    SimplePipeline &addAppUuid(const QString &name = QStringLiteral("app_uuid"));
     SimplePipeline &addSysInfo();
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &addHostInfo();
