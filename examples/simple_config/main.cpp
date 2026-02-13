@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 
     gQtLogger
         .addAppInfo()
+        .addAppUuid()
         .pipeline()
             .addSeqNumber()
             .filter("^(?!.*password|.*secret).*$")
