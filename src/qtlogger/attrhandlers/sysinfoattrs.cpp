@@ -19,6 +19,11 @@ SysInfoAttrs::SysInfoAttrs()
         { QStringLiteral("build_abi"), QSysInfo::buildAbi() },
         { QStringLiteral("build_cpu_arch"), QSysInfo::buildCpuArchitecture() },
         { QStringLiteral("pretty_product_name"), QSysInfo::prettyProductName() },
+        { QStringLiteral("machine_host_name"), QSysInfo::machineHostName() },
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+        { QStringLiteral("machine_unique_id"), QString::fromLatin1(QSysInfo::machineUniqueId()) },
+        { QStringLiteral("boot_unique_id"), QString::fromLatin1(QSysInfo::bootUniqueId()) },
+#endif
     };
 }
 
