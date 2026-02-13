@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     // Logging with QtLogger
 
     gQtLogger
+        .addSysInfo()
         .addAppInfo()
         .addAppUuid()
         .pipeline()
