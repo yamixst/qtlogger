@@ -33,25 +33,25 @@ inline QString sentryUrl(const QString &sentryHost,
 
 inline QString sentryUrl()
 {
-    auto dsn = qEnvironmentVariable("SENTRY_DSN");
+    auto dsn = QString::fromLocal8Bit(qgetenv("SENTRY_DSN"));
     if (!dsn.isEmpty()) {
         return sentryUrl(dsn);
     }
 
-    return sentryUrl(qEnvironmentVariable("SENTRY_HOST"),
-                     qEnvironmentVariable("SENTRY_PROJECT_ID"),
-                     qEnvironmentVariable("SENTRY_PUBLIC_KEY"));
+    return sentryUrl(QString::fromLocal8Bit(qgetenv("SENTRY_HOST")),
+                     QString::fromLocal8Bit(qgetenv("SENTRY_PROJECT_ID")),
+                     QString::fromLocal8Bit(qgetenv("SENTRY_PUBLIC_KEY")));
 }
 
 inline bool checkSentryEnv()
 {
-    if (!qEnvironmentVariable("SENTRY_DSN").isEmpty()) {
+    if (!qgetenv("SENTRY_DSN").isEmpty()) {
         return true;
     }
 
-    return !qEnvironmentVariable("SENTRY_HOST").isEmpty()
-           && !qEnvironmentVariable("SENTRY_PROJECT_ID").isEmpty()
-           && !qEnvironmentVariable("SENTRY_PUBLIC_KEY").isEmpty();
+    return !qgetenv("SENTRY_HOST").isEmpty()
+           && !qgetenv("SENTRY_PROJECT_ID").isEmpty()
+           && !qgetenv("SENTRY_PUBLIC_KEY").isEmpty();
 }
 
 inline QList<QPair<QByteArray, QByteArray>> sentryHeaders()
