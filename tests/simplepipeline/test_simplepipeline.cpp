@@ -38,6 +38,7 @@ private slots:
     // Attribute handler tests
     void testAddSeqNumber();
     void testAddAppInfo();
+    void testAddAppUuid();
 #ifdef QTLOGGER_NETWORK
     void testAddHostInfo();
 #endif
@@ -188,6 +189,69 @@ void TestSimplePipeline::testAddAppInfo()
     // Should add application-related attributes
     QVERIFY(msg.hasAttribute("appName") || msg.hasAttribute("appVersion") || 
             msg.hasAttribute("pid") || msg.hasAttribute("processName"));
+}
+
+void TestSimplePipeline::testAddAppUuid()
+{
+    QCoreApplication::setOrganizationName("QtLoggerTest");
+    QCoreApplication::setApplicationName("TestAppUuid");
+
+    // Clear any existing UUID from previous test runs
+    QSettings settings(QSettings::UserScope, QCoreApplication::organizationName(),
+                       QCoreApplication::applicationName());
+    settings.remove("app_uuid");
+    settings.sync();
+
+    m_pipeline->addAppUuid().append(m_mockSink);
+
+    LogMessage msg(QtDebugMsg, QMessageLogContext(), "test message");
+    m_pipeline->process(msg);
+
+    QVERIFY(msg.hasAttribute("app_uuid"));
+
+    auto uuid = msg.attribute("app_uuid").toString();
+    QVERIFY(!uuid.isEmpty());
+
+    // UUID should be valid format (without braces)
+    QVERIFY(!uuid.contains('{'));
+    QVERIFY(!uuid.contains('}'));
+
+    // Process another message - should have the same UUID
+    LogMessage msg2(QtDebugMsg, QMessageLogContext(), "test message 2");
+    m_pipeline->process(msg2);
+
+    QCOMPARE(msg2.attribute("app_uuid").toString(), uuid);
+
+    // Verify UUID is persisted in QSettings
+    QSettings settingsCheck(QSettings::UserScope, QCoreApplication::organizationName(),
+                            QCoreApplication::applicationName());
+    auto storedUuid = settingsCheck.value("app_uuid").toString();
+    QCOMPARE(storedUuid, uuid);
+
+    // Create a new pipeline - should read the same UUID from QSettings
+    SimplePipeline pipeline2;
+    auto mockSink2 = MockSinkPtr::create();
+    pipeline2.addAppUuid().append(mockSink2);
+
+    LogMessage msg3(QtDebugMsg, QMessageLogContext(), "test message 3");
+    pipeline2.process(msg3);
+
+    QCOMPARE(msg3.attribute("app_uuid").toString(), uuid);
+
+    // Test with custom attribute name
+    SimplePipeline pipeline3;
+    auto mockSink3 = MockSinkPtr::create();
+    pipeline3.addAppUuid("custom_uuid").append(mockSink3);
+
+    LogMessage msg4(QtDebugMsg, QMessageLogContext(), "test message 4");
+    pipeline3.process(msg4);
+
+    QVERIFY(msg4.hasAttribute("custom_uuid"));
+    QCOMPARE(msg4.attribute("custom_uuid").toString(), uuid);
+
+    // Cleanup
+    settings.remove("app_uuid");
+    settings.sync();
 }
 
 #ifdef QTLOGGER_NETWORK

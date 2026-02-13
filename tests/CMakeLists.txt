@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 add_subdirectory(logmessage)
+add_subdirectory(attrhandlers)
 add_subdirectory(filters)
 add_subdirectory(formatters)
 add_subdirectory(pipeline)
