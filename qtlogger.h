@@ -24,7 +24,7 @@
 
 // version.h
 
-#define QTLOGGER_VERSION 0.9.0
+#define QTLOGGER_VERSION 0.10.0
 
 // end version.h
 
@@ -803,25 +803,25 @@ inline QString sentryUrl(const QString &sentryHost,
 
 inline QString sentryUrl()
 {
-    auto dsn = qEnvironmentVariable("SENTRY_DSN");
+    auto dsn = QString::fromLocal8Bit(qgetenv("SENTRY_DSN"));
     if (!dsn.isEmpty()) {
         return sentryUrl(dsn);
     }
 
-    return sentryUrl(qEnvironmentVariable("SENTRY_HOST"),
-                     qEnvironmentVariable("SENTRY_PROJECT_ID"),
-                     qEnvironmentVariable("SENTRY_PUBLIC_KEY"));
+    return sentryUrl(QString::fromLocal8Bit(qgetenv("SENTRY_HOST")),
+                     QString::fromLocal8Bit(qgetenv("SENTRY_PROJECT_ID")),
+                     QString::fromLocal8Bit(qgetenv("SENTRY_PUBLIC_KEY")));
 }
 
 inline bool checkSentryEnv()
 {
-    if (!qEnvironmentVariable("SENTRY_DSN").isEmpty()) {
+    if (!qgetenv("SENTRY_DSN").isEmpty()) {
         return true;
     }
 
-    return !qEnvironmentVariable("SENTRY_HOST").isEmpty()
-           && !qEnvironmentVariable("SENTRY_PROJECT_ID").isEmpty()
-           && !qEnvironmentVariable("SENTRY_PUBLIC_KEY").isEmpty();
+    return !qgetenv("SENTRY_HOST").isEmpty()
+           && !qgetenv("SENTRY_PROJECT_ID").isEmpty()
+           && !qgetenv("SENTRY_PUBLIC_KEY").isEmpty();
 }
 
 inline QList<QPair<QByteArray, QByteArray>> sentryHeaders()
@@ -1106,6 +1106,7 @@ public:
 
     SimplePipeline &addSeqNumber(const QString &name = QStringLiteral("seq_number"));
     SimplePipeline &addAppInfo();
+    SimplePipeline &addAppUuid(const QString &name = QStringLiteral("app_uuid"));
     SimplePipeline &addSysInfo();
 #ifdef QTLOGGER_NETWORK
     SimplePipeline &addHostInfo();
@@ -1834,6 +1835,68 @@ QVariantHash AppInfoAttrs::attributes(const LogMessage &lmsg)
 
 } // namespace QtLogger
 
+// appuuidattr.cpp
+
+// appuuidattr.h
+
+//
+
+#include <QSharedPointer>
+
+namespace QtLogger {
+
+class QTLOGGER_EXPORT AppUuidAttr : public AttrHandler
+{
+public:
+    explicit AppUuidAttr(const QString &name = QStringLiteral("app_uuid"));
+    QVariantHash attributes(const LogMessage &lmsg) override;
+
+private:
+    QString m_name;
+    QString m_uuid;
+};
+
+using AppUuidAttrPtr = QSharedPointer<AppUuidAttr>;
+
+} // namespace QtLogger
+// end appuuidattr.h
+
+#include <QCoreApplication>
+#include <QSettings>
+#include <QUuid>
+
+namespace QtLogger {
+
+QTLOGGER_DECL_SPEC
+AppUuidAttr::AppUuidAttr(const QString &name) : m_name(name)
+{
+    QSettings settings(QSettings::UserScope, QCoreApplication::organizationName(),
+                       QCoreApplication::applicationName());
+
+    auto uuid = settings.value(QStringLiteral("app_uuid")).toString();
+
+    if (uuid.isEmpty()) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+        uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+#else
+        uuid = QUuid::createUuid().toString();
+        uuid.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+#endif
+        settings.setValue(QStringLiteral("app_uuid"), uuid);
+    }
+
+    m_uuid = uuid;
+}
+
+QTLOGGER_DECL_SPEC
+QVariantHash AppUuidAttr::attributes(const LogMessage &lmsg)
+{
+    Q_UNUSED(lmsg)
+    return { { m_name, m_uuid } };
+}
+
+} // namespace QtLogger
+
 // hostinfoattrs.cpp
 
 #ifdef QTLOGGER_NETWORK
@@ -1895,6 +1958,11 @@ SysInfoAttrs::SysInfoAttrs()
         { QStringLiteral("build_abi"), QSysInfo::buildAbi() },
         { QStringLiteral("build_cpu_arch"), QSysInfo::buildCpuArchitecture() },
         { QStringLiteral("pretty_product_name"), QSysInfo::prettyProductName() },
+        { QStringLiteral("machine_host_name"), QSysInfo::machineHostName() },
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+        { QStringLiteral("machine_unique_id"), QString::fromLatin1(QSysInfo::machineUniqueId()) },
+        { QStringLiteral("boot_unique_id"), QString::fromLatin1(QSysInfo::bootUniqueId()) },
+#endif
     };
 }
 
@@ -3872,6 +3940,13 @@ QTLOGGER_DECL_SPEC
 SimplePipeline &SimplePipeline::addAppInfo()
 {
     append(AppInfoAttrsPtr::create());
+    return *this;
+}
+
+QTLOGGER_DECL_SPEC
+SimplePipeline &SimplePipeline::addAppUuid(const QString &name)
+{
+    append(AppUuidAttrPtr::create(name));
     return *this;
 }
 

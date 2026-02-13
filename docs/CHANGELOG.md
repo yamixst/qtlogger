@@ -2,6 +2,19 @@
 
 All notable changes to QtLogger will be documented in this file.
 
+## [0.10.0]
+
+### Added
+
+- `AppUuidAttr` for persistent application UUID (stored in user settings)
+- `SysInfoAttrs` extended with `machine_unique_id` and `boot_unique_id` (Qt 5.11+)
+- `SimplePipeline::addAppUuid()` method
+
+### Changed
+
+- Renamed `doc/` directory to `docs/`
+- Use `qgetenv` for Sentry environment variables
+
 ## [0.9.0]
 
 ### Added
