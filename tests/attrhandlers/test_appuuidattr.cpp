@@ -107,7 +107,7 @@ void TestAppUuidAttr::testUuidFormat()
     QVERIFY(uuid.length() == 36 || uuid.length() == 32);
 
     // UUID should be parseable
-    auto parsedUuid = QUuid::fromString(uuid);
+    auto parsedUuid = QUuid(uuid);
     QVERIFY(!parsedUuid.isNull());
 }
 
