@@ -8,4 +8,5 @@ SUBDIRS += one_line_config \
            config_from_file \
            pattern_formatter \
            file_rotation \
-           sentry_example
+           sentry_example \
+           telegram_bot
