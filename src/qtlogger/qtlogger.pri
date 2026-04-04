@@ -63,6 +63,7 @@ SOURCES += \
     $$PWD/attrhandlers/appinfoattrs.cpp \
     $$PWD/attrhandlers/appuuidattr.cpp \
     $$PWD/attrhandlers/seqnumberattr.cpp \
+    $$PWD/attrhandlers/sysinfoattrs.cpp \
     $$PWD/configure.cpp \
     $$PWD/filters/categoryfilter.cpp \
     $$PWD/filters/duplicatefilter.cpp \
@@ -70,6 +71,7 @@ SOURCES += \
     $$PWD/formatters/jsonformatter.cpp \
     $$PWD/formatters/patternformatter.cpp \
     $$PWD/formatters/prettyformatter.cpp \
+    $$PWD/formatters/sentryformatter.cpp \
     $$PWD/logger.cpp \
     $$PWD/pipeline.cpp \
     $$PWD/simplepipeline.cpp \
@@ -89,6 +91,7 @@ HEADERS += \
     $$PWD/attrhandlers/appuuidattr.h \
     $$PWD/attrhandlers/functionattrhandler.h \
     $$PWD/attrhandlers/seqnumberattr.h \
+    $$PWD/attrhandlers/sysinfoattrs.h \
     $$PWD/configure.h \
     $$PWD/filter.h \
     $$PWD/filters/categoryfilter.h \
@@ -101,6 +104,7 @@ HEADERS += \
     $$PWD/formatters/jsonformatter.h \
     $$PWD/formatters/patternformatter.h \
     $$PWD/formatters/prettyformatter.h \
+    $$PWD/formatters/sentryformatter.h \
     $$PWD/formatters/qtlogmessageformatter.h \
     $$PWD/functionhandler.h \
     $$PWD/handler.h \
