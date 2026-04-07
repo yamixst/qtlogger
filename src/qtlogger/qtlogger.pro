@@ -15,10 +15,10 @@ QT -= gui
 CONFIG -= debug_and_release
 CONFIG *= warn_on
 
-# CONFIG += qtlogger_static
+CONFIG += qtlogger_static
 # CONFIG += qtlogger_debug_output
 # CONFIG += qtlogger_no_thread
-# CONFIG += qtlogger_network
+CONFIG += qtlogger_network
 # CONFIG += qtlogger_journal
 
 qtlogger_static {
