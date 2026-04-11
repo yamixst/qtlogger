@@ -10,7 +10,7 @@
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 QString qtMsgTypeToSentryLevel(QtMsgType type)
@@ -31,7 +31,7 @@ QString qtMsgTypeToSentryLevel(QtMsgType type)
     }
 }
 
-} // namespace
+} // namespace detail
 
 SentryFormatter::SentryFormatter(const QString &sdkName, const QString &sdkVersion)
     : m_sdkName(sdkName), m_sdkVersion(sdkVersion)
@@ -58,7 +58,7 @@ QString SentryFormatter::format(const LogMessage &lmsg)
     event[QStringLiteral("platform")] = QStringLiteral("native");
 
     // Severity level
-    event[QStringLiteral("level")] = qtMsgTypeToSentryLevel(lmsg.type());
+    event[QStringLiteral("level")] = detail::qtMsgTypeToSentryLevel(lmsg.type());
 
     // Logger name (category)
     auto category = QString::fromLatin1(lmsg.category());
@@ -158,7 +158,7 @@ QString SentryFormatter::format(const LogMessage &lmsg)
 
     // Fingerprint (for grouping similar events)
     QJsonArray fingerprint;
-    fingerprint.append(qtMsgTypeToSentryLevel(lmsg.type()));
+    fingerprint.append(detail::qtMsgTypeToSentryLevel(lmsg.type()));
     fingerprint.append(category.isEmpty() ? QStringLiteral("default") : category);
     fingerprint.append(lmsg.message().left(100)); // First 100 chars of message
     event[QStringLiteral("fingerprint")] = fingerprint;

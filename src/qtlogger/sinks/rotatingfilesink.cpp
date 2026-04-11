@@ -31,7 +31,7 @@
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 static quint32 calculateCRC32(QFile &file) {
@@ -63,7 +63,7 @@ static quint32 calculateCRC32(QFile &file) {
     return crc ^ 0xFFFFFFFF;
 }
 
-} // namespace
+} // namespace detail
 
 class RotatingFileSink::RotatingFileSinkPrivate
 {
@@ -212,7 +212,7 @@ public:
             return;
         }
 
-        auto fileCRC = calculateCRC32(inputFile);
+        auto fileCRC = detail::calculateCRC32(inputFile);
         auto fileSize = static_cast<quint32>(inputFile.size());
         inputFile.seek(0);
 

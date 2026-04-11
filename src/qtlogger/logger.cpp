@@ -16,7 +16,7 @@
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 #ifndef QTLOGGER_NO_THREAD
 QAtomicPointer<Logger> g_activeLogger;
@@ -26,7 +26,7 @@ Logger *g_activeLogger = nullptr;
 
 QtMessageHandler g_previousMessageHandler = nullptr;
 
-}
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 Logger *Logger::instance()
@@ -44,10 +44,10 @@ QTLOGGER_DECL_SPEC
 Logger::~Logger()
 {
 #ifndef QTLOGGER_NO_THREAD
-    g_activeLogger.testAndSetOrdered(this, nullptr);
+    detail::g_activeLogger.testAndSetOrdered(this, nullptr);
 #else
-    if (g_activeLogger == this) {
-        g_activeLogger = nullptr;
+    if (detail::g_activeLogger == this) {
+        detail::g_activeLogger = nullptr;
     }
 #endif
 }
@@ -99,9 +99,9 @@ void Logger::messageHandler(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
 #ifndef QTLOGGER_NO_THREAD
-    auto logger = g_activeLogger.loadAcquire();
+    auto logger = detail::g_activeLogger.loadAcquire();
 #else
-    auto logger = g_activeLogger;
+    auto logger = detail::g_activeLogger;
 #endif
 
     if (!logger)
@@ -114,31 +114,31 @@ QTLOGGER_DECL_SPEC
 void Logger::installMessageHandler()
 {
 #ifndef QTLOGGER_NO_THREAD
-    g_activeLogger.storeRelease(this);
+    detail::g_activeLogger.storeRelease(this);
 #else
-    g_activeLogger = this;
+    detail::g_activeLogger = this;
 #endif
 
     auto prev = qInstallMessageHandler(messageHandler);
 
     if (prev != messageHandler) {
-        g_previousMessageHandler = prev;
+        detail::g_previousMessageHandler = prev;
     }
 }
 
 QTLOGGER_DECL_SPEC
 void Logger::restorePreviousMessageHandler()
 {
-    if (!g_previousMessageHandler)
+    if (!detail::g_previousMessageHandler)
         return;
 
-    auto prev = qInstallMessageHandler(g_previousMessageHandler);
+    auto prev = qInstallMessageHandler(detail::g_previousMessageHandler);
 
     if (prev != messageHandler) {
         qInstallMessageHandler(prev);
     }
 
-    g_previousMessageHandler = nullptr;
+    detail::g_previousMessageHandler = nullptr;
 }
 
 #ifndef QTLOGGER_NO_THREAD

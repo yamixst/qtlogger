@@ -9,7 +9,7 @@
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 static const auto g_processStartTime = std::chrono::steady_clock::now();
 
@@ -774,7 +774,7 @@ private:
     int m_removeAfter;
 };
 
-} // namespace
+} // namespace detail
 
 class PatternFormatter::PatternFormatterPrivate
 {
@@ -797,11 +797,11 @@ public:
             if (pos < m_pattern.length() - 1 && m_pattern[pos] == '%') {
                 if (m_pattern[pos + 1] == '{') {
                     if (!literalText.isEmpty()) {
-                        auto token = new LiteralToken(literalText);
+                        auto token = new detail::LiteralToken(literalText);
                         if (hasCondition) {
                             token->setCondition(currentCondition);
                         }
-                        m_tokens.append(QSharedPointer<Token>(token));
+                        m_tokens.append(QSharedPointer<detail::Token>(token));
                         literalText.clear();
                     }
 
@@ -815,51 +815,51 @@ public:
 
                     QString placeholder = m_pattern.mid(pos + 2, closingPos - pos - 2);
 
-                    std::optional<FormattedToken::FormatSpec> formatSpec;
+                    std::optional<detail::FormattedToken::FormatSpec> formatSpec;
 
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        formatSpec = FormattedToken::parseFormatSpec(possibleSpec);
+                        formatSpec = detail::FormattedToken::parseFormatSpec(possibleSpec);
                         if (formatSpec) {
                             placeholder = placeholder.left(lastColon);
                         }
                     }
 
-                    FormattedToken *token = nullptr;
+                    detail::FormattedToken *token = nullptr;
 
                     if (placeholder == QLatin1String("type")) {
-                        token = new TypeToken();
+                        token = new detail::TypeToken();
                     } else if (placeholder == QLatin1String("line")) {
-                        token = new LineToken();
+                        token = new detail::LineToken();
                     } else if (placeholder == QLatin1String("file")) {
-                        token = new FileToken();
+                        token = new detail::FileToken();
                     } else if (placeholder == QLatin1String("shortfile")
                                || placeholder.startsWith(QLatin1String("shortfile "))) {
                         QString baseDir;
                         if (placeholder.startsWith(QLatin1String("shortfile "))) {
                             baseDir = placeholder.mid(10).trimmed();
                         }
-                        token = new ShortFileToken(baseDir);
+                        token = new detail::ShortFileToken(baseDir);
                     } else if (placeholder == QLatin1String("function")) {
-                        token = new FunctionToken(false);
+                        token = new detail::FunctionToken(false);
                     } else if (placeholder == QLatin1String("func")) {
-                        token = new FunctionToken(true);
+                        token = new detail::FunctionToken(true);
                     } else if (placeholder == QLatin1String("category")) {
-                        token = new CategoryToken();
+                        token = new detail::CategoryToken();
                     } else if (placeholder == QLatin1String("time")
                                || placeholder.startsWith(QLatin1String("time "))) {
                         QString timeFormat;
                         if (placeholder.startsWith(QLatin1String("time "))) {
                             timeFormat = placeholder.mid(5).trimmed();
                         }
-                        token = new TimeToken(timeFormat);
+                        token = new detail::TimeToken(timeFormat);
                     } else if (placeholder == QLatin1String("threadid")) {
-                        token = new ThreadIdToken();
+                        token = new detail::ThreadIdToken();
                     } else if (placeholder == QLatin1String("qthreadptr")) {
-                        token = new QThreadPtrToken();
+                        token = new detail::QThreadPtrToken();
                     } else if (placeholder == QLatin1String("message")) {
-                        token = new MessageToken();
+                        token = new detail::MessageToken();
                     } else if (placeholder.startsWith(QLatin1String("if-"))) {
                         // Handle conditional: %{if-debug}, %{if-warning}, etc.
                         QString conditionType = placeholder.mid(3); // Remove "if-"
@@ -891,9 +891,9 @@ public:
                                 }
                                 removeAfter = suffix.mid(commaPos + 1).toInt();
                             }
-                            token = new AttributeToken(attrName, true, removeBefore, removeAfter);
+                            token = new detail::AttributeToken(attrName, true, removeBefore, removeAfter);
                         } else {
-                            token = new AttributeToken(placeholder);
+                            token = new detail::AttributeToken(placeholder);
                         }
                     }
 
@@ -904,7 +904,7 @@ public:
                         if (formatSpec) {
                             token->setFormatSpec(*formatSpec);
                         }
-                        m_tokens.append(QSharedPointer<Token>(token));
+                        m_tokens.append(QSharedPointer<detail::Token>(token));
                     }
 
                     pos = closingPos + 1;
@@ -924,11 +924,11 @@ public:
         }
 
         if (!literalText.isEmpty()) {
-            auto token = new LiteralToken(literalText);
+            auto token = new detail::LiteralToken(literalText);
             if (hasCondition) {
                 token->setCondition(currentCondition);
             }
-            m_tokens.append(QSharedPointer<Token>(token));
+            m_tokens.append(QSharedPointer<detail::Token>(token));
         }
     }
 
@@ -954,13 +954,13 @@ public:
             }
         }
 
-        result.remove(DEL_MARKER);
+        result.remove(detail::DEL_MARKER);
 
         return result;
     }
 
     QString m_pattern;
-    QList<QSharedPointer<Token>> m_tokens;
+    QList<QSharedPointer<detail::Token>> m_tokens;
 };
 
 QTLOGGER_DECL_SPEC

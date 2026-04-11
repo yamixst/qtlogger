@@ -12,7 +12,7 @@
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 /**
  * @brief Replaces the time pattern in the given string with the current date and time.
@@ -41,7 +41,7 @@ QString replaceTimePattern(const QString &path)
     }
 
     return match.captured(1) + QDateTime::currentDateTime().toString(format) + match.captured(3);
-}
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 QSharedPointer<QFile> createFilePtr(const QString &path)
@@ -52,7 +52,7 @@ QSharedPointer<QFile> createFilePtr(const QString &path)
 }
 
 QTLOGGER_DECL_SPEC
-FileSink::FileSink(const QString &path) : IODeviceSink(createFilePtr(path))
+FileSink::FileSink(const QString &path) : IODeviceSink(detail::createFilePtr(path))
 {
     if (!file()->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
         std::cerr << "FileSink: Can't open log file: " << path.toStdString()

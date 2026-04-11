@@ -8,7 +8,9 @@
 
 #include "messagepatterns.h"
 
-namespace {
+namespace QtLogger {
+
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 QString prevMessagePattern(const QString &messagePattern = {})
@@ -21,9 +23,7 @@ QString prevMessagePattern(const QString &messagePattern = {})
     return __prevMessagePattern;
 }
 
-}
-
-namespace QtLogger {
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 void setFilterRules(const QString &a_rules)
@@ -50,19 +50,19 @@ QString setMessagePattern(const QString &a_messagePattern)
     if (s_messagePattern == messagePattern)
         return s_messagePattern;
 
-    prevMessagePattern(s_messagePattern);
+    detail::prevMessagePattern(s_messagePattern);
 
     s_messagePattern = messagePattern;
 
     qSetMessagePattern(s_messagePattern);
 
-    return prevMessagePattern();
+    return detail::prevMessagePattern();
 }
 
 QTLOGGER_DECL_SPEC
 QString restorePreviousMessagePattern()
 {
-    return setMessagePattern(prevMessagePattern());
+    return setMessagePattern(detail::prevMessagePattern());
 }
 
 } // namespace QtLogger
