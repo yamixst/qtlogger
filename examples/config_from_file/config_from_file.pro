@@ -1,17 +1,17 @@
-QT += core
-QT -= gui
+# Copyright (C) 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
+# SPDX-License-Identifier: MIT
 
-CONFIG += c++17 console
-CONFIG -= app_bundle
-
-TARGET = config_from_file
 TEMPLATE = app
 
-SOURCES += main.cpp
+TARGET = config_from_file
+
+CONFIG += qt
+QT -= gui
+QT += core
 
 include(../../qtlogger_link.pri)
 
-INCLUDEPATH += $$PWD/../../src
+SOURCES += $$PWD/main.cpp
 
 CONFIG += file_copies
 COPIES += config_file

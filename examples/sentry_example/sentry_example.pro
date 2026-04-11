@@ -1,15 +1,15 @@
 # Copyright (C) 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 # SPDX-License-Identifier: MIT
 
-QT += core network
-
-CONFIG += c++17 console
-CONFIG -= app_bundle
-
-DEFINES += QTLOGGER_NETWORK
+TEMPLATE = app
 
 TARGET = sentry_example
 
-SOURCES += main.cpp
+CONFIG += qt
+QT -= gui
+QT += core network
 
+CONFIG += qtlogger_network
 include(../../qtlogger_link.pri)
+
+SOURCES += $$PWD/main.cpp

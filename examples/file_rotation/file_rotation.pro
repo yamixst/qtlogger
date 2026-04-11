@@ -1,16 +1,14 @@
-QT = core concurrent
+# Copyright (C) 2024 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
+# SPDX-License-Identifier: MIT
 
-CONFIG += c++17 console
-CONFIG -= app_bundle
-
-SOURCES += \
-    main.cpp
-
-include(../../qtlogger_link.pri)
+TEMPLATE = app
 
 TARGET = file_rotation
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+CONFIG += qt
+QT -= gui
+QT += core
+
+include(../../qtlogger_link.pri)
+
+SOURCES += $$PWD/main.cpp

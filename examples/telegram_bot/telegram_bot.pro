@@ -1,15 +1,14 @@
 # Copyright (C) 2026 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
 # SPDX-License-Identifier: MIT
 
-QT += core network
-
-CONFIG += c++17 console
-CONFIG -= app_bundle
-
-DEFINES += QTLOGGER_NETWORK
+TEMPLATE = app
 
 TARGET = telegram_bot
 
-SOURCES += main.cpp
+CONFIG += qt
+QT -= gui
 
+CONFIG += qtlogger_network
 include(../../qtlogger_link.pri)
+
+SOURCES += $$PWD/main.cpp
