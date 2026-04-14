@@ -46,7 +46,7 @@
 #    include "sinks/windebugsink.h"
 #endif
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 #    include "sinks/oslogsink.h"
 #endif
 

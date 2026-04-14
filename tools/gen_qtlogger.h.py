@@ -90,7 +90,7 @@ def main():
         file.write("#pragma once\n\n")
         file.write("// #define QTLOGGER_NO_THREAD\n")
         file.write("// #define QTLOGGER_NETWORK\n")
-        file.write("// #define QTLOGGER_IOSLOG\n")
+        file.write("// #define QTLOGGER_OSLOG\n")
         file.write("// #define QTLOGGER_ANDROIDLOG\n")
         file.write("// #define QTLOGGER_SYSLOG\n")
         file.write("// #define QTLOGGER_JOURNAL\n")
