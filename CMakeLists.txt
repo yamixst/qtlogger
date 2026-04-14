@@ -4,6 +4,7 @@ project(qtlogger LANGUAGES CXX)
 
 option(QTLOGGER_NO_EXAMPLES "Disable building examples" OFF)
 option(QTLOGGER_NO_TESTS "Disable building tests" OFF)
+
 option(QTLOGGER_LIBRARY "Build qtlogger as shared library" OFF)
 option(QTLOGGER_DEBUG_OUTPUT "Enable qtlogger debug output" OFF)
 option(QTLOGGER_NO_THREAD "Disable qtlogger threading support" OFF)
