@@ -4,6 +4,8 @@ if(NOT DEFINED QTLOGGER_PROJECT_VERSION)
     include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/QtLoggerVersion.cmake")
 endif()
 
+include(GNUInstallDirs)
+
 project(qtlogger VERSION ${QTLOGGER_PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
@@ -141,9 +143,17 @@ else()
     add_library(qtlogger STATIC ${QTLOGGER_SOURCES} ${QTLOGGER_HEADERS})
 endif()
 
-target_link_libraries(qtlogger PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+add_library(qtlogger::qtlogger ALIAS qtlogger)
+
+set_target_properties(qtlogger PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    EXPORT_NAME qtlogger
+)
+
+target_link_libraries(qtlogger PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 if(QTLOGGER_NETWORK)
-    target_link_libraries(qtlogger PRIVATE Qt${QT_VERSION_MAJOR}::Network)
+    target_link_libraries(qtlogger PUBLIC Qt${QT_VERSION_MAJOR}::Network)
 endif()
 
 target_compile_definitions(qtlogger PRIVATE QTLOGGER_LIBRARY)
@@ -157,27 +167,27 @@ if(QTLOGGER_DEBUG_OUTPUT)
 endif()
 
 if(QTLOGGER_NO_THREAD)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_NO_THREAD)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_NO_THREAD)
 endif()
 
 if(QTLOGGER_NETWORK)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_NETWORK)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_NETWORK)
 endif()
 
 if(APPLE)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_OSLOG)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_OSLOG)
 endif()
 
 if(ANDROID)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_ANDROIDLOG)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_ANDROIDLOG)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT ANDROID)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_SYSLOG)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_SYSLOG)
 endif()
 
 if(QTLOGGER_JOURNAL)
-    target_compile_definitions(qtlogger PRIVATE QTLOGGER_SDJOURNAL)
+    target_compile_definitions(qtlogger PUBLIC QTLOGGER_SDJOURNAL)
     # Find and link libsystemd
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
@@ -193,7 +203,24 @@ target_include_directories(qtlogger
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+install(TARGETS qtlogger
+    EXPORT qtloggerTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qtlogger
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+
+install(FILES ${CMAKE_SOURCE_DIR}/qtlogger.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
