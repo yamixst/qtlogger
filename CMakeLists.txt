@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(qtlogger LANGUAGES CXX)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/QtLoggerVersion.cmake")
+
+project(qtlogger VERSION ${QTLOGGER_PROJECT_VERSION} LANGUAGES CXX)
 
 option(QTLOGGER_NO_EXAMPLES "Disable building examples" OFF)
 option(QTLOGGER_NO_TESTS "Disable building tests" OFF)

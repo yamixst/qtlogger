@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(qtlogger LANGUAGES CXX)
+if(NOT DEFINED QTLOGGER_PROJECT_VERSION)
+    include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/QtLoggerVersion.cmake")
+endif()
+
+project(qtlogger VERSION ${QTLOGGER_PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
