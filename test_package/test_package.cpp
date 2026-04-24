@@ -1,0 +1,17 @@
+// Copyright (C) 2026 Mikhail Yatsenko <mikhail.yatsenko@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#include <QCoreApplication>
+
+#include <qtlogger/qtlogger.h>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    gQtLogger.configure();
+    
+    qInfo("qtlogger test package");
+
+    return 0;
+}
