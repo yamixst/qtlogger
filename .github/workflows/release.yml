@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    env:
+      BUILD_DIR: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Qt and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            qt6-base-dev \
+            qt6-base-dev-tools
+
+      - name: Create source archive
+        run: |
+          git archive \
+            --format=tar.gz \
+            --prefix="qtlogger-${VERSION}/" \
+            --output="qtlogger-${VERSION}-source.tar.gz" \
+            "${GITHUB_REF_NAME}"
+
+      - name: Generate header-only archive
+        run: |
+          python3 tools/gen_qtlogger.h.py
+          tar -czf "qtlogger-${VERSION}-header-only.tar.gz" qtlogger.h
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B "${BUILD_DIR}" -G Ninja \
+            -DQTLOGGER_NO_EXAMPLES=ON \
+            -DQTLOGGER_NO_TESTS=ON \
+            -DQTLOGGER_LIBRARY=ON
+
+      - name: Build release package
+        run: |
+          cmake --build "${BUILD_DIR}" --target package
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            qtlogger-${{ env.VERSION }}-source.tar.gz
+            qtlogger-${{ env.VERSION }}-header-only.tar.gz
+            build/qtlogger-${{ env.VERSION }}-Linux-x86_64.tar.gz
