@@ -465,16 +465,15 @@ void TestOwnThreadHandler::testMultipleHandlersInOwnThreads()
     handler2.process(msg2);
     handler3.process(msg3);
     
-    // Wait for processing with individual checks
-    QVERIFY(handler1.waitForProcessing(2000));
-    if (handler2.processCallCount() == 0) {
-        QVERIFY(handler2.waitForProcessing(2000));
-    }
-    if (handler3.processCallCount() == 0) {
-        QVERIFY(handler3.waitForProcessing(2000));
-    }
-    
+    // The async processing may complete before waitForProcessing() starts waiting,
+    // so poll the observable state instead of relying on a fresh wake-up.
+    QTRY_COMPARE_WITH_TIMEOUT(handler1.processCallCount(), 1, 2000);
+    QTRY_COMPARE_WITH_TIMEOUT(handler2.processCallCount(), 1, 2000);
+    QTRY_COMPARE_WITH_TIMEOUT(handler3.processCallCount(), 1, 2000);
+
     QCOMPARE(handler1.lastMessage(), QString("handler1"));
+    QCOMPARE(handler2.lastMessage(), QString("handler2"));
+    QCOMPARE(handler3.lastMessage(), QString("handler3"));
     
     // Clean up
     handler1.resetOwnThread();
