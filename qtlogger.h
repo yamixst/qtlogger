@@ -13,7 +13,7 @@
 
 // #define QTLOGGER_NO_THREAD
 // #define QTLOGGER_NETWORK
-// #define QTLOGGER_IOSLOG
+// #define QTLOGGER_OSLOG
 // #define QTLOGGER_ANDROIDLOG
 // #define QTLOGGER_SYSLOG
 // #define QTLOGGER_JOURNAL
@@ -24,7 +24,7 @@
 
 // version.h
 
-#define QTLOGGER_VERSION 0.10.0
+#define QTLOGGER_VERSION 0.11.0
 
 // end version.h
 
@@ -1739,7 +1739,7 @@ using WinDebugSinkPtr = QSharedPointer<WinDebugSink>;
 
 #endif
 
-#ifdef QTLOGGER_IOSLOG
+#ifdef QTLOGGER_OSLOG
 
 #endif
 
@@ -2349,7 +2349,7 @@ QString JsonFormatter::format(const LogMessage &lmsg)
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 static const auto g_processStartTime = std::chrono::steady_clock::now();
 
@@ -3114,7 +3114,7 @@ private:
     int m_removeAfter;
 };
 
-} // namespace
+} // namespace detail
 
 class PatternFormatter::PatternFormatterPrivate
 {
@@ -3137,11 +3137,11 @@ public:
             if (pos < m_pattern.length() - 1 && m_pattern[pos] == '%') {
                 if (m_pattern[pos + 1] == '{') {
                     if (!literalText.isEmpty()) {
-                        auto token = new LiteralToken(literalText);
+                        auto token = new detail::LiteralToken(literalText);
                         if (hasCondition) {
                             token->setCondition(currentCondition);
                         }
-                        m_tokens.append(QSharedPointer<Token>(token));
+                        m_tokens.append(QSharedPointer<detail::Token>(token));
                         literalText.clear();
                     }
 
@@ -3155,51 +3155,51 @@ public:
 
                     QString placeholder = m_pattern.mid(pos + 2, closingPos - pos - 2);
 
-                    std::optional<FormattedToken::FormatSpec> formatSpec;
+                    std::optional<detail::FormattedToken::FormatSpec> formatSpec;
 
                     int lastColon = placeholder.lastIndexOf(QLatin1Char(':'));
                     if (lastColon != -1 && lastColon < placeholder.length() - 1) {
                         QString possibleSpec = placeholder.mid(lastColon + 1);
-                        formatSpec = FormattedToken::parseFormatSpec(possibleSpec);
+                        formatSpec = detail::FormattedToken::parseFormatSpec(possibleSpec);
                         if (formatSpec) {
                             placeholder = placeholder.left(lastColon);
                         }
                     }
 
-                    FormattedToken *token = nullptr;
+                    detail::FormattedToken *token = nullptr;
 
                     if (placeholder == QLatin1String("type")) {
-                        token = new TypeToken();
+                        token = new detail::TypeToken();
                     } else if (placeholder == QLatin1String("line")) {
-                        token = new LineToken();
+                        token = new detail::LineToken();
                     } else if (placeholder == QLatin1String("file")) {
-                        token = new FileToken();
+                        token = new detail::FileToken();
                     } else if (placeholder == QLatin1String("shortfile")
                                || placeholder.startsWith(QLatin1String("shortfile "))) {
                         QString baseDir;
                         if (placeholder.startsWith(QLatin1String("shortfile "))) {
                             baseDir = placeholder.mid(10).trimmed();
                         }
-                        token = new ShortFileToken(baseDir);
+                        token = new detail::ShortFileToken(baseDir);
                     } else if (placeholder == QLatin1String("function")) {
-                        token = new FunctionToken(false);
+                        token = new detail::FunctionToken(false);
                     } else if (placeholder == QLatin1String("func")) {
-                        token = new FunctionToken(true);
+                        token = new detail::FunctionToken(true);
                     } else if (placeholder == QLatin1String("category")) {
-                        token = new CategoryToken();
+                        token = new detail::CategoryToken();
                     } else if (placeholder == QLatin1String("time")
                                || placeholder.startsWith(QLatin1String("time "))) {
                         QString timeFormat;
                         if (placeholder.startsWith(QLatin1String("time "))) {
                             timeFormat = placeholder.mid(5).trimmed();
                         }
-                        token = new TimeToken(timeFormat);
+                        token = new detail::TimeToken(timeFormat);
                     } else if (placeholder == QLatin1String("threadid")) {
-                        token = new ThreadIdToken();
+                        token = new detail::ThreadIdToken();
                     } else if (placeholder == QLatin1String("qthreadptr")) {
-                        token = new QThreadPtrToken();
+                        token = new detail::QThreadPtrToken();
                     } else if (placeholder == QLatin1String("message")) {
-                        token = new MessageToken();
+                        token = new detail::MessageToken();
                     } else if (placeholder.startsWith(QLatin1String("if-"))) {
                         // Handle conditional: %{if-debug}, %{if-warning}, etc.
                         QString conditionType = placeholder.mid(3); // Remove "if-"
@@ -3231,9 +3231,9 @@ public:
                                 }
                                 removeAfter = suffix.mid(commaPos + 1).toInt();
                             }
-                            token = new AttributeToken(attrName, true, removeBefore, removeAfter);
+                            token = new detail::AttributeToken(attrName, true, removeBefore, removeAfter);
                         } else {
-                            token = new AttributeToken(placeholder);
+                            token = new detail::AttributeToken(placeholder);
                         }
                     }
 
@@ -3244,7 +3244,7 @@ public:
                         if (formatSpec) {
                             token->setFormatSpec(*formatSpec);
                         }
-                        m_tokens.append(QSharedPointer<Token>(token));
+                        m_tokens.append(QSharedPointer<detail::Token>(token));
                     }
 
                     pos = closingPos + 1;
@@ -3264,11 +3264,11 @@ public:
         }
 
         if (!literalText.isEmpty()) {
-            auto token = new LiteralToken(literalText);
+            auto token = new detail::LiteralToken(literalText);
             if (hasCondition) {
                 token->setCondition(currentCondition);
             }
-            m_tokens.append(QSharedPointer<Token>(token));
+            m_tokens.append(QSharedPointer<detail::Token>(token));
         }
     }
 
@@ -3294,13 +3294,13 @@ public:
             }
         }
 
-        result.remove(DEL_MARKER);
+        result.remove(detail::DEL_MARKER);
 
         return result;
     }
 
     QString m_pattern;
-    QList<QSharedPointer<Token>> m_tokens;
+    QList<QSharedPointer<detail::Token>> m_tokens;
 };
 
 QTLOGGER_DECL_SPEC
@@ -3508,7 +3508,7 @@ QString PrettyFormatter::format(const LogMessage &lmsg)
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 QString qtMsgTypeToSentryLevel(QtMsgType type)
@@ -3529,7 +3529,7 @@ QString qtMsgTypeToSentryLevel(QtMsgType type)
     }
 }
 
-} // namespace
+} // namespace detail
 
 SentryFormatter::SentryFormatter(const QString &sdkName, const QString &sdkVersion)
     : m_sdkName(sdkName), m_sdkVersion(sdkVersion)
@@ -3556,7 +3556,7 @@ QString SentryFormatter::format(const LogMessage &lmsg)
     event[QStringLiteral("platform")] = QStringLiteral("native");
 
     // Severity level
-    event[QStringLiteral("level")] = qtMsgTypeToSentryLevel(lmsg.type());
+    event[QStringLiteral("level")] = detail::qtMsgTypeToSentryLevel(lmsg.type());
 
     // Logger name (category)
     auto category = QString::fromLatin1(lmsg.category());
@@ -3656,7 +3656,7 @@ QString SentryFormatter::format(const LogMessage &lmsg)
 
     // Fingerprint (for grouping similar events)
     QJsonArray fingerprint;
-    fingerprint.append(qtMsgTypeToSentryLevel(lmsg.type()));
+    fingerprint.append(detail::qtMsgTypeToSentryLevel(lmsg.type()));
     fingerprint.append(category.isEmpty() ? QStringLiteral("default") : category);
     fingerprint.append(lmsg.message().left(100)); // First 100 chars of message
     event[QStringLiteral("fingerprint")] = fingerprint;
@@ -3679,7 +3679,7 @@ QString SentryFormatter::format(const LogMessage &lmsg)
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 #ifndef QTLOGGER_NO_THREAD
 QAtomicPointer<Logger> g_activeLogger;
@@ -3689,7 +3689,7 @@ Logger *g_activeLogger = nullptr;
 
 QtMessageHandler g_previousMessageHandler = nullptr;
 
-}
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 Logger *Logger::instance()
@@ -3707,10 +3707,10 @@ QTLOGGER_DECL_SPEC
 Logger::~Logger()
 {
 #ifndef QTLOGGER_NO_THREAD
-    g_activeLogger.testAndSetOrdered(this, nullptr);
+    detail::g_activeLogger.testAndSetOrdered(this, nullptr);
 #else
-    if (g_activeLogger == this) {
-        g_activeLogger = nullptr;
+    if (detail::g_activeLogger == this) {
+        detail::g_activeLogger = nullptr;
     }
 #endif
 }
@@ -3762,9 +3762,9 @@ void Logger::messageHandler(QtMsgType type, const QMessageLogContext &context,
                             const QString &message)
 {
 #ifndef QTLOGGER_NO_THREAD
-    auto logger = g_activeLogger.loadAcquire();
+    auto logger = detail::g_activeLogger.loadAcquire();
 #else
-    auto logger = g_activeLogger;
+    auto logger = detail::g_activeLogger;
 #endif
 
     if (!logger)
@@ -3777,31 +3777,31 @@ QTLOGGER_DECL_SPEC
 void Logger::installMessageHandler()
 {
 #ifndef QTLOGGER_NO_THREAD
-    g_activeLogger.storeRelease(this);
+    detail::g_activeLogger.storeRelease(this);
 #else
-    g_activeLogger = this;
+    detail::g_activeLogger = this;
 #endif
 
     auto prev = qInstallMessageHandler(messageHandler);
 
     if (prev != messageHandler) {
-        g_previousMessageHandler = prev;
+        detail::g_previousMessageHandler = prev;
     }
 }
 
 QTLOGGER_DECL_SPEC
 void Logger::restorePreviousMessageHandler()
 {
-    if (!g_previousMessageHandler)
+    if (!detail::g_previousMessageHandler)
         return;
 
-    auto prev = qInstallMessageHandler(g_previousMessageHandler);
+    auto prev = qInstallMessageHandler(detail::g_previousMessageHandler);
 
     if (prev != messageHandler) {
         qInstallMessageHandler(prev);
     }
 
-    g_previousMessageHandler = nullptr;
+    detail::g_previousMessageHandler = nullptr;
 }
 
 #ifndef QTLOGGER_NO_THREAD
@@ -4383,7 +4383,7 @@ void ColoredConsole::updateColorsEnabled()
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 /**
  * @brief Replaces the time pattern in the given string with the current date and time.
@@ -4412,7 +4412,7 @@ QString replaceTimePattern(const QString &path)
     }
 
     return match.captured(1) + QDateTime::currentDateTime().toString(format) + match.captured(3);
-}
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 QSharedPointer<QFile> createFilePtr(const QString &path)
@@ -4423,7 +4423,7 @@ QSharedPointer<QFile> createFilePtr(const QString &path)
 }
 
 QTLOGGER_DECL_SPEC
-FileSink::FileSink(const QString &path) : IODeviceSink(createFilePtr(path))
+FileSink::FileSink(const QString &path) : IODeviceSink(detail::createFilePtr(path))
 {
     if (!file()->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
         std::cerr << "FileSink: Can't open log file: " << path.toStdString()
@@ -4652,7 +4652,7 @@ void OslogSink::send(const LogMessage &lmsg)
 
 namespace QtLogger {
 
-namespace {
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 static quint32 calculateCRC32(QFile &file) {
@@ -4684,7 +4684,7 @@ static quint32 calculateCRC32(QFile &file) {
     return crc ^ 0xFFFFFFFF;
 }
 
-} // namespace
+} // namespace detail
 
 class RotatingFileSink::RotatingFileSinkPrivate
 {
@@ -4833,7 +4833,7 @@ public:
             return;
         }
 
-        auto fileCRC = calculateCRC32(inputFile);
+        auto fileCRC = detail::calculateCRC32(inputFile);
         auto fileSize = static_cast<quint32>(inputFile.size());
         inputFile.seek(0);
 
@@ -5331,7 +5331,9 @@ void SortedPipeline::clearPipelines()
 #include <QLoggingCategory>
 #include <QString>
 
-namespace {
+namespace QtLogger {
+
+namespace detail {
 
 QTLOGGER_DECL_SPEC
 QString prevMessagePattern(const QString &messagePattern = {})
@@ -5344,9 +5346,7 @@ QString prevMessagePattern(const QString &messagePattern = {})
     return __prevMessagePattern;
 }
 
-}
-
-namespace QtLogger {
+} // namespace detail
 
 QTLOGGER_DECL_SPEC
 void setFilterRules(const QString &a_rules)
@@ -5373,19 +5373,19 @@ QString setMessagePattern(const QString &a_messagePattern)
     if (s_messagePattern == messagePattern)
         return s_messagePattern;
 
-    prevMessagePattern(s_messagePattern);
+    detail::prevMessagePattern(s_messagePattern);
 
     s_messagePattern = messagePattern;
 
     qSetMessagePattern(s_messagePattern);
 
-    return prevMessagePattern();
+    return detail::prevMessagePattern();
 }
 
 QTLOGGER_DECL_SPEC
 QString restorePreviousMessagePattern()
 {
-    return setMessagePattern(prevMessagePattern());
+    return setMessagePattern(detail::prevMessagePattern());
 }
 
 } // namespace QtLogger
