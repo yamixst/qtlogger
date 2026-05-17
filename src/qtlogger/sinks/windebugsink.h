@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 
 #include <QSharedPointer>

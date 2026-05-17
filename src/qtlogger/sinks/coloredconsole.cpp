@@ -3,6 +3,8 @@
 
 #include "coloredconsole.h"
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 #    include <io.h>
 #    include <stdio.h>
