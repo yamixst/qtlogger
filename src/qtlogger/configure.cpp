@@ -120,20 +120,20 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
         *pipeline << PrettyFormatter::instance();
     }
 
-    const auto stdout = settings.value(group + QStringLiteral("/stdout"), false).toBool();
+    const auto stdoutSink = settings.value(group + QStringLiteral("/stdout"), false).toBool();
     const auto stdoutColor =
             settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
-    if (stdout || stdoutColor) {
+    if (stdoutSink || stdoutColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
         *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Auto : ColorMode::Never);
     }
 
-    const auto stderr = settings.value(group + QStringLiteral("/stderr"), false).toBool();
+    const auto stderrSink = settings.value(group + QStringLiteral("/stderr"), false).toBool();
     const auto stderrColor =
             settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
-    if (stderr || stderrColor) {
+    if (stderrSink || stderrColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
