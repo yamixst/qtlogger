@@ -19,6 +19,10 @@ target_link_libraries(test_qtlogger_header
 )
 
 # Include the generated qtlogger.h from the project root
+target_compile_definitions(test_qtlogger_header PRIVATE
+    QTLOGGER_STATIC
+)
+
 target_include_directories(test_qtlogger_header PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../..
 )
