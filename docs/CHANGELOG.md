@@ -2,6 +2,35 @@
 
 All notable changes to QtLogger will be documented in this file.
 
+## [0.11.1]
+
+### Fixed
+
+- Renamed `stdout`/`stderr` local variables in `configure()` to `stdoutSink`/`stderrSink` to avoid Windows macro conflicts
+- Reverse iterator usage in `SortedPipeline` insertion methods (`insertBetweenNearLeft`, `insertBetweenNearRight`)
+
+## [0.11.0]
+
+### Added
+
+- Conan package recipe for qtlogger library
+- CPack packaging configuration
+- GitHub Actions CI and release workflows
+- Telegram bot example
+- Network support (`QTLOGGER_NETWORK`) — guarded for Sentry and Telegram examples
+- Install rules and export targets to CMake
+
+### Changed
+
+- Project version is now read from `version.h` header
+- Moved anonymous namespaces to `detail` namespace
+- Normalized example `.pro` files to standard format
+
+### Fixed
+
+- Include path in `qtlogger_link.pri`
+- Typo in `OSLOG` define name
+
 ## [0.10.0]
 
 ### Added

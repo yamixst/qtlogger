@@ -24,7 +24,7 @@
 
 // version.h
 
-#define QTLOGGER_VERSION 0.11.0
+#define QTLOGGER_VERSION 0.11.1
 
 // end version.h
 
@@ -1717,6 +1717,8 @@ using HttpSinkPtr = QSharedPointer<HttpSink>;
 
 // windebugsink.h
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 
 #include <QSharedPointer>
@@ -2081,20 +2083,20 @@ void configure(Pipeline *pipeline, const QSettings &settings, const QString &gro
         *pipeline << PrettyFormatter::instance();
     }
 
-    const auto stdout = settings.value(group + QStringLiteral("/stdout"), false).toBool();
+    const auto stdoutSink = settings.value(group + QStringLiteral("/stdout"), false).toBool();
     const auto stdoutColor =
             settings.value(group + QStringLiteral("/stdout_color"), false).toBool();
-    if (stdout || stdoutColor) {
+    if (stdoutSink || stdoutColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stdout (color=" << stdoutColor << ")" << std::endl;
 #endif
         *pipeline << StdOutSinkPtr::create(stdoutColor ? ColorMode::Auto : ColorMode::Never);
     }
 
-    const auto stderr = settings.value(group + QStringLiteral("/stderr"), false).toBool();
+    const auto stderrSink = settings.value(group + QStringLiteral("/stderr"), false).toBool();
     const auto stderrColor =
             settings.value(group + QStringLiteral("/stderr_color"), false).toBool();
-    if (stderr || stderrColor) {
+    if (stderrSink || stderrColor) {
 #ifdef QTLOGGER_DEBUG
         std::cerr << "configure: stderr (color=" << stderrColor << ")" << std::endl;
 #endif
@@ -4263,6 +4265,8 @@ void AndroidLogSink::send(const LogMessage &lmsg)
 
 // coloredconsole.cpp
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 #    include <io.h>
 #    include <stdio.h>
@@ -5178,6 +5182,8 @@ void SyslogSink::send(const LogMessage &lmsg)
 
 // windebugsink.cpp
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 
 #include <qt_windows.h>
@@ -5204,15 +5210,21 @@ void SortedPipeline::insertBetweenNearLeft(const QSet<HandlerType> &leftType,
                                            const QSet<HandlerType> &rightType,
                                            const HandlerPtr &handler)
 {
-    auto firstRight =
-            std::find_if(handlers().begin(), handlers().end(),
-                         [&rightType](const auto &x) { return rightType.contains(x->type()); });
+    auto &_handlers = handlers();
 
-    auto lastLeft = std::find_if(firstRight, handlers().begin(), [&leftType](const HandlerPtr &x) {
+    auto firstRight = std::find_if(_handlers.begin(), _handlers.end(), [&rightType](const auto &x) {
+        return rightType.contains(x->type());
+    });
+
+    auto rFirstRight = std::make_reverse_iterator(firstRight);
+
+    auto rLastLeft = std::find_if(rFirstRight, _handlers.rend(), [&leftType](const HandlerPtr &x) {
         return leftType.contains(x->type());
     });
 
-    handlers().insert(lastLeft, handler);
+    auto lastLeft = rLastLeft.base();
+
+    _handlers.insert(lastLeft, handler);
 }
 
 QTLOGGER_DECL_SPEC
@@ -5220,15 +5232,19 @@ void SortedPipeline::insertBetweenNearRight(const QSet<HandlerType> &leftType,
                                             const QSet<HandlerType> &rightType,
                                             const HandlerPtr &handler)
 {
-    auto lastLeft =
-            std::find_if(handlers().end(), handlers().begin(),
+    auto &_handlers = handlers();
+
+    auto rLastLeft =
+            std::find_if(_handlers.rbegin(), _handlers.rend(),
                          [&leftType](const HandlerPtr &x) { return leftType.contains(x->type()); });
 
-    auto firstRight = std::find_if(lastLeft, handlers().end(), [&rightType](const auto &x) {
+    auto lastLeft = rLastLeft.base();
+
+    auto firstRight = std::find_if(lastLeft, _handlers.end(), [&rightType](const auto &x) {
         return rightType.contains(x->type());
     });
 
-    handlers().insert(firstRight, handler);
+    _handlers.insert(firstRight, handler);
 }
 
 QTLOGGER_DECL_SPEC
@@ -5256,7 +5272,8 @@ void SortedPipeline::appendAttrHandler(const AttrHandlerPtr &attrHandler)
         return;
 
     insertBetweenNearLeft({ HandlerType::AttrHandler },
-                          { HandlerType::Filter, HandlerType::Formatter, HandlerType::Sink },
+                          { HandlerType::Filter, HandlerType::Formatter, HandlerType::Sink,
+                            HandlerType::Pipeline },
                           attrHandler);
 }
 
@@ -5273,7 +5290,8 @@ void SortedPipeline::appendFilter(const FilterPtr &filter)
         return;
 
     insertBetweenNearLeft({ HandlerType::AttrHandler, HandlerType::Filter },
-                          { HandlerType::Formatter, HandlerType::Sink }, filter);
+                          { HandlerType::Formatter, HandlerType::Sink, HandlerType::Pipeline },
+                          filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -5290,8 +5308,8 @@ void SortedPipeline::setFormatter(const FormatterPtr &formatter)
 
     clearFormatters();
 
-    insertBetweenNearRight({ HandlerType::AttrHandler, HandlerType::Filter }, { HandlerType::Sink },
-                           formatter);
+    insertBetweenNearRight({ HandlerType::AttrHandler, HandlerType::Filter },
+                           { HandlerType::Sink, HandlerType::Pipeline }, formatter);
 }
 
 QTLOGGER_DECL_SPEC
