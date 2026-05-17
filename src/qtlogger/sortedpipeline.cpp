@@ -69,7 +69,8 @@ void SortedPipeline::appendAttrHandler(const AttrHandlerPtr &attrHandler)
         return;
 
     insertBetweenNearLeft({ HandlerType::AttrHandler },
-                          { HandlerType::Filter, HandlerType::Formatter, HandlerType::Sink },
+                          { HandlerType::Filter, HandlerType::Formatter, HandlerType::Sink,
+                            HandlerType::Pipeline },
                           attrHandler);
 }
 
@@ -86,7 +87,8 @@ void SortedPipeline::appendFilter(const FilterPtr &filter)
         return;
 
     insertBetweenNearLeft({ HandlerType::AttrHandler, HandlerType::Filter },
-                          { HandlerType::Formatter, HandlerType::Sink }, filter);
+                          { HandlerType::Formatter, HandlerType::Sink, HandlerType::Pipeline },
+                          filter);
 }
 
 QTLOGGER_DECL_SPEC
@@ -103,8 +105,8 @@ void SortedPipeline::setFormatter(const FormatterPtr &formatter)
 
     clearFormatters();
 
-    insertBetweenNearRight({ HandlerType::AttrHandler, HandlerType::Filter }, { HandlerType::Sink },
-                           formatter);
+    insertBetweenNearRight({ HandlerType::AttrHandler, HandlerType::Filter },
+                           { HandlerType::Sink, HandlerType::Pipeline }, formatter);
 }
 
 QTLOGGER_DECL_SPEC
