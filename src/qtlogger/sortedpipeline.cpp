@@ -7,15 +7,21 @@ void SortedPipeline::insertBetweenNearLeft(const QSet<HandlerType> &leftType,
                                            const QSet<HandlerType> &rightType,
                                            const HandlerPtr &handler)
 {
-    auto firstRight =
-            std::find_if(handlers().begin(), handlers().end(),
-                         [&rightType](const auto &x) { return rightType.contains(x->type()); });
+    auto &_handlers = handlers();
 
-    auto lastLeft = std::find_if(firstRight, handlers().begin(), [&leftType](const HandlerPtr &x) {
+    auto firstRight = std::find_if(_handlers.begin(), _handlers.end(), [&rightType](const auto &x) {
+        return rightType.contains(x->type());
+    });
+
+    auto rFirstRight = std::make_reverse_iterator(firstRight);
+
+    auto rLastLeft = std::find_if(rFirstRight, _handlers.rend(), [&leftType](const HandlerPtr &x) {
         return leftType.contains(x->type());
     });
 
-    handlers().insert(lastLeft, handler);
+    auto lastLeft = rLastLeft.base();
+
+    _handlers.insert(lastLeft, handler);
 }
 
 QTLOGGER_DECL_SPEC
@@ -23,15 +29,19 @@ void SortedPipeline::insertBetweenNearRight(const QSet<HandlerType> &leftType,
                                             const QSet<HandlerType> &rightType,
                                             const HandlerPtr &handler)
 {
-    auto lastLeft =
-            std::find_if(handlers().end(), handlers().begin(),
+    auto &_handlers = handlers();
+
+    auto rLastLeft =
+            std::find_if(_handlers.rbegin(), _handlers.rend(),
                          [&leftType](const HandlerPtr &x) { return leftType.contains(x->type()); });
 
-    auto firstRight = std::find_if(lastLeft, handlers().end(), [&rightType](const auto &x) {
+    auto lastLeft = rLastLeft.base();
+
+    auto firstRight = std::find_if(lastLeft, _handlers.end(), [&rightType](const auto &x) {
         return rightType.contains(x->type());
     });
 
-    handlers().insert(firstRight, handler);
+    _handlers.insert(firstRight, handler);
 }
 
 QTLOGGER_DECL_SPEC
