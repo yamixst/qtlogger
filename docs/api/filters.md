@@ -212,9 +212,8 @@ Rules are processed in order. Later rules override earlier ones for the same cat
 | `*=false` | Disable all categories |
 | `*.debug=false` | Disable debug for all categories |
 | `network=true` | Enable all levels for `network` category |
-| `network.*=true` | Same as above |
+| `network.*=true` | Enable all levels for all subcategoreis of `network` |
 | `network.debug=false` | Disable debug for `network` category |
-| `app.ui.*=false` | Disable all for `app.ui` and subcategories |
 
 ### Wildcard Matching
 
