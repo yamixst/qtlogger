@@ -40,14 +40,6 @@ jobs:
             qt6-base-dev \
             qt6-base-dev-tools
 
-      - name: Create source archive
-        run: |
-          git archive \
-            --format=tar.gz \
-            --prefix="qtlogger-${VERSION}/" \
-            --output="qtlogger-${VERSION}-source.tar.gz" \
-            "${GITHUB_REF_NAME}"
-
       - name: Generate header-only archive
         run: |
           python3 tools/gen_qtlogger.h.py
@@ -68,6 +60,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            qtlogger-${{ env.VERSION }}-source.tar.gz
             qtlogger-${{ env.VERSION }}-header-only.tar.gz
             build/qtlogger-${{ env.VERSION }}-Linux-x86_64.tar.gz
