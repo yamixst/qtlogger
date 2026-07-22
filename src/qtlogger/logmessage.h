@@ -19,7 +19,7 @@ namespace QtLogger {
 class QTLOGGER_EXPORT LogMessage
 {
 public:
-    LogMessage() noexcept = default;
+    LogMessage() = default;
 
     LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
         : m_type(type),
