@@ -1,3 +1,5 @@
+
+
 ![Project Status](https://img.shields.io/badge/status-beta-orange)
 ![C++ Standard](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![Qt Version](https://img.shields.io/badge/Qt-5.9--6.10-green)
@@ -35,7 +37,7 @@ int main(int argc, char *argv[])
 - **Console output** with optional colored output
 - **Rotating logs** with size-based, daily, and startup rotation + gzip compression
 - **Platform-native sinks**: Android logcat, macOS/iOS os_log, Linux syslog/systemd journal, Windows debugger
-- **Network logging**: HTTP endpoints for remote logging
+- **Network logging**: HTTP endpoints for remote logging (requires the `QTLOGGER_NETWORK` build option)
 - **Category-based and regex filtering** for fine-grained control
 - **Duplicate suppression** to prevent log spam
 - **Pattern formatter** with rich placeholder support (time formats, fixed-width fields, conditional blocks)
