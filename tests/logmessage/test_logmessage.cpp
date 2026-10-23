@@ -3,11 +3,16 @@
 #include <QThread>
 #include <QVariantHash>
 #include <QMessageLogContext>
+#include <type_traits>
 
 #include "qtlogger.h"
 #include "mock_context.h"
 
 using namespace QtLogger;
+
+// Regression check for #3: the defaulted constructor must stay usable
+static_assert(std::is_default_constructible<LogMessage>::value,
+              "LogMessage must be default constructible");
 
 class TestLogMessage : public QObject
 {
