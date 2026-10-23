@@ -97,7 +97,9 @@ def main():
         file.write("\n")
         file.write("#define QTLOGGER_DECL_SPEC inline\n")
         file.write("\n")
-        file.write("#define QTLOGGER_STATIC\n")
+        file.write("#ifndef QTLOGGER_STATIC\n")
+        file.write("#    define QTLOGGER_STATIC\n")
+        file.write("#endif\n")
         file.write(result_code)
 
 
