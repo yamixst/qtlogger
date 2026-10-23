@@ -26,6 +26,12 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
 
+      - name: Extract release notes
+        run: |
+          awk -v v="${VERSION}" '/^## \[/ { p = index($0, "## [" v "]") == 1; next } p' \
+            docs/CHANGELOG.md > release_notes.md
+          cat release_notes.md
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -59,6 +65,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release_notes.md
           files: |
             qtlogger-${{ env.VERSION }}-header-only.tar.gz
             build/qtlogger-${{ env.VERSION }}-Linux-x86_64.tar.gz
