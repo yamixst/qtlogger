@@ -21,14 +21,14 @@ class QTLOGGER_EXPORT LogMessage
 public:
     LogMessage() = default;
 
-    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
+    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message)
         : m_type(type),
           m_context(context.file, context.line, context.function, context.category),
           m_message(message)
     {
     }
 
-    inline LogMessage(const LogMessage &lmsg) noexcept
+    inline LogMessage(const LogMessage &lmsg)
         : m_file(lmsg.m_context.file),
           m_function(lmsg.m_context.function),
           m_category(lmsg.m_context.category),
