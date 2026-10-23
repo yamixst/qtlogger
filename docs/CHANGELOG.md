@@ -4,9 +4,11 @@ All notable changes to QtLogger will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.2]
+
 ### Fixed
 
-- `LogMessage` failed to compile with GCC 15 because of `noexcept` on the defaulted constructor (#3)
+- `LogMessage` failed to compile with GCC 15 because of `noexcept` on the defaulted constructor; `noexcept` is removed from all `LogMessage` constructors, as they may allocate (#3)
 - Header-only mode no longer requires a manual `QTLOGGER_STATIC` define (#5)
 
 ## [0.11.1]

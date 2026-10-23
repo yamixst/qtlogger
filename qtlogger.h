@@ -20,11 +20,15 @@
 
 #define QTLOGGER_DECL_SPEC inline
 
+#ifndef QTLOGGER_STATIC
+#    define QTLOGGER_STATIC
+#endif
+
 // qtlogger.h
 
 // version.h
 
-#define QTLOGGER_VERSION 0.11.1
+#define QTLOGGER_VERSION 0.11.2
 
 // end version.h
 
@@ -70,16 +74,16 @@ namespace QtLogger {
 class QTLOGGER_EXPORT LogMessage
 {
 public:
-    LogMessage() noexcept = default;
+    LogMessage() = default;
 
-    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message) noexcept
+    LogMessage(QtMsgType type, const QMessageLogContext &context, const QString &message)
         : m_type(type),
           m_context(context.file, context.line, context.function, context.category),
           m_message(message)
     {
     }
 
-    inline LogMessage(const LogMessage &lmsg) noexcept
+    inline LogMessage(const LogMessage &lmsg)
         : m_file(lmsg.m_context.file),
           m_function(lmsg.m_context.function),
           m_category(lmsg.m_context.category),
