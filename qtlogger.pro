@@ -4,7 +4,7 @@
 TEMPLATE = subdirs
 
 CONFIG += qtlogger_no_tests
-# CONFIG += qtlogger_no_examples
+CONFIG += qtlogger_no_examples
 
 SUBDIRS += src
 
